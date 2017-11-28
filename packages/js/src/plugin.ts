@@ -1,77 +1,80 @@
 import { Avocado } from './avocado';
-
-import { PluginCallback, PluginCallOptions } from './definitions';
+import { AvocadoPluginConfig, PluginCallback } from './definitions';
 
 /**
  * Base class for all 3rd party plugins.
  */
 export class Plugin {
   avocado: Avocado;
+  private browserPlugin: any;
 
   constructor() {
     this.avocado = Avocado.instance();
-
     this.avocado.registerPlugin(this);
   }
 
-  nativeCallback(method: string, options?: any, callbackFunction?: PluginCallback, callOptions?: PluginCallOptions) {
-    if (typeof options === 'function') {
-      callbackFunction = options;
-      options = {};
+  send(method: string): Promise<any>;
+  send(method: string, callback: PluginCallback): void;
+  send(method: string, callback: Function): void;
+  send(method: string, options?: any): Promise<any>;
+  send(method: string, options: any, callback: PluginCallback): void;
+  send(method: string, options: any, callback: Function): void;
+  send(method: string, a?: any, b?: any) {
+    if (typeof a === 'function') {
+      return this.toPlugin(method, {}, 'callback', a);
     }
-    return this.native(method, options, 'callback', callbackFunction);
-  }
+    if (typeof b === 'function') {
+      return this.toPlugin(method, a || {}, 'callback', b);
+    }
 
-  nativePromise(method: string, options?: any, callOptions?: PluginCallOptions) {
-    return this.native(method, options, 'promise', null, callOptions);
+    return this.toPlugin(method, a || {}, 'promise', null);
   }
 
   /**
    * Call a native plugin method, or a web API fallback.
-   * 
+   *
    * NO CONSOLE LOGS IN THIS METHOD! Can throw our
    * custom console handler into an infinite loop
    */
-  native(method: any, options: any, callbackType: string, callbackFunction?: PluginCallback, callOptions?: PluginCallOptions) {
+  private toPlugin(methodName: any, options: any, callbackType: string, callbackFunction?: PluginCallback) {
+    const config: AvocadoPluginConfig = (this as any).constructor.getPluginInfo();
 
-    let d = (<any>this).constructor.getPluginInfo();
-
-    // If avocado is running in a browser environment, call our
-    // web fallback
-    /*
-    if(this.avocado.isBrowser()) {
-      if(webFallback) {
-        return webFallback(options);
-      } else {
-        throw new Error('Tried calling a native plugin method in the browser but no web fallback is available.');
-      }
+    if (this.avocado.isNative) {
+      return this.avocado.toNative({
+        pluginId: config.id,
+        methodName: methodName,
+        options: options,
+        callbackType: callbackType
+      }, {
+        callbackFunction: callbackFunction
+      });
     }
-    */
 
-    // Avocado is running in a non-sandbox browser environment, call
-    // the native code underneath
-    return this.avocado.toNative({
-      pluginId: d.id,
-      methodName: method,
-      options: options,
-      callbackType: callbackType
-    }, {
-      callbackFunction: callbackFunction
-    });
+    if (typeof config.browser !== 'function') {
+      console.warn(`"${config.name}" browser plugin not found`);
+      return Promise.resolve();
+    }
+
+    if (!this.browserPlugin) {
+      this.browserPlugin = new config.browser();
+    }
+
+    if (typeof this.browserPlugin[methodName] !== 'function') {
+      console.warn(`"${config.name}" browser plugin missing "${methodName}" method`);
+      return Promise.resolve();
+    }
+
+    return this.browserPlugin[methodName](options, callbackFunction);
   }
 }
 
 /**
  * Decorator for AvocadoPlugin's
  */
-export function AvocadoPlugin(config: any) {
+export function AvocadoPlugin(config: AvocadoPluginConfig) {
   return function(cls: any) {
-    cls['_avocadoPlugin'] = Object.assign({
-    }, config);
-
-    cls['getPluginInfo'] = () => {
-      return cls['_avocadoPlugin'];
-    }
+    cls['_avocadoPlugin'] = Object.assign({}, config);
+    cls['getPluginInfo'] = () => cls['_avocadoPlugin'];
     return cls;
   };
 }

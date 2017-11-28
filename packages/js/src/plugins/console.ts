@@ -1,6 +1,5 @@
 import { AvocadoPlugin, Plugin } from '../plugin';
 
-declare var window;
 
 @AvocadoPlugin({
   name: 'Console',
@@ -23,14 +22,14 @@ export class Console extends Plugin {
       this.queue.push(['log', ...args]);
       this.originalLog.apply(console, args);
     };
-      
+
     const syncQueue = () => {
       const queue = this.queue.slice()
       while(queue.length) {
         const logMessage = queue.shift();
         const level = logMessage[0];
         const message = logMessage.slice(1)
-        this.nativeCallback('log', { level: level, message: message });
+        this.send('log', { level: level, message: message });
       }
       setTimeout(syncQueue, 100);
     };

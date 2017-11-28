@@ -10,9 +10,9 @@ export enum StatusBarStyle {
   id: 'com.avocadojs.plugin.statusbar'
 })
 export class StatusBar extends Plugin {
-  constructor() { super(); }
 
   setStyle(options: { style: StatusBarStyle }, callback) {
-    this.nativeCallback('setStyle', options, callback);
+    this.send('setStyle', options, callback);
   }
+
 }

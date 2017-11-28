@@ -5,8 +5,13 @@ import { AvocadoPlugin, Plugin } from '../plugin';
   id: 'com.avocadojs.plugin.browser'
 })
 export class Browser extends Plugin {
-  constructor() { super(); }
+
   open(url: string) {
-    this.nativeCallback('open', { url });
+    if (this.avocado.isNative) {
+      return this.send('open', { url });
+    }
+
+    window.open(url);
   }
+
 }

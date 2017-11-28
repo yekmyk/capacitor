@@ -6,21 +6,17 @@ import {
   PluginResult,
   StoredPluginCall
 } from './definitions';
-
-import { Platform } from './platform';
 import { Plugin } from './plugin';
-
 import { Console } from './plugins/console';
 
-declare var window: any;
 
 /**
  * Main class for interacting with the Avocado runtime.
  */
 export class Avocado {
-  platform: Platform;
-
-  console: Console;
+  private console: Console;
+  private postToNative: (call: PluginCall) => void;
+  isNative = false;
 
   // Storage of calls for associating w/ native callback later
   private calls: { [key: string]: StoredPluginCall } = {}
@@ -29,10 +25,24 @@ export class Avocado {
 
   constructor() {
     // Load console plugin first to avoid race conditions
-
-    this.platform = new Platform();
-
     setTimeout(() => { this.loadCoreModules(); } )
+
+    const win: any = window;
+    if (win.avocadoBridge) {
+      this.postToNative = (data: any) => {
+        win.avocadoBridge.postMessage(data);
+      };
+      this.isNative = true;
+
+    } else if (win.webkit && win.webkit.messageHandlers && win.webkit.messageHandlers.bridge) {
+      this.postToNative = (data) => {
+        win.webkit.messageHandlers.bridge.postMessage({
+          type: 'message',
+          ...data
+        });
+      };
+      this.isNative = true;
+    }
   }
 
   private log(...args: any[]) {
@@ -40,7 +50,7 @@ export class Avocado {
     this.console && this.console.windowLog(args);
   }
 
-  loadCoreModules() {
+  private loadCoreModules() {
     //this.console = new Console();
   }
 
@@ -51,7 +61,7 @@ export class Avocado {
 
   /**
    * Send a plugin method call to the native layer.
-   * 
+   *
    * NO CONSOLE.LOG HERE, WILL CAUSE INFINITE LOOP WITH CONSOLE PLUGIN
    */
   toNative(call: PluginCall, caller: PluginCaller) {
@@ -62,27 +72,19 @@ export class Avocado {
     call.callbackId = callbackId;
 
     switch(call.callbackType) {
-      case undefined:
-        ret = this._toNativePromise(call, caller);
       case 'callback':
         if (typeof caller.callbackFunction !== 'function') {
           caller.callbackFunction = () => {}
         }
-        ret = this._toNativeCallback(call, caller);
+        this._toNativeCallback(call, caller);
         break;
-      case 'promise':
+
+      default:
+        // promise
         ret = this._toNativePromise(call, caller);
-      case 'observable':
-        break;
     }
 
-    //this.log('To native', call);
-
-    // Send this call to the native layer
-    window.webkit.messageHandlers.bridge.postMessage({
-      type: 'message',
-      ...call
-    });
+    this.postToNative(call);
 
     return ret;
   }
@@ -119,7 +121,7 @@ export class Avocado {
    */
   fromNative(result: PluginResult) {
     const storedCall = this.calls[result.callbackId];
-    
+
     const { call, callbackHandler } = storedCall;
 
     this._fromNativeCallback(result, storedCall);
@@ -130,7 +132,7 @@ export class Avocado {
 
     switch(storedCall.call.callbackType) {
       case 'promise': {
-        if(result.success === false) {
+        if (result.success === false) {
           callbackHandler.$reject(result.error);
         } else {
           callbackHandler.$resolve(result.data);
@@ -143,15 +145,6 @@ export class Avocado {
         }
       }
     }
-  }
-
-  /**
-   * @return whether or not we're running in a browser sandbox environment
-   * with no acces to native functionality (progressive web, desktop browser, etc).
-   */
-  isBrowser() {
-    // TODO: Make this generic
-    return !!!(<any>window).webkit;
   }
 
   /**

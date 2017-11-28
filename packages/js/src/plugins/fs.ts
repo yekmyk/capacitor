@@ -1,28 +1,14 @@
 import { AvocadoPlugin, Plugin } from '../plugin';
 
-declare var window;
-
-export enum FilesystemDirectory {
-  Application = 'APPLICATION',
-  Documents = 'DOCUMENTS',
-  Data = 'DATA',
-  Cache = 'CACHE',
-  External = 'EXTERNAL', // Android only
-  ExternalStorage = 'EXTERNAL_STORAGE' // Android only
-}
-
 
 @AvocadoPlugin({
   name: 'Filesystem',
   id: 'com.avocadojs.plugin.fs'
 })
 export class Filesystem extends Plugin {
-  constructor() {
-    super();
-  }
 
   writeFile(file: string, data: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.nativePromise('writeFile', {
+    return this.send('writeFile', {
       file,
       data,
       directory,
@@ -31,7 +17,7 @@ export class Filesystem extends Plugin {
   }
 
   appendFile(file: string, data: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.nativePromise('appendFile', {
+    return this.send('appendFile', {
       file,
       data,
       directory,
@@ -40,7 +26,7 @@ export class Filesystem extends Plugin {
   }
 
   readFile(file: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.nativePromise('readFile', {
+    return this.send('readFile', {
       file,
       directory,
       encoding
@@ -48,7 +34,7 @@ export class Filesystem extends Plugin {
   }
 
   mkdir(path: string, directory: FilesystemDirectory, createIntermediateDirectories: boolean = false) {
-    return this.nativePromise('mkdir', {
+    return this.send('mkdir', {
       path,
       directory,
       createIntermediateDirectories
@@ -56,23 +42,34 @@ export class Filesystem extends Plugin {
   }
 
   rmdir(path: string, directory: FilesystemDirectory) {
-    return this.nativePromise('rmdir', {
+    return this.send('rmdir', {
       path,
       directory
     });
   }
 
   readdir(path: string, directory: FilesystemDirectory) {
-    return this.nativePromise('readdir', {
+    return this.send('readdir', {
       path,
       directory
     });
   }
 
   stat(path: string, directory: FilesystemDirectory) {
-    return this.nativePromise('stat', {
+    return this.send('stat', {
       path,
       directory
     });
   }
+
+}
+
+
+export enum FilesystemDirectory {
+  Application = 'APPLICATION',
+  Documents = 'DOCUMENTS',
+  Data = 'DATA',
+  Cache = 'CACHE',
+  External = 'EXTERNAL', // Android only
+  ExternalStorage = 'EXTERNAL_STORAGE' // Android only
 }

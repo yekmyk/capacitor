@@ -5,11 +5,9 @@ import { AvocadoPlugin, Plugin } from '../plugin';
   id: 'com.avocadojs.plugin.network'
 })
 export class Network extends Plugin {
-  constructor() {
-    super();
-  }
 
   onStatusChange(callback) {
-    this.nativeCallback('onStatusChange', callback);
+    this.send('onStatusChange', callback);
   }
+
 }

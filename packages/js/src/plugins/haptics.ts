@@ -11,25 +11,24 @@ export enum HapticsImpactStyle {
   id: 'com.avocadojs.plugin.haptics'
 })
 export class Haptics extends Plugin {
-  constructor() { super(); }
 
   impact(options: { style: HapticsImpactStyle }) {
-    this.nativeCallback('impact', options);
+    this.send('impact', options);
   }
 
   vibrate() {
-    this.nativeCallback('vibrate');
+    this.send('vibrate');
   }
 
   selectionStart() {
-    this.nativeCallback('selectionStart');
+    this.send('selectionStart');
   }
 
   selectionChanged() {
-    this.nativeCallback('selectionChanged');
+    this.send('selectionChanged');
   }
 
   selectionEnd() {
-    this.nativeCallback('selectionEnd');
+    this.send('selectionEnd');
   }
 }

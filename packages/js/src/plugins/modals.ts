@@ -5,10 +5,9 @@ import { AvocadoPlugin, Plugin } from '../plugin';
   id: 'com.avocadojs.plugin.modals'
 })
 export class Modals extends Plugin {
-  constructor() { super(); }
 
   alert(title: string, message: string, buttonTitle: string) {
-    return this.nativePromise('alert', {
+    return this.send('alert', {
       title,
       message,
       buttonTitle
@@ -16,7 +15,7 @@ export class Modals extends Plugin {
   }
 
   prompt(title: string, message: string, buttonTitle: string) {
-    this.nativePromise('prompt', {
+    this.send('prompt', {
       title,
       message,
       buttonTitle
@@ -24,10 +23,11 @@ export class Modals extends Plugin {
   }
 
   confirm(title: string, message: string, buttonTitle: string) {
-    this.nativePromise('confirm', {
+    this.send('confirm', {
       title,
       message,
       buttonTitle
     });
   }
+
 }

@@ -5,13 +5,13 @@ import { AvocadoPlugin, Plugin } from '../plugin';
   id: 'com.avocadojs.plugin.splashscreen'
 })
 export class SplashScreen extends Plugin {
-  constructor() { super(); }
 
   show(options: {}, callback) {
-    this.nativeCallback('show', options, callback);
+    this.send('show', options, callback);
   }
 
   hide(options: {}, callback) {
-    this.nativeCallback('hide', options, callback);
+    this.send('hide', options, callback);
   }
+
 }

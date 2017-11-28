@@ -1,9 +1,3 @@
-var Platform = /** @class */ (function () {
-    function Platform() {
-    }
-    return Platform;
-}());
-
 var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -17,13 +11,26 @@ var __assign = (undefined && undefined.__assign) || Object.assign || function(t)
  */
 var Avocado = /** @class */ (function () {
     function Avocado() {
-        // Load console plugin first to avoid race conditions
         var _this = this;
+        this.isNative = false;
         // Storage of calls for associating w/ native callback later
         this.calls = {};
         this.callbackIdCount = 0;
-        this.platform = new Platform();
+        // Load console plugin first to avoid race conditions
         setTimeout(function () { _this.loadCoreModules(); });
+        var win = window;
+        if (win.avocadoBridge) {
+            this.postToNative = function (data) {
+                win.avocadoBridge.postMessage(data);
+            };
+            this.isNative = true;
+        }
+        else if (win.webkit && win.webkit.messageHandlers && win.webkit.messageHandlers.bridge) {
+            this.postToNative = function (data) {
+                win.webkit.messageHandlers.bridge.postMessage(__assign({ type: 'message' }, data));
+            };
+            this.isNative = true;
+        }
     }
     Avocado.prototype.log = function () {
         var args = [];
@@ -50,22 +57,17 @@ var Avocado = /** @class */ (function () {
         var callbackId = call.pluginId + ++this.callbackIdCount;
         call.callbackId = callbackId;
         switch (call.callbackType) {
-            case undefined:
-                ret = this._toNativePromise(call, caller);
             case 'callback':
                 if (typeof caller.callbackFunction !== 'function') {
                     caller.callbackFunction = function () { };
                 }
-                ret = this._toNativeCallback(call, caller);
+                this._toNativeCallback(call, caller);
                 break;
-            case 'promise':
+            default:
+                // promise
                 ret = this._toNativePromise(call, caller);
-            case 'observable':
-                break;
         }
-        //this.log('To native', call);
-        // Send this call to the native layer
-        window.webkit.messageHandlers.bridge.postMessage(__assign({ type: 'message' }, call));
+        this.postToNative(call);
         return ret;
     };
     Avocado.prototype._toNativeCallback = function (call, caller) {
@@ -116,14 +118,6 @@ var Avocado = /** @class */ (function () {
         }
     };
     /**
-     * @return whether or not we're running in a browser sandbox environment
-     * with no acces to native functionality (progressive web, desktop browser, etc).
-     */
-    Avocado.prototype.isBrowser = function () {
-        // TODO: Make this generic
-        return !!!window.webkit;
-    };
-    /**
      * @return the instance of Avocado
      */
     Avocado.instance = function () {
@@ -142,16 +136,16 @@ var Plugin = /** @class */ (function () {
     function Plugin() {
         this.avocado = Avocado.instance();
         this.avocado.registerPlugin(this);
+        this.isNative = this.avocado.isNative;
     }
-    Plugin.prototype.nativeCallback = function (method, options, callbackFunction, callOptions) {
-        if (typeof options === 'function') {
-            callbackFunction = options;
-            options = {};
+    Plugin.prototype.send = function (method, a, b) {
+        if (typeof a === 'function') {
+            return this.toPlugin(method, {}, 'callback', a);
         }
-        return this.native(method, options, 'callback', callbackFunction);
-    };
-    Plugin.prototype.nativePromise = function (method, options, callOptions) {
-        return this.native(method, options, 'promise', null, callOptions);
+        if (typeof b === 'function') {
+            return this.toPlugin(method, a || {}, 'callback', b);
+        }
+        return this.toPlugin(method, a || {}, 'promise', null);
     };
     /**
      * Call a native plugin method, or a web API fallback.
@@ -159,29 +153,30 @@ var Plugin = /** @class */ (function () {
      * NO CONSOLE LOGS IN THIS METHOD! Can throw our
      * custom console handler into an infinite loop
      */
-    Plugin.prototype.native = function (method, options, callbackType, callbackFunction, callOptions) {
-        var d = this.constructor.getPluginInfo();
-        // If avocado is running in a browser environment, call our
-        // web fallback
-        /*
-        if(this.avocado.isBrowser()) {
-          if(webFallback) {
-            return webFallback(options);
-          } else {
-            throw new Error('Tried calling a native plugin method in the browser but no web fallback is available.');
-          }
+    Plugin.prototype.toPlugin = function (methodName, options, callbackType, callbackFunction) {
+        var config = this.constructor.getPluginInfo();
+        if (this.avocado.isNative) {
+            return this.avocado.toNative({
+                pluginId: config.id,
+                methodName: methodName,
+                options: options,
+                callbackType: callbackType
+            }, {
+                callbackFunction: callbackFunction
+            });
         }
-        */
-        // Avocado is running in a non-sandbox browser environment, call
-        // the native code underneath
-        return this.avocado.toNative({
-            pluginId: d.id,
-            methodName: method,
-            options: options,
-            callbackType: callbackType
-        }, {
-            callbackFunction: callbackFunction
-        });
+        if (typeof config.browser !== 'function') {
+            console.warn("\"" + config.name + "\" browser plugin not found");
+            return Promise.resolve();
+        }
+        if (!this.browserPlugin) {
+            this.browserPlugin = new config.browser();
+        }
+        if (typeof this.browserPlugin[methodName] !== 'function') {
+            console.warn("\"" + config.name + "\" browser plugin missing \"" + methodName + "\" method");
+            return Promise.resolve();
+        }
+        return this.browserPlugin[methodName](options, callbackFunction);
     };
     return Plugin;
 }());
@@ -191,9 +186,7 @@ var Plugin = /** @class */ (function () {
 function AvocadoPlugin(config) {
     return function (cls) {
         cls['_avocadoPlugin'] = Object.assign({}, config);
-        cls['getPluginInfo'] = function () {
-            return cls['_avocadoPlugin'];
-        };
+        cls['getPluginInfo'] = function () { return cls['_avocadoPlugin']; };
         return cls;
     };
 }
@@ -217,10 +210,13 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 var Browser = /** @class */ (function (_super) {
     __extends(Browser, _super);
     function Browser() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Browser.prototype.open = function (url) {
-        this.nativeCallback('open', { url: url });
+        if (this.isNative) {
+            return this.send('open', { url: url });
+        }
+        window.open(url);
     };
     Browser = __decorate([
         AvocadoPlugin({
@@ -250,10 +246,10 @@ var __decorate$1 = (undefined && undefined.__decorate) || function (decorators, 
 var Camera = /** @class */ (function (_super) {
     __extends$1(Camera, _super);
     function Camera() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Camera.prototype.getPhoto = function (options) {
-        return this.nativePromise('getPhoto', options);
+        return this.send('getPhoto', options);
     };
     Camera = __decorate$1([
         AvocadoPlugin({
@@ -301,7 +297,7 @@ var Console = /** @class */ (function (_super) {
                 var logMessage = queue.shift();
                 var level = logMessage[0];
                 var message = logMessage.slice(1);
-                _this.nativeCallback('log', { level: level, message: message });
+                _this.send('log', { level: level, message: message });
             }
             setTimeout(syncQueue, 100);
         };
@@ -375,22 +371,43 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var DeviceBrowserPlugin = /** @class */ (function () {
+    function DeviceBrowserPlugin() {
+    }
+    DeviceBrowserPlugin.prototype.getInfo = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, {
+                        model: navigator.userAgent,
+                        platform: "browser",
+                        uuid: "",
+                        version: navigator.userAgent,
+                        manufacturer: navigator.userAgent,
+                        isVirtual: false,
+                        serial: ""
+                    }];
+            });
+        });
+    };
+    return DeviceBrowserPlugin;
+}());
 var Device = /** @class */ (function (_super) {
     __extends$3(Device, _super);
     function Device() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Device.prototype.getInfo = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, this.nativePromise('getInfo', {}, null)];
+                return [2 /*return*/, this.send('getInfo')];
             });
         });
     };
     Device = __decorate$3([
         AvocadoPlugin({
             name: 'Device',
-            id: 'com.avocadojs.plugin.device'
+            id: 'com.avocadojs.plugin.device',
+            browser: DeviceBrowserPlugin
         })
     ], Device);
     return Device;
@@ -412,23 +429,14 @@ var __decorate$4 = (undefined && undefined.__decorate) || function (decorators, 
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var FilesystemDirectory;
-(function (FilesystemDirectory) {
-    FilesystemDirectory["Application"] = "APPLICATION";
-    FilesystemDirectory["Documents"] = "DOCUMENTS";
-    FilesystemDirectory["Data"] = "DATA";
-    FilesystemDirectory["Cache"] = "CACHE";
-    FilesystemDirectory["External"] = "EXTERNAL";
-    FilesystemDirectory["ExternalStorage"] = "EXTERNAL_STORAGE"; // Android only
-})(FilesystemDirectory || (FilesystemDirectory = {}));
 var Filesystem = /** @class */ (function (_super) {
     __extends$4(Filesystem, _super);
     function Filesystem() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Filesystem.prototype.writeFile = function (file, data, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.nativePromise('writeFile', {
+        return this.send('writeFile', {
             file: file,
             data: data,
             directory: directory,
@@ -437,7 +445,7 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.appendFile = function (file, data, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.nativePromise('appendFile', {
+        return this.send('appendFile', {
             file: file,
             data: data,
             directory: directory,
@@ -446,7 +454,7 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.readFile = function (file, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.nativePromise('readFile', {
+        return this.send('readFile', {
             file: file,
             directory: directory,
             encoding: encoding
@@ -454,26 +462,26 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.mkdir = function (path, directory, createIntermediateDirectories) {
         if (createIntermediateDirectories === void 0) { createIntermediateDirectories = false; }
-        return this.nativePromise('mkdir', {
+        return this.send('mkdir', {
             path: path,
             directory: directory,
             createIntermediateDirectories: createIntermediateDirectories
         });
     };
     Filesystem.prototype.rmdir = function (path, directory) {
-        return this.nativePromise('rmdir', {
+        return this.send('rmdir', {
             path: path,
             directory: directory
         });
     };
     Filesystem.prototype.readdir = function (path, directory) {
-        return this.nativePromise('readdir', {
+        return this.send('readdir', {
             path: path,
             directory: directory
         });
     };
     Filesystem.prototype.stat = function (path, directory) {
-        return this.nativePromise('stat', {
+        return this.send('stat', {
             path: path,
             directory: directory
         });
@@ -486,6 +494,15 @@ var Filesystem = /** @class */ (function (_super) {
     ], Filesystem);
     return Filesystem;
 }(Plugin));
+var FilesystemDirectory;
+(function (FilesystemDirectory) {
+    FilesystemDirectory["Application"] = "APPLICATION";
+    FilesystemDirectory["Documents"] = "DOCUMENTS";
+    FilesystemDirectory["Data"] = "DATA";
+    FilesystemDirectory["Cache"] = "CACHE";
+    FilesystemDirectory["External"] = "EXTERNAL";
+    FilesystemDirectory["ExternalStorage"] = "EXTERNAL_STORAGE"; // Android only
+})(FilesystemDirectory || (FilesystemDirectory = {}));
 
 var __extends$5 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -538,46 +555,44 @@ var __generator$1 = (undefined && undefined.__generator) || function (thisArg, b
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var GeolocationBrowserPlugin = /** @class */ (function () {
+    function GeolocationBrowserPlugin() {
+    }
+    GeolocationBrowserPlugin.prototype.getCurrentPosition = function () {
+        console.log('Geolocation calling web fallback');
+        if (navigator.geolocation) {
+            return new Promise(function (resolve) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    resolve(position.coords);
+                });
+            });
+        }
+        return Promise.reject({
+            err: new Error('Geolocation is not supported by this browser.')
+        });
+    };
+    return GeolocationBrowserPlugin;
+}());
 var Geolocation = /** @class */ (function (_super) {
     __extends$5(Geolocation, _super);
     function Geolocation() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    Geolocation.prototype.doThingWithCallback = function (callback) {
-        return this.nativeCallback('doThing', {}, callback);
-    };
     Geolocation.prototype.getCurrentPosition = function () {
         return __awaiter$1(this, void 0, void 0, function () {
             return __generator$1(this, function (_a) {
-                return [2 /*return*/, this.nativePromise('getCurrentPosition', {
-                        someVar: 'yo'
-                    }, this.getLocationWeb.bind(this))];
+                return [2 /*return*/, this.send('getCurrentPosition')];
             });
         });
     };
     Geolocation.prototype.watchPosition = function (callback) {
-        return this.nativeCallback('watchPosition', {}, callback);
-    };
-    Geolocation.prototype.getLocationWeb = function () {
-        console.log('Geolocation calling web fallback');
-        if (navigator.geolocation) {
-            return new Promise(function (resolve, reject) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    resolve(position.coords);
-                    console.log(position);
-                });
-            });
-        }
-        else {
-            return Promise.reject({
-                err: new Error('Geolocation is not supported by this browser.')
-            });
-        }
+        this.send('watchPosition', callback);
     };
     Geolocation = __decorate$5([
         AvocadoPlugin({
             name: 'Geolocation',
-            id: 'com.avocadojs.plugin.geolocation'
+            id: 'com.avocadojs.plugin.geolocation',
+            browser: GeolocationBrowserPlugin
         })
     ], Geolocation);
     return Geolocation;
@@ -608,22 +623,22 @@ var HapticsImpactStyle;
 var Haptics = /** @class */ (function (_super) {
     __extends$6(Haptics, _super);
     function Haptics() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Haptics.prototype.impact = function (options) {
-        this.nativeCallback('impact', options);
+        this.send('impact', options);
     };
     Haptics.prototype.vibrate = function () {
-        this.nativeCallback('vibrate');
+        this.send('vibrate');
     };
     Haptics.prototype.selectionStart = function () {
-        this.nativeCallback('selectionStart');
+        this.send('selectionStart');
     };
     Haptics.prototype.selectionChanged = function () {
-        this.nativeCallback('selectionChanged');
+        this.send('selectionChanged');
     };
     Haptics.prototype.selectionEnd = function () {
-        this.nativeCallback('selectionEnd');
+        this.send('selectionEnd');
     };
     Haptics = __decorate$6([
         AvocadoPlugin({
@@ -653,24 +668,24 @@ var __decorate$7 = (undefined && undefined.__decorate) || function (decorators, 
 var Modals = /** @class */ (function (_super) {
     __extends$7(Modals, _super);
     function Modals() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Modals.prototype.alert = function (title, message, buttonTitle) {
-        return this.nativePromise('alert', {
+        return this.send('alert', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
         });
     };
     Modals.prototype.prompt = function (title, message, buttonTitle) {
-        this.nativePromise('prompt', {
+        this.send('prompt', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
         });
     };
     Modals.prototype.confirm = function (title, message, buttonTitle) {
-        this.nativePromise('confirm', {
+        this.send('confirm', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
@@ -704,10 +719,10 @@ var __decorate$8 = (undefined && undefined.__decorate) || function (decorators, 
 var Motion = /** @class */ (function (_super) {
     __extends$8(Motion, _super);
     function Motion() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Motion.prototype.watchAccel = function (callback) {
-        this.nativeCallback('watchAccel', callback);
+        this.send('watchAccel', callback);
     };
     Motion = __decorate$8([
         AvocadoPlugin({
@@ -737,10 +752,10 @@ var __decorate$9 = (undefined && undefined.__decorate) || function (decorators, 
 var Network = /** @class */ (function (_super) {
     __extends$9(Network, _super);
     function Network() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Network.prototype.onStatusChange = function (callback) {
-        this.nativeCallback('onStatusChange', callback);
+        this.send('onStatusChange', callback);
     };
     Network = __decorate$9([
         AvocadoPlugin({
@@ -770,13 +785,13 @@ var __decorate$10 = (undefined && undefined.__decorate) || function (decorators,
 var SplashScreen = /** @class */ (function (_super) {
     __extends$10(SplashScreen, _super);
     function SplashScreen() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     SplashScreen.prototype.show = function (options, callback) {
-        this.nativeCallback('show', options, callback);
+        this.send('show', options, callback);
     };
     SplashScreen.prototype.hide = function (options, callback) {
-        this.nativeCallback('hide', options, callback);
+        this.send('hide', options, callback);
     };
     SplashScreen = __decorate$10([
         AvocadoPlugin({
@@ -811,10 +826,10 @@ var StatusBarStyle;
 var StatusBar = /** @class */ (function (_super) {
     __extends$11(StatusBar, _super);
     function StatusBar() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     StatusBar.prototype.setStyle = function (options, callback) {
-        this.nativeCallback('setStyle', options, callback);
+        this.send('setStyle', options, callback);
     };
     StatusBar = __decorate$11([
         AvocadoPlugin({
@@ -825,4 +840,4 @@ var StatusBar = /** @class */ (function (_super) {
     return StatusBar;
 }(Plugin));
 
-export { Avocado, Platform, Plugin, AvocadoPlugin, Browser, Camera, Console, Device, Filesystem, FilesystemDirectory, Geolocation, Haptics, HapticsImpactStyle, Modals, Motion, Network, SplashScreen, StatusBar, StatusBarStyle };
+export { Avocado, Plugin, AvocadoPlugin, Browser, Camera, Console, Device, Filesystem, FilesystemDirectory, Geolocation, Haptics, HapticsImpactStyle, Modals, Motion, Network, SplashScreen, StatusBar, StatusBarStyle };

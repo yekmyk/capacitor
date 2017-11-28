@@ -6,16 +6,16 @@ var Plugin = /** @class */ (function () {
     function Plugin() {
         this.avocado = Avocado.instance();
         this.avocado.registerPlugin(this);
+        this.isNative = this.avocado.isNative;
     }
-    Plugin.prototype.nativeCallback = function (method, options, callbackFunction, callOptions) {
-        if (typeof options === 'function') {
-            callbackFunction = options;
-            options = {};
+    Plugin.prototype.send = function (method, a, b) {
+        if (typeof a === 'function') {
+            return this.toPlugin(method, {}, 'callback', a);
         }
-        return this.native(method, options, 'callback', callbackFunction);
-    };
-    Plugin.prototype.nativePromise = function (method, options, callOptions) {
-        return this.native(method, options, 'promise', null, callOptions);
+        if (typeof b === 'function') {
+            return this.toPlugin(method, a || {}, 'callback', b);
+        }
+        return this.toPlugin(method, a || {}, 'promise', null);
     };
     /**
      * Call a native plugin method, or a web API fallback.
@@ -23,29 +23,30 @@ var Plugin = /** @class */ (function () {
      * NO CONSOLE LOGS IN THIS METHOD! Can throw our
      * custom console handler into an infinite loop
      */
-    Plugin.prototype.native = function (method, options, callbackType, callbackFunction, callOptions) {
-        var d = this.constructor.getPluginInfo();
-        // If avocado is running in a browser environment, call our
-        // web fallback
-        /*
-        if(this.avocado.isBrowser()) {
-          if(webFallback) {
-            return webFallback(options);
-          } else {
-            throw new Error('Tried calling a native plugin method in the browser but no web fallback is available.');
-          }
+    Plugin.prototype.toPlugin = function (methodName, options, callbackType, callbackFunction) {
+        var config = this.constructor.getPluginInfo();
+        if (this.avocado.isNative) {
+            return this.avocado.toNative({
+                pluginId: config.id,
+                methodName: methodName,
+                options: options,
+                callbackType: callbackType
+            }, {
+                callbackFunction: callbackFunction
+            });
         }
-        */
-        // Avocado is running in a non-sandbox browser environment, call
-        // the native code underneath
-        return this.avocado.toNative({
-            pluginId: d.id,
-            methodName: method,
-            options: options,
-            callbackType: callbackType
-        }, {
-            callbackFunction: callbackFunction
-        });
+        if (typeof config.browser !== 'function') {
+            console.warn("\"" + config.name + "\" browser plugin not found");
+            return Promise.resolve();
+        }
+        if (!this.browserPlugin) {
+            this.browserPlugin = new config.browser();
+        }
+        if (typeof this.browserPlugin[methodName] !== 'function') {
+            console.warn("\"" + config.name + "\" browser plugin missing \"" + methodName + "\" method");
+            return Promise.resolve();
+        }
+        return this.browserPlugin[methodName](options, callbackFunction);
     };
     return Plugin;
 }());
@@ -56,9 +57,7 @@ export { Plugin };
 export function AvocadoPlugin(config) {
     return function (cls) {
         cls['_avocadoPlugin'] = Object.assign({}, config);
-        cls['getPluginInfo'] = function () {
-            return cls['_avocadoPlugin'];
-        };
+        cls['getPluginInfo'] = function () { return cls['_avocadoPlugin']; };
         return cls;
     };
 }

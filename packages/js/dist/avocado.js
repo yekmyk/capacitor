@@ -6,19 +6,31 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     }
     return t;
 };
-import { Platform } from './platform';
 /**
  * Main class for interacting with the Avocado runtime.
  */
 var Avocado = /** @class */ (function () {
     function Avocado() {
-        // Load console plugin first to avoid race conditions
         var _this = this;
+        this.isNative = false;
         // Storage of calls for associating w/ native callback later
         this.calls = {};
         this.callbackIdCount = 0;
-        this.platform = new Platform();
+        // Load console plugin first to avoid race conditions
         setTimeout(function () { _this.loadCoreModules(); });
+        var win = window;
+        if (win.avocadoBridge) {
+            this.postToNative = function (data) {
+                win.avocadoBridge.postMessage(data);
+            };
+            this.isNative = true;
+        }
+        else if (win.webkit && win.webkit.messageHandlers && win.webkit.messageHandlers.bridge) {
+            this.postToNative = function (data) {
+                win.webkit.messageHandlers.bridge.postMessage(__assign({ type: 'message' }, data));
+            };
+            this.isNative = true;
+        }
     }
     Avocado.prototype.log = function () {
         var args = [];
@@ -45,22 +57,17 @@ var Avocado = /** @class */ (function () {
         var callbackId = call.pluginId + ++this.callbackIdCount;
         call.callbackId = callbackId;
         switch (call.callbackType) {
-            case undefined:
-                ret = this._toNativePromise(call, caller);
             case 'callback':
                 if (typeof caller.callbackFunction !== 'function') {
                     caller.callbackFunction = function () { };
                 }
-                ret = this._toNativeCallback(call, caller);
+                this._toNativeCallback(call, caller);
                 break;
-            case 'promise':
+            default:
+                // promise
                 ret = this._toNativePromise(call, caller);
-            case 'observable':
-                break;
         }
-        //this.log('To native', call);
-        // Send this call to the native layer
-        window.webkit.messageHandlers.bridge.postMessage(__assign({ type: 'message' }, call));
+        this.postToNative(call);
         return ret;
     };
     Avocado.prototype._toNativeCallback = function (call, caller) {
@@ -109,14 +116,6 @@ var Avocado = /** @class */ (function () {
                 }
             }
         }
-    };
-    /**
-     * @return whether or not we're running in a browser sandbox environment
-     * with no acces to native functionality (progressive web, desktop browser, etc).
-     */
-    Avocado.prototype.isBrowser = function () {
-        // TODO: Make this generic
-        return !!!window.webkit;
     };
     /**
      * @return the instance of Avocado

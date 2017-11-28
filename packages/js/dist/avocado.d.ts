@@ -1,18 +1,17 @@
 import { PluginCaller, PluginCall, PluginResult } from './definitions';
-import { Platform } from './platform';
 import { Plugin } from './plugin';
-import { Console } from './plugins/console';
 /**
  * Main class for interacting with the Avocado runtime.
  */
 export declare class Avocado {
-    platform: Platform;
-    console: Console;
+    private console;
+    private postToNative;
+    isNative: boolean;
     private calls;
     private callbackIdCount;
     constructor();
     private log(...args);
-    loadCoreModules(): void;
+    private loadCoreModules();
     registerPlugin(plugin: Plugin): void;
     /**
      * Send a plugin method call to the native layer.
@@ -28,11 +27,6 @@ export declare class Avocado {
      */
     fromNative(result: PluginResult): void;
     private _fromNativeCallback(result, storedCall);
-    /**
-     * @return whether or not we're running in a browser sandbox environment
-     * with no acces to native functionality (progressive web, desktop browser, etc).
-     */
-    isBrowser(): boolean;
     /**
      * @return the instance of Avocado
      */

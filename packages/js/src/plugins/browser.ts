@@ -7,7 +7,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class Browser extends Plugin {
 
   open(url: string) {
-    if (this.avocado.isNative) {
+    if (this.isNative) {
       return this.send('open', { url });
     }
 

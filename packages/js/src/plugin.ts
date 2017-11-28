@@ -5,12 +5,14 @@ import { AvocadoPluginConfig, PluginCallback } from './definitions';
  * Base class for all 3rd party plugins.
  */
 export class Plugin {
-  avocado: Avocado;
+  private avocado: Avocado;
   private browserPlugin: any;
+  isNative: boolean;
 
   constructor() {
     this.avocado = Avocado.instance();
     this.avocado.registerPlugin(this);
+    this.isNative = this.avocado.isNative;
   }
 
   send(method: string): Promise<any>;

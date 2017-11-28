@@ -13,22 +13,22 @@ export enum HapticsImpactStyle {
 export class Haptics extends Plugin {
 
   impact(options: { style: HapticsImpactStyle }) {
-    this.send('impact', options);
+    this.nativeCallback('impact', options);
   }
 
   vibrate() {
-    this.send('vibrate');
+    this.nativeCallback('vibrate');
   }
 
   selectionStart() {
-    this.send('selectionStart');
+    this.nativeCallback('selectionStart');
   }
 
   selectionChanged() {
-    this.send('selectionChanged');
+    this.nativeCallback('selectionChanged');
   }
 
   selectionEnd() {
-    this.send('selectionEnd');
+    this.nativeCallback('selectionEnd');
   }
 }

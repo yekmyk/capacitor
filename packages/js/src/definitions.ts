@@ -1,6 +1,4 @@
 export type PluginCallback = (error: PluginResultError, data: PluginResultData) => void;
-// TODO: Get more complex custom promise type
-export type PluginCallbackHandler = PluginCallback | any;
 
 /**
  * Data that won't be sent to the native layer
@@ -21,15 +19,18 @@ export interface PluginCall {
 
   callbackId?: string;
 
-  callbackFunction?: Function;
-
-  // The type of callback we want
-  callbackType?: string;//"callback" | "promise" | "observable";
+  callbackFunction?: PluginCallback;
+  callbackResolve?: Function;
+  callbackReject?: Function;
 }
 
-export interface StoredPluginCall {
+export interface StoredPluginCall_ {
   call: PluginCall;
-  callbackHandler: PluginCallbackHandler;
+  callbackHandler: {
+    callback?: PluginCallback;
+    resolve?: Function;
+    reject?: Function;
+  }
 }
 
 export interface PluginResultData {
@@ -43,10 +44,9 @@ export interface PluginResultError {
  * A resulting call back from the native layer.
  */
 export interface PluginResult {
-  pluginId: string;
+  callbackId?: string;
   methodName: string;
   data: PluginResultData;
-  callbackId?: string;
   success: boolean;
   error?: PluginResultError;
 }
@@ -58,5 +58,4 @@ export interface NativePostMessage {
 export interface AvocadoPluginConfig {
   id: string;
   name: string;
-  browser?: any;
 }

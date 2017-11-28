@@ -12,7 +12,7 @@ export enum StatusBarStyle {
 export class StatusBar extends Plugin {
 
   setStyle(options: { style: StatusBarStyle }, callback) {
-    this.send('setStyle', options, callback);
+    this.nativeCallback('setStyle', options, callback);
   }
 
 }

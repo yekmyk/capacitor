@@ -8,7 +8,7 @@ export class Browser extends Plugin {
 
   open(url: string) {
     if (this.isNative) {
-      return this.send('open', { url });
+      this.nativeCallback('open', { url });
     }
 
     window.open(url);

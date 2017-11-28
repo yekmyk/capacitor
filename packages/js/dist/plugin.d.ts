@@ -4,22 +4,15 @@ import { AvocadoPluginConfig, PluginCallback } from './definitions';
  */
 export declare class Plugin {
     private avocado;
-    private browserPlugin;
     isNative: boolean;
     constructor();
-    send(method: string): Promise<any>;
-    send(method: string, callback: PluginCallback): void;
-    send(method: string, callback: Function): void;
-    send(method: string, options?: any): Promise<any>;
-    send(method: string, options: any, callback: PluginCallback): void;
-    send(method: string, options: any, callback: Function): void;
-    /**
-     * Call a native plugin method, or a web API fallback.
-     *
-     * NO CONSOLE LOGS IN THIS METHOD! Can throw our
-     * custom console handler into an infinite loop
-     */
-    private toPlugin(methodName, options, callbackType, callbackFunction?);
+    nativeCallback(methodName: string, callback?: PluginCallback): any;
+    nativeCallback(methodName: string, callback?: Function): any;
+    nativeCallback(methodName: string, options?: any): any;
+    nativeCallback(methodName: string, options?: any, callback?: PluginCallback): any;
+    nativeCallback(methodName: string, options?: any, callback?: Function): any;
+    nativePromise(methodName: string, options?: any): Promise<{}>;
+    pluginId(): string;
 }
 /**
  * Decorator for AvocadoPlugin's

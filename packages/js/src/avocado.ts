@@ -1,10 +1,8 @@
 import {
   PluginCallback,
-  PluginCallbackHandler,
   PluginCaller,
   PluginCall,
-  PluginResult,
-  StoredPluginCall
+  PluginResult
 } from './definitions';
 import { Plugin } from './plugin';
 import { Console } from './plugins/console';
@@ -19,14 +17,11 @@ export class Avocado {
   isNative = false;
 
   // Storage of calls for associating w/ native callback later
-  private calls: { [key: string]: StoredPluginCall } = {}
+  private calls: { [key: string]: PluginCall } = {}
 
   private callbackIdCount = 0;
 
   constructor() {
-    // Load console plugin first to avoid race conditions
-    setTimeout(() => { this.loadCoreModules(); } )
-
     const win: any = window;
     if (win.avocadoBridge) {
       this.postToNative = (data: any) => {
@@ -43,6 +38,9 @@ export class Avocado {
       };
       this.isNative = true;
     }
+
+    // Load console plugin first to avoid race conditions
+    setTimeout(() => { this.loadCoreModules(); } )
   }
 
   private log(...args: any[]) {
@@ -54,65 +52,27 @@ export class Avocado {
     //this.console = new Console();
   }
 
-  registerPlugin(plugin: Plugin) {
-    let info = (<any>plugin).constructor.getPluginInfo();
-    this.log('Registering plugin', info);
-  }
-
   /**
    * Send a plugin method call to the native layer.
    *
    * NO CONSOLE.LOG HERE, WILL CAUSE INFINITE LOOP WITH CONSOLE PLUGIN
    */
-  toNative(call: PluginCall, caller: PluginCaller) {
-    let ret;
+  toNative(call: PluginCall) {
+    if (this.isNative) {
+      // create a unique id for this callback
+      call.callbackId = call.pluginId + ++this.callbackIdCount;
 
-    let callbackId = call.pluginId + ++this.callbackIdCount;
+      // always send at least an empty obj
+      call.options = call.options || {};
 
-    call.callbackId = callbackId;
+      // store the call for later lookup
+      this.calls[call.callbackId] = call;
 
-    switch(call.callbackType) {
-      case 'callback':
-        if (typeof caller.callbackFunction !== 'function') {
-          caller.callbackFunction = () => {}
-        }
-        this._toNativeCallback(call, caller);
-        break;
+      // post the call data to native
+      this.postToNative(call);
 
-      default:
-        // promise
-        ret = this._toNativePromise(call, caller);
-    }
-
-    this.postToNative(call);
-
-    return ret;
-  }
-
-  private _toNativeCallback(call: PluginCall, caller: PluginCaller) {
-    this._saveCallback(call, caller.callbackFunction);
-  }
-
-  private _toNativePromise(call: PluginCall, caller: PluginCaller) {
-    let promiseCall: any = {};
-
-    let promise = new Promise((resolve, reject) => {
-      promiseCall['$resolve'] = resolve;
-      promiseCall['$reject'] = reject;
-    });
-
-    promiseCall['$promise'] = promise;
-
-    this._saveCallback(call, promiseCall);
-
-    return promise;
-  }
-
-  private _saveCallback(call: PluginCall, callbackHandler: PluginCallbackHandler) {
-    call.callbackId = call.callbackId;
-    this.calls[call.callbackId] = {
-      call,
-      callbackHandler
+    } else {
+      console.warn(`browser implementation unavailable for: ${call.pluginId}`);
     }
   }
 
@@ -120,31 +80,50 @@ export class Avocado {
    * Process a response from the native layer.
    */
   fromNative(result: PluginResult) {
+    // get the stored call
     const storedCall = this.calls[result.callbackId];
 
-    const { call, callbackHandler } = storedCall;
+    if (!storedCall) {
+      // oopps, this shouldn't happen, something's up
+      console.error(`stored callback not found: ${result.callbackId}`);
 
-    this._fromNativeCallback(result, storedCall);
-  }
-
-  private _fromNativeCallback(result: PluginResult, storedCall: StoredPluginCall) {
-    const { call, callbackHandler } = storedCall;
-
-    switch(storedCall.call.callbackType) {
-      case 'promise': {
-        if (result.success === false) {
-          callbackHandler.$reject(result.error);
-        } else {
-          callbackHandler.$resolve(result.data);
-        }
-        break;
+    } else if (typeof storedCall.callbackFunction === 'function') {
+      // callback
+      // if nativeCallback was used, but wasn't passed a callback function
+      // then this gets skipped over, which is good
+      // do not remove this call from stored calls cuz it could be used again
+      if (result.success) {
+        storedCall.callbackFunction(null, result.data);
+      } else {
+        storedCall.callbackFunction(result.error, null);
       }
-      case 'callback': {
-        if(typeof callbackHandler == 'function') {
-          result.success ? callbackHandler(null, result.data) : callbackHandler(result.error, null);
-        }
+
+    } else if (typeof storedCall.callbackResolve === 'function') {
+      // promise
+      // promises will always resolve and reject functions
+      if (result.success) {
+        storedCall.callbackResolve(result.data);
+      } else {
+        storedCall.callbackReject(result.error);
       }
+
+      // no need to keep this call around for a one time resolve promise
+      delete this.calls[result.callbackId];
+
+    } else {
+      if (!result.success && result.error) {
+        // no callback, so if there was an error let's log it
+        console.error(result.error.message);
+      }
+
+      // no need to keep this call around if there is no callback
+      delete this.calls[result.callbackId];
     }
+
+    // always delete to prevent memory leaks
+    // overkill but we're not sure what apps will do with this data
+    delete result.data;
+    delete result.error;
   }
 
   /**

@@ -8,7 +8,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class Camera extends Plugin {
 
   getPhoto(options: CameraOptions) {
-    return this.send('getPhoto', options);
+    return this.nativePromise('getPhoto', options);
   }
 
 }

@@ -1,5 +1,4 @@
 export declare type PluginCallback = (error: PluginResultError, data: PluginResultData) => void;
-export declare type PluginCallbackHandler = PluginCallback | any;
 /**
  * Data that won't be sent to the native layer
  * from the caller. For example, a callback function
@@ -16,12 +15,17 @@ export interface PluginCall {
     methodName: string;
     options: any;
     callbackId?: string;
-    callbackFunction?: Function;
-    callbackType?: string;
+    callbackFunction?: PluginCallback;
+    callbackResolve?: Function;
+    callbackReject?: Function;
 }
-export interface StoredPluginCall {
+export interface StoredPluginCall_ {
     call: PluginCall;
-    callbackHandler: PluginCallbackHandler;
+    callbackHandler: {
+        callback?: PluginCallback;
+        resolve?: Function;
+        reject?: Function;
+    };
 }
 export interface PluginResultData {
     [key: string]: any;
@@ -33,10 +37,9 @@ export interface PluginResultError {
  * A resulting call back from the native layer.
  */
 export interface PluginResult {
-    pluginId: string;
+    callbackId?: string;
     methodName: string;
     data: PluginResultData;
-    callbackId?: string;
     success: boolean;
     error?: PluginResultError;
 }
@@ -46,5 +49,4 @@ export interface NativePostMessage {
 export interface AvocadoPluginConfig {
     id: string;
     name: string;
-    browser?: any;
 }

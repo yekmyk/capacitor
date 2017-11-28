@@ -1,73 +1,56 @@
 import { Avocado } from './avocado';
-import { AvocadoPluginConfig, PluginCallback } from './definitions';
+import { AvocadoPluginConfig, PluginCall, PluginCallback } from './definitions';
 
 /**
  * Base class for all 3rd party plugins.
  */
 export class Plugin {
   private avocado: Avocado;
-  private browserPlugin: any;
   isNative: boolean;
 
   constructor() {
     this.avocado = Avocado.instance();
-    this.avocado.registerPlugin(this);
     this.isNative = this.avocado.isNative;
   }
 
-  send(method: string): Promise<any>;
-  send(method: string, callback: PluginCallback): void;
-  send(method: string, callback: Function): void;
-  send(method: string, options?: any): Promise<any>;
-  send(method: string, options: any, callback: PluginCallback): void;
-  send(method: string, options: any, callback: Function): void;
-  send(method: string, a?: any, b?: any) {
-    if (typeof a === 'function') {
-      return this.toPlugin(method, {}, 'callback', a);
-    }
-    if (typeof b === 'function') {
-      return this.toPlugin(method, a || {}, 'callback', b);
+  nativeCallback(methodName: string, callback?: PluginCallback)
+  nativeCallback(methodName: string, callback?: Function)
+  nativeCallback(methodName: string, options?: any)
+  nativeCallback(methodName: string, options?: any, callback?: PluginCallback)
+  nativeCallback(methodName: string, options?: any, callback?: Function)
+  nativeCallback(methodName: string, options?: any, callback?: any) {
+    if (typeof options === 'function') {
+      // 2nd arg was a function
+      // so it's the callback, not options
+      callback = options;
+      options = {};
     }
 
-    return this.toPlugin(method, a || {}, 'promise', null);
+    this.avocado.toNative({
+      pluginId: this.pluginId(),
+      methodName: methodName,
+      options: options,
+      callbackFunction: callback
+    });
   }
 
-  /**
-   * Call a native plugin method, or a web API fallback.
-   *
-   * NO CONSOLE LOGS IN THIS METHOD! Can throw our
-   * custom console handler into an infinite loop
-   */
-  private toPlugin(methodName: any, options: any, callbackType: string, callbackFunction?: PluginCallback) {
-    const config: AvocadoPluginConfig = (this as any).constructor.getPluginInfo();
-
-    if (this.avocado.isNative) {
-      return this.avocado.toNative({
-        pluginId: config.id,
+  nativePromise(methodName: string, options?: any) {
+    return new Promise((resolve, reject) => {
+      this.avocado.toNative({
+        pluginId: this.pluginId(),
         methodName: methodName,
         options: options,
-        callbackType: callbackType
-      }, {
-        callbackFunction: callbackFunction
+        callbackResolve: resolve,
+        callbackReject: reject
       });
-    }
-
-    if (typeof config.browser !== 'function') {
-      console.warn(`"${config.name}" browser plugin not found`);
-      return Promise.resolve();
-    }
-
-    if (!this.browserPlugin) {
-      this.browserPlugin = new config.browser();
-    }
-
-    if (typeof this.browserPlugin[methodName] !== 'function') {
-      console.warn(`"${config.name}" browser plugin missing "${methodName}" method`);
-      return Promise.resolve();
-    }
-
-    return this.browserPlugin[methodName](options, callbackFunction);
+    });
   }
+
+  pluginId() {
+    const config: AvocadoPluginConfig = (this as any).constructor.getPluginInfo();
+    return config.id;
+  }
+
 }
 
 /**

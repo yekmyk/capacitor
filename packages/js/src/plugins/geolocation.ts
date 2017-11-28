@@ -1,10 +1,16 @@
 import { AvocadoPlugin, Plugin } from '../plugin';
+import { PluginCallback } from '../definitions';
 
-
-export class GeolocationBrowserPlugin {
+@AvocadoPlugin({
+  name: 'Geolocation',
+  id: 'com.avocadojs.plugin.geolocation'
+})
+export class Geolocation extends Plugin {
 
   getCurrentPosition() {
-    console.log('Geolocation calling web fallback');
+    if (this.isNative) {
+      return this.nativePromise('getCurrentPosition');
+    }
 
     if (navigator.geolocation) {
       return new Promise(resolve => {
@@ -15,26 +21,26 @@ export class GeolocationBrowserPlugin {
     }
 
     return Promise.reject({
-      err: new Error('Geolocation is not supported by this browser.')
+      err: new Error(`Geolocation is not supported by this browser.`)
     });
   }
 
-}
+  watchPosition(callback: PluginCallback) {
+    if (this.isNative) {
+      this.nativeCallback('watchPosition', callback);
 
+    } else if (navigator.geolocation) {
+      const successCallback = (position: Position) => {
+        callback(null, position.coords);
+      }
+      const errorCallback = (error: PositionError) => {
+        callback(error, null);
+      }
+      navigator.geolocation.watchPosition(successCallback, errorCallback);
 
-@AvocadoPlugin({
-  name: 'Geolocation',
-  id: 'com.avocadojs.plugin.geolocation',
-  browser: GeolocationBrowserPlugin
-})
-export class Geolocation extends Plugin {
-
-  async getCurrentPosition() {
-    return this.send('getCurrentPosition');
-  }
-
-  watchPosition(callback: Function) {
-    this.send('watchPosition', callback);
+    } else {
+      console.warn(`Geolocation is not supported by this browser.`);
+    }
   }
 
 }

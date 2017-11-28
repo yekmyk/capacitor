@@ -8,7 +8,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class LocalNotifications extends Plugin {
 
   schedule(notification: LocalNotification) {
-    return this.send('schedule', notification);
+    return this.nativePromise('schedule', notification);
   }
 
 }

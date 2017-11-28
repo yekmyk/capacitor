@@ -7,7 +7,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class Network extends Plugin {
 
   onStatusChange(callback) {
-    this.send('onStatusChange', callback);
+    this.nativeCallback('onStatusChange', callback);
   }
 
 }

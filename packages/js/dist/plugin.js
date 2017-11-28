@@ -5,48 +5,37 @@ import { Avocado } from './avocado';
 var Plugin = /** @class */ (function () {
     function Plugin() {
         this.avocado = Avocado.instance();
-        this.avocado.registerPlugin(this);
         this.isNative = this.avocado.isNative;
     }
-    Plugin.prototype.send = function (method, a, b) {
-        if (typeof a === 'function') {
-            return this.toPlugin(method, {}, 'callback', a);
+    Plugin.prototype.nativeCallback = function (methodName, options, callback) {
+        if (typeof options === 'function') {
+            // 2nd arg was a function
+            // so it's the callback, not options
+            callback = options;
+            options = {};
         }
-        if (typeof b === 'function') {
-            return this.toPlugin(method, a || {}, 'callback', b);
-        }
-        return this.toPlugin(method, a || {}, 'promise', null);
+        this.avocado.toNative({
+            pluginId: this.pluginId(),
+            methodName: methodName,
+            options: options,
+            callbackFunction: callback
+        });
     };
-    /**
-     * Call a native plugin method, or a web API fallback.
-     *
-     * NO CONSOLE LOGS IN THIS METHOD! Can throw our
-     * custom console handler into an infinite loop
-     */
-    Plugin.prototype.toPlugin = function (methodName, options, callbackType, callbackFunction) {
-        var config = this.constructor.getPluginInfo();
-        if (this.avocado.isNative) {
-            return this.avocado.toNative({
-                pluginId: config.id,
+    Plugin.prototype.nativePromise = function (methodName, options) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.avocado.toNative({
+                pluginId: _this.pluginId(),
                 methodName: methodName,
                 options: options,
-                callbackType: callbackType
-            }, {
-                callbackFunction: callbackFunction
+                callbackResolve: resolve,
+                callbackReject: reject
             });
-        }
-        if (typeof config.browser !== 'function') {
-            console.warn("\"" + config.name + "\" browser plugin not found");
-            return Promise.resolve();
-        }
-        if (!this.browserPlugin) {
-            this.browserPlugin = new config.browser();
-        }
-        if (typeof this.browserPlugin[methodName] !== 'function') {
-            console.warn("\"" + config.name + "\" browser plugin missing \"" + methodName + "\" method");
-            return Promise.resolve();
-        }
-        return this.browserPlugin[methodName](options, callbackFunction);
+        });
+    };
+    Plugin.prototype.pluginId = function () {
+        var config = this.constructor.getPluginInfo();
+        return config.id;
     };
     return Plugin;
 }());

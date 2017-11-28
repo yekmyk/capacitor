@@ -13,8 +13,6 @@ export class Console extends Plugin {
   constructor() {
     super();
 
-    const self = this;
-
     this.originalLog = window.console.log;
 
     window.console.log = (...args) => {
@@ -29,7 +27,7 @@ export class Console extends Plugin {
         const logMessage = queue.shift();
         const level = logMessage[0];
         const message = logMessage.slice(1)
-        this.send('log', { level: level, message: message });
+        this.nativeCallback('log', { level: level, message: message });
       }
       setTimeout(syncQueue, 100);
     };

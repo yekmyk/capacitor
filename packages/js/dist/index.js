@@ -16,8 +16,6 @@ var Avocado = /** @class */ (function () {
         // Storage of calls for associating w/ native callback later
         this.calls = {};
         this.callbackIdCount = 0;
-        // Load console plugin first to avoid race conditions
-        setTimeout(function () { _this.loadCoreModules(); });
         var win = window;
         if (win.avocadoBridge) {
             this.postToNative = function (data) {
@@ -31,6 +29,8 @@ var Avocado = /** @class */ (function () {
             };
             this.isNative = true;
         }
+        // Load console plugin first to avoid race conditions
+        setTimeout(function () { _this.loadCoreModules(); });
     }
     Avocado.prototype.log = function () {
         var args = [];
@@ -43,79 +43,72 @@ var Avocado = /** @class */ (function () {
     Avocado.prototype.loadCoreModules = function () {
         //this.console = new Console();
     };
-    Avocado.prototype.registerPlugin = function (plugin) {
-        var info = plugin.constructor.getPluginInfo();
-        this.log('Registering plugin', info);
-    };
     /**
      * Send a plugin method call to the native layer.
      *
      * NO CONSOLE.LOG HERE, WILL CAUSE INFINITE LOOP WITH CONSOLE PLUGIN
      */
-    Avocado.prototype.toNative = function (call, caller) {
-        var ret;
-        var callbackId = call.pluginId + ++this.callbackIdCount;
-        call.callbackId = callbackId;
-        switch (call.callbackType) {
-            case 'callback':
-                if (typeof caller.callbackFunction !== 'function') {
-                    caller.callbackFunction = function () { };
-                }
-                this._toNativeCallback(call, caller);
-                break;
-            default:
-                // promise
-                ret = this._toNativePromise(call, caller);
+    Avocado.prototype.toNative = function (call) {
+        if (this.isNative) {
+            // create a unique id for this callback
+            call.callbackId = call.pluginId + ++this.callbackIdCount;
+            // always send at least an empty obj
+            call.options = call.options || {};
+            // store the call for later lookup
+            this.calls[call.callbackId] = call;
+            // post the call data to native
+            this.postToNative(call);
         }
-        this.postToNative(call);
-        return ret;
-    };
-    Avocado.prototype._toNativeCallback = function (call, caller) {
-        this._saveCallback(call, caller.callbackFunction);
-    };
-    Avocado.prototype._toNativePromise = function (call, caller) {
-        var promiseCall = {};
-        var promise = new Promise(function (resolve, reject) {
-            promiseCall['$resolve'] = resolve;
-            promiseCall['$reject'] = reject;
-        });
-        promiseCall['$promise'] = promise;
-        this._saveCallback(call, promiseCall);
-        return promise;
-    };
-    Avocado.prototype._saveCallback = function (call, callbackHandler) {
-        call.callbackId = call.callbackId;
-        this.calls[call.callbackId] = {
-            call: call,
-            callbackHandler: callbackHandler
-        };
+        else {
+            console.warn("browser implementation unavailable for: " + call.pluginId);
+        }
     };
     /**
      * Process a response from the native layer.
      */
     Avocado.prototype.fromNative = function (result) {
+        // get the stored call
         var storedCall = this.calls[result.callbackId];
-        var call = storedCall.call, callbackHandler = storedCall.callbackHandler;
-        this._fromNativeCallback(result, storedCall);
-    };
-    Avocado.prototype._fromNativeCallback = function (result, storedCall) {
-        var call = storedCall.call, callbackHandler = storedCall.callbackHandler;
-        switch (storedCall.call.callbackType) {
-            case 'promise': {
-                if (result.success === false) {
-                    callbackHandler.$reject(result.error);
-                }
-                else {
-                    callbackHandler.$resolve(result.data);
-                }
-                break;
+        if (!storedCall) {
+            // oopps, this shouldn't happen, something's up
+            console.error("stored callback not found: " + result.callbackId);
+        }
+        else if (typeof storedCall.callbackFunction === 'function') {
+            // callback
+            // if nativeCallback was used, but wasn't passed a callback function
+            // then this gets skipped over, which is good
+            // do not remove this call from stored calls cuz it could be used again
+            if (result.success) {
+                storedCall.callbackFunction(null, result.data);
             }
-            case 'callback': {
-                if (typeof callbackHandler == 'function') {
-                    result.success ? callbackHandler(null, result.data) : callbackHandler(result.error, null);
-                }
+            else {
+                storedCall.callbackFunction(result.error, null);
             }
         }
+        else if (typeof storedCall.callbackResolve === 'function') {
+            // promise
+            // promises will always resolve and reject functions
+            if (result.success) {
+                storedCall.callbackResolve(result.data);
+            }
+            else {
+                storedCall.callbackReject(result.error);
+            }
+            // no need to keep this call around for a one time resolve promise
+            delete this.calls[result.callbackId];
+        }
+        else {
+            if (!result.success && result.error) {
+                // no callback, so if there was an error let's log it
+                console.error(result.error.message);
+            }
+            // no need to keep this call around if there is no callback
+            delete this.calls[result.callbackId];
+        }
+        // always delete to prevent memory leaks
+        // overkill but we're not sure what apps will do with this data
+        delete result.data;
+        delete result.error;
     };
     /**
      * @return the instance of Avocado
@@ -135,48 +128,37 @@ var Avocado = /** @class */ (function () {
 var Plugin = /** @class */ (function () {
     function Plugin() {
         this.avocado = Avocado.instance();
-        this.avocado.registerPlugin(this);
         this.isNative = this.avocado.isNative;
     }
-    Plugin.prototype.send = function (method, a, b) {
-        if (typeof a === 'function') {
-            return this.toPlugin(method, {}, 'callback', a);
+    Plugin.prototype.nativeCallback = function (methodName, options, callback) {
+        if (typeof options === 'function') {
+            // 2nd arg was a function
+            // so it's the callback, not options
+            callback = options;
+            options = {};
         }
-        if (typeof b === 'function') {
-            return this.toPlugin(method, a || {}, 'callback', b);
-        }
-        return this.toPlugin(method, a || {}, 'promise', null);
+        this.avocado.toNative({
+            pluginId: this.pluginId(),
+            methodName: methodName,
+            options: options,
+            callbackFunction: callback
+        });
     };
-    /**
-     * Call a native plugin method, or a web API fallback.
-     *
-     * NO CONSOLE LOGS IN THIS METHOD! Can throw our
-     * custom console handler into an infinite loop
-     */
-    Plugin.prototype.toPlugin = function (methodName, options, callbackType, callbackFunction) {
-        var config = this.constructor.getPluginInfo();
-        if (this.avocado.isNative) {
-            return this.avocado.toNative({
-                pluginId: config.id,
+    Plugin.prototype.nativePromise = function (methodName, options) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.avocado.toNative({
+                pluginId: _this.pluginId(),
                 methodName: methodName,
                 options: options,
-                callbackType: callbackType
-            }, {
-                callbackFunction: callbackFunction
+                callbackResolve: resolve,
+                callbackReject: reject
             });
-        }
-        if (typeof config.browser !== 'function') {
-            console.warn("\"" + config.name + "\" browser plugin not found");
-            return Promise.resolve();
-        }
-        if (!this.browserPlugin) {
-            this.browserPlugin = new config.browser();
-        }
-        if (typeof this.browserPlugin[methodName] !== 'function') {
-            console.warn("\"" + config.name + "\" browser plugin missing \"" + methodName + "\" method");
-            return Promise.resolve();
-        }
-        return this.browserPlugin[methodName](options, callbackFunction);
+        });
+    };
+    Plugin.prototype.pluginId = function () {
+        var config = this.constructor.getPluginInfo();
+        return config.id;
     };
     return Plugin;
 }());
@@ -214,7 +196,7 @@ var Browser = /** @class */ (function (_super) {
     }
     Browser.prototype.open = function (url) {
         if (this.isNative) {
-            return this.send('open', { url: url });
+            this.nativeCallback('open', { url: url });
         }
         window.open(url);
     };
@@ -249,7 +231,7 @@ var Camera = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Camera.prototype.getPhoto = function (options) {
-        return this.send('getPhoto', options);
+        return this.nativePromise('getPhoto', options);
     };
     Camera = __decorate$1([
         AvocadoPlugin({
@@ -297,7 +279,7 @@ var Console = /** @class */ (function (_super) {
                 var logMessage = queue.shift();
                 var level = logMessage[0];
                 var message = logMessage.slice(1);
-                _this.send('log', { level: level, message: message });
+                _this.nativeCallback('log', { level: level, message: message });
             }
             setTimeout(syncQueue, 100);
         };
@@ -336,78 +318,29 @@ var __decorate$3 = (undefined && undefined.__decorate) || function (decorators, 
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var DeviceBrowserPlugin = /** @class */ (function () {
-    function DeviceBrowserPlugin() {
-    }
-    DeviceBrowserPlugin.prototype.getInfo = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, {
-                        model: navigator.userAgent,
-                        platform: "browser",
-                        uuid: "",
-                        version: navigator.userAgent,
-                        manufacturer: navigator.userAgent,
-                        isVirtual: false,
-                        serial: ""
-                    }];
-            });
-        });
-    };
-    return DeviceBrowserPlugin;
-}());
 var Device = /** @class */ (function (_super) {
     __extends$3(Device, _super);
     function Device() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Device.prototype.getInfo = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, this.send('getInfo')];
-            });
+        if (this.isNative) {
+            return this.nativePromise('getInfo');
+        }
+        return Promise.resolve({
+            model: navigator.userAgent,
+            platform: 'browser',
+            uuid: '',
+            version: navigator.userAgent,
+            manufacturer: navigator.userAgent,
+            isVirtual: false,
+            serial: ''
         });
     };
     Device = __decorate$3([
         AvocadoPlugin({
             name: 'Device',
-            id: 'com.avocadojs.plugin.device',
-            browser: DeviceBrowserPlugin
+            id: 'com.avocadojs.plugin.device'
         })
     ], Device);
     return Device;
@@ -436,7 +369,7 @@ var Filesystem = /** @class */ (function (_super) {
     }
     Filesystem.prototype.writeFile = function (file, data, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.send('writeFile', {
+        return this.nativePromise('writeFile', {
             file: file,
             data: data,
             directory: directory,
@@ -445,7 +378,7 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.appendFile = function (file, data, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.send('appendFile', {
+        return this.nativePromise('appendFile', {
             file: file,
             data: data,
             directory: directory,
@@ -454,7 +387,7 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.readFile = function (file, directory, encoding) {
         if (encoding === void 0) { encoding = 'utf8'; }
-        return this.send('readFile', {
+        return this.nativePromise('readFile', {
             file: file,
             directory: directory,
             encoding: encoding
@@ -462,26 +395,26 @@ var Filesystem = /** @class */ (function (_super) {
     };
     Filesystem.prototype.mkdir = function (path, directory, createIntermediateDirectories) {
         if (createIntermediateDirectories === void 0) { createIntermediateDirectories = false; }
-        return this.send('mkdir', {
+        return this.nativePromise('mkdir', {
             path: path,
             directory: directory,
             createIntermediateDirectories: createIntermediateDirectories
         });
     };
     Filesystem.prototype.rmdir = function (path, directory) {
-        return this.send('rmdir', {
+        return this.nativePromise('rmdir', {
             path: path,
             directory: directory
         });
     };
     Filesystem.prototype.readdir = function (path, directory) {
-        return this.send('readdir', {
+        return this.nativePromise('readdir', {
             path: path,
             directory: directory
         });
     };
     Filesystem.prototype.stat = function (path, directory) {
-        return this.send('stat', {
+        return this.nativePromise('stat', {
             path: path,
             directory: directory
         });
@@ -520,46 +453,15 @@ var __decorate$5 = (undefined && undefined.__decorate) || function (decorators, 
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __awaiter$1 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$1 = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+var Geolocation = /** @class */ (function (_super) {
+    __extends$5(Geolocation, _super);
+    function Geolocation() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-};
-var GeolocationBrowserPlugin = /** @class */ (function () {
-    function GeolocationBrowserPlugin() {
-    }
-    GeolocationBrowserPlugin.prototype.getCurrentPosition = function () {
-        console.log('Geolocation calling web fallback');
+    Geolocation.prototype.getCurrentPosition = function () {
+        if (this.isNative) {
+            return this.nativePromise('getCurrentPosition');
+        }
         if (navigator.geolocation) {
             return new Promise(function (resolve) {
                 navigator.geolocation.getCurrentPosition(function (position) {
@@ -568,31 +470,30 @@ var GeolocationBrowserPlugin = /** @class */ (function () {
             });
         }
         return Promise.reject({
-            err: new Error('Geolocation is not supported by this browser.')
-        });
-    };
-    return GeolocationBrowserPlugin;
-}());
-var Geolocation = /** @class */ (function (_super) {
-    __extends$5(Geolocation, _super);
-    function Geolocation() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    Geolocation.prototype.getCurrentPosition = function () {
-        return __awaiter$1(this, void 0, void 0, function () {
-            return __generator$1(this, function (_a) {
-                return [2 /*return*/, this.send('getCurrentPosition')];
-            });
+            err: new Error("Geolocation is not supported by this browser.")
         });
     };
     Geolocation.prototype.watchPosition = function (callback) {
-        this.send('watchPosition', callback);
+        if (this.isNative) {
+            this.nativeCallback('watchPosition', callback);
+        }
+        else if (navigator.geolocation) {
+            var successCallback = function (position) {
+                callback(null, position.coords);
+            };
+            var errorCallback = function (error) {
+                callback(error, null);
+            };
+            navigator.geolocation.watchPosition(successCallback, errorCallback);
+        }
+        else {
+            console.warn("Geolocation is not supported by this browser.");
+        }
     };
     Geolocation = __decorate$5([
         AvocadoPlugin({
             name: 'Geolocation',
-            id: 'com.avocadojs.plugin.geolocation',
-            browser: GeolocationBrowserPlugin
+            id: 'com.avocadojs.plugin.geolocation'
         })
     ], Geolocation);
     return Geolocation;
@@ -626,19 +527,19 @@ var Haptics = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Haptics.prototype.impact = function (options) {
-        this.send('impact', options);
+        this.nativeCallback('impact', options);
     };
     Haptics.prototype.vibrate = function () {
-        this.send('vibrate');
+        this.nativeCallback('vibrate');
     };
     Haptics.prototype.selectionStart = function () {
-        this.send('selectionStart');
+        this.nativeCallback('selectionStart');
     };
     Haptics.prototype.selectionChanged = function () {
-        this.send('selectionChanged');
+        this.nativeCallback('selectionChanged');
     };
     Haptics.prototype.selectionEnd = function () {
-        this.send('selectionEnd');
+        this.nativeCallback('selectionEnd');
     };
     Haptics = __decorate$6([
         AvocadoPlugin({
@@ -671,7 +572,7 @@ var LocalNotifications = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     LocalNotifications.prototype.schedule = function (notification) {
-        return this.send('schedule', notification);
+        return this.nativePromise('schedule', notification);
     };
     LocalNotifications = __decorate$7([
         AvocadoPlugin({
@@ -704,21 +605,21 @@ var Modals = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Modals.prototype.alert = function (title, message, buttonTitle) {
-        return this.send('alert', {
+        return this.nativePromise('alert', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
         });
     };
     Modals.prototype.prompt = function (title, message, buttonTitle) {
-        this.send('prompt', {
+        this.nativePromise('prompt', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
         });
     };
     Modals.prototype.confirm = function (title, message, buttonTitle) {
-        this.send('confirm', {
+        this.nativePromise('confirm', {
             title: title,
             message: message,
             buttonTitle: buttonTitle
@@ -755,7 +656,7 @@ var Motion = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Motion.prototype.watchAccel = function (callback) {
-        this.send('watchAccel', callback);
+        this.nativeCallback('watchAccel', callback);
     };
     Motion = __decorate$9([
         AvocadoPlugin({
@@ -788,7 +689,7 @@ var Network = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Network.prototype.onStatusChange = function (callback) {
-        this.send('onStatusChange', callback);
+        this.nativeCallback('onStatusChange', callback);
     };
     Network = __decorate$10([
         AvocadoPlugin({
@@ -821,10 +722,10 @@ var SplashScreen = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     SplashScreen.prototype.show = function (options, callback) {
-        this.send('show', options, callback);
+        this.nativeCallback('show', options, callback);
     };
     SplashScreen.prototype.hide = function (options, callback) {
-        this.send('hide', options, callback);
+        this.nativeCallback('hide', options, callback);
     };
     SplashScreen = __decorate$11([
         AvocadoPlugin({
@@ -862,7 +763,7 @@ var StatusBar = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     StatusBar.prototype.setStyle = function (options, callback) {
-        this.send('setStyle', options, callback);
+        this.nativeCallback('setStyle', options, callback);
     };
     StatusBar = __decorate$12([
         AvocadoPlugin({

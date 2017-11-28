@@ -1,30 +1,24 @@
 import { AvocadoPlugin, Plugin } from '../plugin';
 
 
-export class DeviceBrowserPlugin {
+@AvocadoPlugin({
+  name: 'Device',
+  id: 'com.avocadojs.plugin.device'
+})
+export class Device extends Plugin {
+  getInfo() {
+    if (this.isNative) {
+      return this.nativePromise('getInfo');
+    }
 
-  async getInfo() {
-    return {
+    return Promise.resolve({
       model: navigator.userAgent,
-      platform: "browser",
-      uuid: "",
+      platform: 'browser',
+      uuid: '',
       version: navigator.userAgent,
       manufacturer: navigator.userAgent,
       isVirtual: false,
-      serial: ""
-    };
-  }
-
-}
-
-
-@AvocadoPlugin({
-  name: 'Device',
-  id: 'com.avocadojs.plugin.device',
-  browser: DeviceBrowserPlugin
-})
-export class Device extends Plugin {
-  async getInfo() {
-    return this.send('getInfo');
+      serial: ''
+    });
   }
 }

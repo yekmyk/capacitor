@@ -7,7 +7,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class Motion extends Plugin {
 
   watchAccel(callback) {
-    this.send('watchAccel', callback);
+    this.nativeCallback('watchAccel', callback);
   }
 
 }

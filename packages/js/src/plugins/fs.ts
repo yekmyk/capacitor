@@ -8,7 +8,7 @@ import { AvocadoPlugin, Plugin } from '../plugin';
 export class Filesystem extends Plugin {
 
   writeFile(file: string, data: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.send('writeFile', {
+    return this.nativePromise('writeFile', {
       file,
       data,
       directory,
@@ -17,7 +17,7 @@ export class Filesystem extends Plugin {
   }
 
   appendFile(file: string, data: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.send('appendFile', {
+    return this.nativePromise('appendFile', {
       file,
       data,
       directory,
@@ -26,7 +26,7 @@ export class Filesystem extends Plugin {
   }
 
   readFile(file: string, directory: FilesystemDirectory, encoding: string = 'utf8') {
-    return this.send('readFile', {
+    return this.nativePromise('readFile', {
       file,
       directory,
       encoding
@@ -34,7 +34,7 @@ export class Filesystem extends Plugin {
   }
 
   mkdir(path: string, directory: FilesystemDirectory, createIntermediateDirectories: boolean = false) {
-    return this.send('mkdir', {
+    return this.nativePromise('mkdir', {
       path,
       directory,
       createIntermediateDirectories
@@ -42,21 +42,21 @@ export class Filesystem extends Plugin {
   }
 
   rmdir(path: string, directory: FilesystemDirectory) {
-    return this.send('rmdir', {
+    return this.nativePromise('rmdir', {
       path,
       directory
     });
   }
 
   readdir(path: string, directory: FilesystemDirectory) {
-    return this.send('readdir', {
+    return this.nativePromise('readdir', {
       path,
       directory
     });
   }
 
   stat(path: string, directory: FilesystemDirectory) {
-    return this.send('stat', {
+    return this.nativePromise('stat', {
       path,
       directory
     });

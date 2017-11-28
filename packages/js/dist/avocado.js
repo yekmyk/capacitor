@@ -16,8 +16,6 @@ var Avocado = /** @class */ (function () {
         // Storage of calls for associating w/ native callback later
         this.calls = {};
         this.callbackIdCount = 0;
-        // Load console plugin first to avoid race conditions
-        setTimeout(function () { _this.loadCoreModules(); });
         var win = window;
         if (win.avocadoBridge) {
             this.postToNative = function (data) {
@@ -31,6 +29,8 @@ var Avocado = /** @class */ (function () {
             };
             this.isNative = true;
         }
+        // Load console plugin first to avoid race conditions
+        setTimeout(function () { _this.loadCoreModules(); });
     }
     Avocado.prototype.log = function () {
         var args = [];
@@ -43,79 +43,72 @@ var Avocado = /** @class */ (function () {
     Avocado.prototype.loadCoreModules = function () {
         //this.console = new Console();
     };
-    Avocado.prototype.registerPlugin = function (plugin) {
-        var info = plugin.constructor.getPluginInfo();
-        this.log('Registering plugin', info);
-    };
     /**
      * Send a plugin method call to the native layer.
      *
      * NO CONSOLE.LOG HERE, WILL CAUSE INFINITE LOOP WITH CONSOLE PLUGIN
      */
-    Avocado.prototype.toNative = function (call, caller) {
-        var ret;
-        var callbackId = call.pluginId + ++this.callbackIdCount;
-        call.callbackId = callbackId;
-        switch (call.callbackType) {
-            case 'callback':
-                if (typeof caller.callbackFunction !== 'function') {
-                    caller.callbackFunction = function () { };
-                }
-                this._toNativeCallback(call, caller);
-                break;
-            default:
-                // promise
-                ret = this._toNativePromise(call, caller);
+    Avocado.prototype.toNative = function (call) {
+        if (this.isNative) {
+            // create a unique id for this callback
+            call.callbackId = call.pluginId + ++this.callbackIdCount;
+            // always send at least an empty obj
+            call.options = call.options || {};
+            // store the call for later lookup
+            this.calls[call.callbackId] = call;
+            // post the call data to native
+            this.postToNative(call);
         }
-        this.postToNative(call);
-        return ret;
-    };
-    Avocado.prototype._toNativeCallback = function (call, caller) {
-        this._saveCallback(call, caller.callbackFunction);
-    };
-    Avocado.prototype._toNativePromise = function (call, caller) {
-        var promiseCall = {};
-        var promise = new Promise(function (resolve, reject) {
-            promiseCall['$resolve'] = resolve;
-            promiseCall['$reject'] = reject;
-        });
-        promiseCall['$promise'] = promise;
-        this._saveCallback(call, promiseCall);
-        return promise;
-    };
-    Avocado.prototype._saveCallback = function (call, callbackHandler) {
-        call.callbackId = call.callbackId;
-        this.calls[call.callbackId] = {
-            call: call,
-            callbackHandler: callbackHandler
-        };
+        else {
+            console.warn("browser implementation unavailable for: " + call.pluginId);
+        }
     };
     /**
      * Process a response from the native layer.
      */
     Avocado.prototype.fromNative = function (result) {
+        // get the stored call
         var storedCall = this.calls[result.callbackId];
-        var call = storedCall.call, callbackHandler = storedCall.callbackHandler;
-        this._fromNativeCallback(result, storedCall);
-    };
-    Avocado.prototype._fromNativeCallback = function (result, storedCall) {
-        var call = storedCall.call, callbackHandler = storedCall.callbackHandler;
-        switch (storedCall.call.callbackType) {
-            case 'promise': {
-                if (result.success === false) {
-                    callbackHandler.$reject(result.error);
-                }
-                else {
-                    callbackHandler.$resolve(result.data);
-                }
-                break;
+        if (!storedCall) {
+            // oopps, this shouldn't happen, something's up
+            console.error("stored callback not found: " + result.callbackId);
+        }
+        else if (typeof storedCall.callbackFunction === 'function') {
+            // callback
+            // if nativeCallback was used, but wasn't passed a callback function
+            // then this gets skipped over, which is good
+            // do not remove this call from stored calls cuz it could be used again
+            if (result.success) {
+                storedCall.callbackFunction(null, result.data);
             }
-            case 'callback': {
-                if (typeof callbackHandler == 'function') {
-                    result.success ? callbackHandler(null, result.data) : callbackHandler(result.error, null);
-                }
+            else {
+                storedCall.callbackFunction(result.error, null);
             }
         }
+        else if (typeof storedCall.callbackResolve === 'function') {
+            // promise
+            // promises will always resolve and reject functions
+            if (result.success) {
+                storedCall.callbackResolve(result.data);
+            }
+            else {
+                storedCall.callbackReject(result.error);
+            }
+            // no need to keep this call around for a one time resolve promise
+            delete this.calls[result.callbackId];
+        }
+        else {
+            if (!result.success && result.error) {
+                // no callback, so if there was an error let's log it
+                console.error(result.error.message);
+            }
+            // no need to keep this call around if there is no callback
+            delete this.calls[result.callbackId];
+        }
+        // always delete to prevent memory leaks
+        // overkill but we're not sure what apps will do with this data
+        delete result.data;
+        delete result.error;
     };
     /**
      * @return the instance of Avocado

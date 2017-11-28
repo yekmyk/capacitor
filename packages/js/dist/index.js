@@ -668,10 +668,10 @@ var __decorate$7 = (undefined && undefined.__decorate) || function (decorators, 
 var LocalNotifications = /** @class */ (function (_super) {
     __extends$7(LocalNotifications, _super);
     function LocalNotifications() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     LocalNotifications.prototype.schedule = function (notification) {
-        return this.nativePromise('schedule', notification);
+        return this.send('schedule', notification);
     };
     LocalNotifications = __decorate$7([
         AvocadoPlugin({

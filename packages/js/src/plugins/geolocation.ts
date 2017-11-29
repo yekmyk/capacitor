@@ -24,13 +24,13 @@ export class Geolocation extends Plugin {
     });
   }
 
-  watchPosition(callback: Function) {
+  watchPosition(callback: GeolocationWatchCallback) {
     if (this.isNative) {
       this.nativeCallback('watchPosition', callback);
 
     } else if (navigator.geolocation) {
       const successCallback = (position: Position) => {
-        callback(null, position.coords);
+        callback(null, position);
       }
       const errorCallback = (error: PositionError) => {
         callback(error, null);
@@ -51,3 +51,5 @@ export interface GeolocationPositon {
     longitude: number;
   }
 }
+
+export type GeolocationWatchCallback = (err: any, position: GeolocationPositon) => void;

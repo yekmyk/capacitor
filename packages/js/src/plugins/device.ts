@@ -1,11 +1,13 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+
 @NativePlugin({
   name: 'Device',
   id: 'com.avocadojs.plugin.device'
 })
 export class Device extends Plugin {
-  getInfo() {
+
+  getInfo(): Promise<DeviceInfo> {
     if (this.isNative) {
       return this.nativePromise('getInfo');
     }
@@ -20,4 +22,15 @@ export class Device extends Plugin {
       serial: ''
     });
   }
+
+}
+
+export interface DeviceInfo {
+  model: string;
+  platform: string;
+  uuid: string;
+  version: string;
+  manufacturer: string;
+  isVirtual: boolean;
+  serial: string;
 }

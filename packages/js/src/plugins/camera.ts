@@ -19,7 +19,6 @@ export interface CameraOptions {
   allowEditing?: boolean;
 }
 
-
 export interface CameraPhoto {
   base64_data: string;
   format: string;

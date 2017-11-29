@@ -6,9 +6,9 @@ import { NativePlugin, Plugin } from '../plugin';
   id: 'com.avocadojs.plugin.console'
 })
 export class Console extends Plugin {
-  queue: any[] = [];
+  private queue: any[] = [];
 
-  originalLog: Function;
+  private originalLog: Function;
 
   constructor() {
     super();

@@ -1,10 +1,5 @@
 import { NativePlugin, Plugin } from '../plugin';
 
-export enum HapticsImpactStyle {
-  Heavy = 'HEAVY',
-  Medium = 'MEDIUM',
-  Light = 'LIGHT'
-}
 
 @NativePlugin({
   name: 'Haptics',
@@ -31,4 +26,11 @@ export class Haptics extends Plugin {
   selectionEnd() {
     this.nativeCallback('selectionEnd');
   }
+}
+
+
+export enum HapticsImpactStyle {
+  Heavy = 'HEAVY',
+  Medium = 'MEDIUM',
+  Light = 'LIGHT'
 }

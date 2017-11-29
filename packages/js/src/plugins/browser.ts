@@ -1,5 +1,6 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+
 @NativePlugin({
   name: 'Browser',
   id: 'com.avocadojs.plugin.browser'

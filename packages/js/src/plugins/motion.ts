@@ -1,5 +1,6 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+
 @NativePlugin({
   name: 'Motion',
   id: 'com.avocadojs.plugin.motion'

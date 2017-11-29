@@ -1,5 +1,6 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+
 @NativePlugin({
   name: 'Geolocation',
   id: 'com.avocadojs.plugin.geolocation'

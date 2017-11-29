@@ -1,9 +1,5 @@
 import { NativePlugin, Plugin } from '../plugin';
 
-export enum StatusBarStyle {
-  Dark = 'DARK',
-  Light = 'LIGHT'
-}
 
 @NativePlugin({
   name: 'StatusBar',
@@ -15,4 +11,10 @@ export class StatusBar extends Plugin {
     this.nativeCallback('setStyle', options, callback);
   }
 
+}
+
+
+export enum StatusBarStyle {
+  Dark = 'DARK',
+  Light = 'LIGHT'
 }

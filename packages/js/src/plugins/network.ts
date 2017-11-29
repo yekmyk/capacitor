@@ -19,4 +19,4 @@ export interface NetworkStatus {
   connectionType: string;
 }
 
-export type NetworkStatusChangeCallback = (err: any, status: NetworkStatus);
+export type NetworkStatusChangeCallback = (err: any, status: NetworkStatus) => void;

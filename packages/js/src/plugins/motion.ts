@@ -7,8 +7,17 @@ import { NativePlugin, Plugin } from '../plugin';
 })
 export class Motion extends Plugin {
 
-  watchAccel(callback) {
+  watchAccel(callback: MotionWatchAccelCallback) {
     this.nativeCallback('watchAccel', callback);
   }
 
 }
+
+
+export interface MotionAccel {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export type MotionWatchAccelCallback = (err: any, accel: MotionAccel) => void;

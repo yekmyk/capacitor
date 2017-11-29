@@ -1,5 +1,6 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+
 @NativePlugin({
   name: 'Modals',
   id: 'com.avocadojs.plugin.modals'

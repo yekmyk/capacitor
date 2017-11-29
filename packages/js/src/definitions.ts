@@ -1,3 +1,12 @@
+
+export interface PluginResultData {
+  [key: string]: any;
+}
+
+export interface PluginResultError {
+  message: string;
+}
+
 export type PluginCallback = (error: PluginResultError, data: PluginResultData) => void;
 
 /**
@@ -24,22 +33,6 @@ export interface PluginCall {
   callbackReject?: Function;
 }
 
-export interface StoredPluginCall_ {
-  call: PluginCall;
-  callbackHandler: {
-    callback?: PluginCallback;
-    resolve?: Function;
-    reject?: Function;
-  }
-}
-
-export interface PluginResultData {
-  [key: string]: any;
-}
-
-export interface PluginResultError {
-  message: string;
-}
 /**
  * A resulting call back from the native layer.
  */
@@ -51,11 +44,7 @@ export interface PluginResult {
   error?: PluginResultError;
 }
 
-export interface NativePostMessage {
-  (call: PluginCall, caller: PluginCaller): void;
-}
-
-export interface AvocadoPluginConfig {
+export interface PluginConfig {
   id: string;
   name: string;
 }

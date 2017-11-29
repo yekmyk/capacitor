@@ -1,5 +1,5 @@
 import { Avocado } from './avocado';
-import { AvocadoPluginConfig, PluginCall, PluginCallback } from './definitions';
+import { PluginConfig, PluginCall, PluginCallback } from './definitions';
 
 /**
  * Base class for all 3rd party plugins.
@@ -47,16 +47,16 @@ export class Plugin {
   }
 
   pluginId() {
-    const config: AvocadoPluginConfig = (this as any).constructor.getPluginInfo();
+    const config: PluginConfig = (this as any).constructor.getPluginInfo();
     return config.id;
   }
 
 }
 
 /**
- * Decorator for AvocadoPlugin's
+ * Plugin Decorator
  */
-export function NativePlugin(config: AvocadoPluginConfig) {
+export function NativePlugin(config: PluginConfig) {
   return function(cls: any) {
     cls['_avocadoPlugin'] = Object.assign({}, config);
     cls['getPluginInfo'] = () => cls['_avocadoPlugin'];

@@ -15,7 +15,7 @@ export class Console extends Plugin {
 
     this.originalLog = window.console.log;
 
-    window.console.log = (...args) => {
+    window.console.log = (...args: any[]) => {
       //const str = args.map(a => a.toString()).join(' ');
       this.queue.push(['log', ...args]);
       this.originalLog.apply(console, args);
@@ -34,7 +34,7 @@ export class Console extends Plugin {
     setTimeout(syncQueue);
   }
 
-  windowLog(...args) {
+  windowLog(...args: any[]) {
     this.originalLog.apply(this.originalLog, args);
   }
 }

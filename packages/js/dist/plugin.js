@@ -50,3 +50,4 @@ export function NativePlugin(config) {
         return cls;
     };
 }
+//# sourceMappingURL=plugin.js.map

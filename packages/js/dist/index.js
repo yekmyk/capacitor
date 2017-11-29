@@ -261,7 +261,7 @@ var __decorate$2 = (undefined && undefined.__decorate) || function (decorators, 
 var Clipboard = /** @class */ (function (_super) {
     __extends$2(Clipboard, _super);
     function Clipboard() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     Clipboard.prototype.set = function (options) {
         return this.nativePromise('set', options);
@@ -515,7 +515,7 @@ var Geolocation = /** @class */ (function (_super) {
         }
         else if (navigator.geolocation) {
             var successCallback = function (position) {
-                callback(null, position.coords);
+                callback(null, position);
             };
             var errorCallback = function (error) {
                 callback(error, null);
@@ -551,12 +551,6 @@ var __decorate$7 = (undefined && undefined.__decorate) || function (decorators, 
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var HapticsImpactStyle;
-(function (HapticsImpactStyle) {
-    HapticsImpactStyle["Heavy"] = "HEAVY";
-    HapticsImpactStyle["Medium"] = "MEDIUM";
-    HapticsImpactStyle["Light"] = "LIGHT";
-})(HapticsImpactStyle || (HapticsImpactStyle = {}));
 var Haptics = /** @class */ (function (_super) {
     __extends$7(Haptics, _super);
     function Haptics() {
@@ -585,6 +579,12 @@ var Haptics = /** @class */ (function (_super) {
     ], Haptics);
     return Haptics;
 }(Plugin));
+var HapticsImpactStyle;
+(function (HapticsImpactStyle) {
+    HapticsImpactStyle["Heavy"] = "HEAVY";
+    HapticsImpactStyle["Medium"] = "MEDIUM";
+    HapticsImpactStyle["Light"] = "LIGHT";
+})(HapticsImpactStyle || (HapticsImpactStyle = {}));
 
 var __extends$8 = (undefined && undefined.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -788,11 +788,6 @@ var __decorate$13 = (undefined && undefined.__decorate) || function (decorators,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var StatusBarStyle;
-(function (StatusBarStyle) {
-    StatusBarStyle["Dark"] = "DARK";
-    StatusBarStyle["Light"] = "LIGHT";
-})(StatusBarStyle || (StatusBarStyle = {}));
 var StatusBar = /** @class */ (function (_super) {
     __extends$13(StatusBar, _super);
     function StatusBar() {
@@ -809,5 +804,10 @@ var StatusBar = /** @class */ (function (_super) {
     ], StatusBar);
     return StatusBar;
 }(Plugin));
+var StatusBarStyle;
+(function (StatusBarStyle) {
+    StatusBarStyle["Dark"] = "DARK";
+    StatusBarStyle["Light"] = "LIGHT";
+})(StatusBarStyle || (StatusBarStyle = {}));
 
 export { Avocado, Plugin, NativePlugin, Browser, Camera, Clipboard, Console, Device, Filesystem, FilesystemDirectory, Geolocation, Haptics, HapticsImpactStyle, LocalNotifications, Modals, Motion, Network, SplashScreen, StatusBar, StatusBarStyle };

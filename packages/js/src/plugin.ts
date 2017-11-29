@@ -13,12 +13,12 @@ export class Plugin {
     this.isNative = this.avocado.isNative;
   }
 
-  nativeCallback(methodName: string, callback?: PluginCallback)
-  nativeCallback(methodName: string, callback?: Function)
-  nativeCallback(methodName: string, options?: any)
-  nativeCallback(methodName: string, options?: any, callback?: PluginCallback)
-  nativeCallback(methodName: string, options?: any, callback?: Function)
-  nativeCallback(methodName: string, options?: any, callback?: any) {
+  nativeCallback(methodName: string, callback?: PluginCallback): void;
+  nativeCallback(methodName: string, callback?: Function): void;
+  nativeCallback(methodName: string, options?: any): void;
+  nativeCallback(methodName: string, options?: any, callback?: PluginCallback): void;
+  nativeCallback(methodName: string, options?: any, callback?: Function): void;
+  nativeCallback(methodName: string, options?: any, callback?: any): void {
     if (typeof options === 'function') {
       // 2nd arg was a function
       // so it's the callback, not options

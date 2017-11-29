@@ -6,11 +6,11 @@ export declare class Plugin {
     private avocado;
     isNative: boolean;
     constructor();
-    nativeCallback(methodName: string, callback?: PluginCallback): any;
-    nativeCallback(methodName: string, callback?: Function): any;
-    nativeCallback(methodName: string, options?: any): any;
-    nativeCallback(methodName: string, options?: any, callback?: PluginCallback): any;
-    nativeCallback(methodName: string, options?: any, callback?: Function): any;
+    nativeCallback(methodName: string, callback?: PluginCallback): void;
+    nativeCallback(methodName: string, callback?: Function): void;
+    nativeCallback(methodName: string, options?: any): void;
+    nativeCallback(methodName: string, options?: any, callback?: PluginCallback): void;
+    nativeCallback(methodName: string, options?: any, callback?: Function): void;
     nativePromise(methodName: string, options?: any): Promise<any>;
     pluginId(): string;
 }

@@ -6,7 +6,7 @@ import { NativePlugin, Plugin } from '../plugin';
 })
 export class Geolocation extends Plugin {
 
-  getCurrentPosition() {
+  getCurrentPosition(): Promise<GeolocationPositon> {
     if (this.isNative) {
       return this.nativePromise('getCurrentPosition');
     }
@@ -14,7 +14,7 @@ export class Geolocation extends Plugin {
     if (navigator.geolocation) {
       return new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(position => {
-          resolve(position.coords);
+          resolve(position);
         });
       });
     }
@@ -42,4 +42,12 @@ export class Geolocation extends Plugin {
     }
   }
 
+}
+
+
+export interface GeolocationPositon {
+  coords: {
+    latitude: number;
+    longitude: number;
+  }
 }

@@ -11,7 +11,7 @@ export declare class Plugin {
     nativeCallback(methodName: string, options?: any): any;
     nativeCallback(methodName: string, options?: any, callback?: PluginCallback): any;
     nativeCallback(methodName: string, options?: any, callback?: Function): any;
-    nativePromise(methodName: string, options?: any): Promise<{}>;
+    nativePromise(methodName: string, options?: any): Promise<any>;
     pluginId(): string;
 }
 /**

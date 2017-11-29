@@ -501,7 +501,7 @@ var Geolocation = /** @class */ (function (_super) {
         if (navigator.geolocation) {
             return new Promise(function (resolve) {
                 navigator.geolocation.getCurrentPosition(function (position) {
-                    resolve(position.coords);
+                    resolve(position);
                 });
             });
         }

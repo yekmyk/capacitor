@@ -7,7 +7,7 @@ import { NativePlugin, Plugin } from '../plugin';
 })
 export class Camera extends Plugin {
 
-  getPhoto(options: CameraOptions) {
+  getPhoto(options: CameraOptions): Promise<CameraPhoto> {
     return this.nativePromise('getPhoto', options);
   }
 
@@ -17,4 +17,10 @@ export class Camera extends Plugin {
 export interface CameraOptions {
   quality?: number;
   allowEditing?: boolean;
+}
+
+
+export interface CameraPhoto {
+  base64_data: string;
+  format: string;
 }

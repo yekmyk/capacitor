@@ -34,7 +34,7 @@ export class Plugin {
     });
   }
 
-  nativePromise(methodName: string, options?: any) {
+  nativePromise(methodName: string, options?: any): Promise<any> {
     return new Promise((resolve, reject) => {
       this.avocado.toNative({
         pluginId: this.pluginId(),

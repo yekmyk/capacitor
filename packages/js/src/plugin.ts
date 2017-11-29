@@ -1,5 +1,5 @@
 import { Avocado } from './avocado';
-import { PluginConfig, PluginCall, PluginCallback } from './definitions';
+import { PluginConfig, PluginCallback } from './definitions';
 
 /**
  * Base class for all 3rd party plugins.
@@ -7,10 +7,12 @@ import { PluginConfig, PluginCall, PluginCallback } from './definitions';
 export class Plugin {
   private avocado: Avocado;
   isNative: boolean;
+  platform: string;
 
   constructor() {
     this.avocado = Avocado.instance();
     this.isNative = this.avocado.isNative;
+    this.platform = this.avocado.platform;
   }
 
   nativeCallback(methodName: string, callback?: PluginCallback): void;
@@ -26,20 +28,14 @@ export class Plugin {
       options = {};
     }
 
-    this.avocado.toNative({
-      pluginId: this.pluginId(),
-      methodName: methodName,
-      options: options,
+    this.avocado.toNative(this.pluginId(), methodName, options, {
       callbackFunction: callback
     });
   }
 
   nativePromise(methodName: string, options?: any): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.avocado.toNative({
-        pluginId: this.pluginId(),
-        methodName: methodName,
-        options: options,
+      this.avocado.toNative(this.pluginId(), methodName, options, {
         callbackResolve: resolve,
         callbackReject: reject
       });

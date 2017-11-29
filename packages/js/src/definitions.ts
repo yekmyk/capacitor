@@ -10,27 +10,30 @@ export interface PluginResultError {
 export type PluginCallback = (error: PluginResultError, data: PluginResultData) => void;
 
 /**
- * Data that won't be sent to the native layer
- * from the caller. For example, a callback function
- * that cannot be cloned in JS
- */
-export interface PluginCaller {
-  callbackFunction?: PluginCallback;
-}
-
-/**
- * Metadata about a native plugin call.
+ * Data sent over to native
  */
 export interface PluginCall {
+  callbackId: string;
   pluginId: string;
   methodName: string;
   options: any;
+}
 
-  callbackId?: string;
-
+/**
+ * Callback data kept on the client
+ * to be called after native response
+ */
+export interface StoredCallback {
   callbackFunction?: PluginCallback;
   callbackResolve?: Function;
   callbackReject?: Function;
+}
+
+/**
+ * Collection of all the callback data
+ */
+export interface StoredCallbacks {
+  [callbackId: string]: StoredCallback;
 }
 
 /**

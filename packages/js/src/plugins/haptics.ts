@@ -7,7 +7,7 @@ import { NativePlugin, Plugin } from '../plugin';
 })
 export class Haptics extends Plugin {
 
-  impact(options: { style: HapticsImpactStyle }) {
+  impact(options: HapticsImpactOptions) {
     this.nativeCallback('impact', options);
   }
 
@@ -28,6 +28,10 @@ export class Haptics extends Plugin {
   }
 }
 
+
+export interface HapticsImpactOptions {
+  style: HapticsImpactStyle;
+}
 
 export enum HapticsImpactStyle {
   Heavy = 'HEAVY',

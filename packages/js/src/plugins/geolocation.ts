@@ -1,7 +1,6 @@
-import { AvocadoPlugin, Plugin } from '../plugin';
-import { PluginCallback } from '../definitions';
+import { NativePlugin, Plugin } from '../plugin';
 
-@AvocadoPlugin({
+@NativePlugin({
   name: 'Geolocation',
   id: 'com.avocadojs.plugin.geolocation'
 })
@@ -25,7 +24,7 @@ export class Geolocation extends Plugin {
     });
   }
 
-  watchPosition(callback: PluginCallback) {
+  watchPosition(callback: Function) {
     if (this.isNative) {
       this.nativeCallback('watchPosition', callback);
 

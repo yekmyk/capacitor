@@ -5,6 +5,7 @@ import { NavController } from 'ionic-angular';
 import {
   Browser,
   Camera,
+  Clipboard,
   Device,
   Filesystem,
   FilesystemDirectory,
@@ -19,12 +20,14 @@ import {
   StatusBar,
   StatusBarStyle
 } from 'avocado-js';
+import { toBase64String } from '@angular/compiler/src/output/source_map';
 
 @Component({
   selector: 'page-home',
   templateUrl: 'home.html'
 })
 export class HomePage {
+  base64Image: string;
   image: string;
   singleCoords = { lat: 0, lng: 0 }
   watchCoords = { lat: 0, lng: 0 }
@@ -42,6 +45,23 @@ export class HomePage {
       console.log("Network status changed", status);
       alert('New network status: ' + JSON.stringify(status))
     });
+
+    this.doStuff();
+  }
+
+  async doStuff() {
+    const toDataURL = url => fetch(url)
+    .then(response => response.blob())
+    .then(blob => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        this.base64Image = reader.result.replace('data:;base64,', '');
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    }))
+
+    toDataURL('assets/ionitron.png');
   }
 
   scheduleLocalNotification() {
@@ -59,10 +79,50 @@ export class HomePage {
     });
   }
 
-  showSplash() {
-    let splash = new SplashScreen();
-    splash.show({}, () => {
+  clipboardSetString() {
+    let c = new Clipboard();
+    c.set({
+      string: "Hello, Moto"
     });
+  }
+
+  async clipboardGetString() {
+    let c = new Clipboard();
+    let str = await c.get({
+      type: "string"
+    });
+    console.log('Got string from clipboard:', str);
+  }
+
+  clipboardSetURL() {
+    let c = new Clipboard();
+    c.set({
+      url: "http://google.com/"
+    });
+  }
+
+  async clipboardGetURL() {
+    let c = new Clipboard();
+    let url = c.get({
+      type: "url"
+    });
+    console.log("Get URL from clipboard", url);
+  }
+
+  clipboardSetImage () {
+    let c = new Clipboard();
+    console.log('Setting image', this.base64Image);
+    c.set({
+      image: this.base64Image
+    });
+  }
+
+  async clipboardGetImage() {
+    let c = new Clipboard();
+    const image = await c.get({
+      type: "image"
+    });
+    console.log('Got image', image);
   }
 
   showAlert() {

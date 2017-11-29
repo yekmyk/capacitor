@@ -1,7 +1,7 @@
-import { AvocadoPlugin, Plugin } from '../plugin';
+import { NativePlugin, Plugin } from '../plugin';
 
 
-@AvocadoPlugin({
+@NativePlugin({
   name: 'LocalNotifications',
   id: 'com.avocadojs.plugin.localnotifications'
 })

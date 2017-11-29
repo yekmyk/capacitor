@@ -32,10 +32,10 @@ export class Geolocation extends Plugin {
     } else if (navigator.geolocation) {
       const successCallback = (position: Position) => {
         callback(null, position);
-      }
+      };
       const errorCallback = (error: PositionError) => {
         callback(error, null);
-      }
+      };
       navigator.geolocation.watchPosition(successCallback, errorCallback);
 
     } else {
@@ -50,7 +50,7 @@ export interface GeolocationPositon {
   coords: {
     latitude: number;
     longitude: number;
-  }
+  };
 }
 
 export type GeolocationWatchCallback = (err: any, position: GeolocationPositon) => void;

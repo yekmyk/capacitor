@@ -27,5 +27,5 @@ export interface LocalNotification {
   title: string;
   body: string;
   identifier: string;
-  scheduleAt?: NotificationScheduleAt
+  scheduleAt?: NotificationScheduleAt;
 }

@@ -17,7 +17,7 @@ export class Avocado {
   isNative = false;
 
   // Storage of calls for associating w/ native callback later
-  private calls: { [key: string]: PluginCall } = {}
+  private calls: { [key: string]: PluginCall } = {};
 
   private callbackIdCount = 0;
 
@@ -40,7 +40,7 @@ export class Avocado {
     }
 
     // Load console plugin first to avoid race conditions
-    setTimeout(() => { this.loadCoreModules(); } )
+    setTimeout(() => { this.loadCoreModules(); } );
   }
 
   private log(...args: any[]) {
@@ -49,7 +49,7 @@ export class Avocado {
   }
 
   private loadCoreModules() {
-    //this.console = new Console();
+    // this.console = new Console();
   }
 
   /**
@@ -130,9 +130,9 @@ export class Avocado {
    * @return the instance of Avocado
    */
   static instance() {
-    if((<any>window).avocado) {
-      return (<any>window).avocado;
+    if ((window as any).avocado) {
+      return (window as any).avocado;
     }
-    return (<any>window).avocado = new Avocado();
+    return (window as any).avocado = new Avocado();
   }
 }

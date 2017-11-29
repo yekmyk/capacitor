@@ -25,5 +25,5 @@ export interface ClipboardSet {
 }
 
 export interface ClipboardGet {
-  type: "string" | "url" | "image";
+  type: 'string' | 'url' | 'image';
 }

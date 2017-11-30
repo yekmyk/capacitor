@@ -1,23 +1,34 @@
 package com.avocadojs.plugin.console;
 
+import android.util.Log;
+
 import com.avocadojs.Avocado;
 import com.avocadojs.Plugin;
 import com.avocadojs.PluginCall;
-import com.avocadojs.PluginResult;
 
 
 public class ConsolePlugin extends Plugin {
 
     public ConsolePlugin(Avocado avocado) {
-        super(avocado, "com.avocadojs.plugin.device");
+        super(avocado, "com.avocadojs.plugin.console");
     }
 
     public void log(PluginCall call) {
-        PluginResult r = new PluginResult();
+        String level = call.data.optString("level", "log").toLowerCase();
+        String message = call.data.optString("message", "");
 
-        r.put("version", android.os.Build.VERSION.RELEASE);
+        if (level == "error'") {
+            Log.e("console", message);
 
-        call.successCallback(r);
+        } else if (level == "warn'") {
+            Log.w("console", message);
+
+        } else if (level == "debug'") {
+            Log.d("console", message);
+
+        } else {
+            Log.i("console", message);
+        }
     }
 
 }

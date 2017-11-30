@@ -66,11 +66,10 @@ declare var global: any;
           try {
             // convert all args to strings
             msgs = msgs.map(arg => {
-              if (typeof arg === 'function') {
-                arg = '[function]';
-
-              } else if (typeof arg === 'object') {
-                arg = JSON.stringify(arg);
+              if (typeof arg === 'object') {
+                try {
+                  arg = JSON.stringify(arg);
+                } catch (e) {}
               }
               // convert to string
               return arg + '';

@@ -1,11 +1,21 @@
-export * from './definitions';
-export { Avocado } from './avocado';
-export { Plugin, NativePlugin } from './plugin';
+
+// always import avocado so that it's placed on window
+import './avocado';
+
+export {
+  PluginCallback,
+  PluginResultData,
+  PluginResultError,
+  PluginConfig
+} from './definitions';
+
+export {
+  Plugin, NativePlugin
+} from './plugin';
 
 export { Browser } from './plugins/browser';
 export { Camera } from './plugins/camera';
 export { Clipboard } from './plugins/clipboard';
-export { Console } from './plugins/console';
 export { Device } from './plugins/device';
 export { Filesystem, FilesystemDirectory } from './plugins/fs';
 export { Geolocation } from './plugins/geolocation';

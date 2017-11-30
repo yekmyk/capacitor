@@ -11,9 +11,12 @@
   "scripts": {
     "build": "npm run clean && npm run transpile",
     "clean": "rimraf ./dist",
-    "transpile": "tsc"
+    "transpile": "npm run transpile.esm && npm run transpile.umd",
+    "transpile.esm": "tsc --module ES2015 --target ES2015 --outDir dist/esm",
+    "transpile.umd": "tsc --module UMD --target ES5 --outDir dist/umd"
   },
-  "main": "dist/index.js",
+  "main": "dist/umd/index.js",
+  "module": "dist/esm/index.js",
   "typings": "dist/index.d.ts",
   "devDependencies": {
     "rimraf": "^2.6.1",

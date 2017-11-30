@@ -9,8 +9,12 @@
     "dist/"
   ],
   "scripts": {
-    "build": "npm run clean && npm run transpile && npm run rollup",
-    "clean": "rimraf ./dist",
+    "build": "npm run clean && npm run transpile && npm run rollup && npm run minify",
+    "clean": "rimraf dist",
+    "minify": "npm run minify.core && npm run minify.plugins && npm run minify.avocado",
+    "minify.avocado": "uglifyjs --mangle --compress --output dist/avocado.js dist/avocado.core.js dist/avocado.plugins.js",
+    "minify.core": "uglifyjs --mangle --compress --source-map \"content='dist/esm/avocado.js.map',url='avocado.core.js.map'\" --output dist/avocado.core.js dist/esm/avocado.js",
+    "minify.plugins": "uglifyjs --mangle --compress --source-map \"content='dist/avocado.plugins.js.map',url='avocado.plugins.js.map'\" --output dist/avocado.plugins.js dist/avocado.plugins.js",
     "rollup": "rollup --config rollup.config.js",
     "transpile": "tsc --module ES2015 --target ES5 --outDir dist/esm"
   },
@@ -21,7 +25,8 @@
     "rollup": "^0.52.0",
     "tslint": "^5.6.0",
     "tslint-ionic-rules": "0.0.8",
-    "typescript": "^2.6.2"
+    "typescript": "^2.6.2",
+    "uglify-js": "^3.2.0"
   },
   "repository": {
     "type": "git",

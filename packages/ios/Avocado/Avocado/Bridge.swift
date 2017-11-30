@@ -2,6 +2,7 @@ import Foundation
 import Dispatch
 import WebKit
 
+
 public class Bridge {
   public var viewController: UIViewController
   
@@ -16,7 +17,7 @@ public class Bridge {
   
   // Dispatch queue for our operations
   // TODO: Unique label?
-  public var dispatchQueue = DispatchQueue(label: "b")
+  public var dispatchQueue = DispatchQueue(label: "bridge")
   
   public init(_ vc: UIViewController, _ pluginIds: [String]) {
     self.viewController = vc
@@ -25,12 +26,18 @@ public class Bridge {
     registerPlugins()
   }
   
+  public func willAppear() {
+    if let splash = getOrLoadPlugin(pluginId: "com.avocadojs.plugin.splashscreen") as? SplashScreen {
+      splash.showOnLaunch()
+    }
+  }
+  
   func registerPlugins() {
     var numClasses = UInt32(0);
     let classes = objc_copyClassList(&numClasses)
     for i in 0..<Int(numClasses) {
       let c = classes![i]
-      if class_conformsToProtocol(c, AvocadoBridgeModule.self) {
+      if class_conformsToProtocol(c, AvocadoBridgePlugin.self) {
         let moduleType = c as! Plugin.Type
         registerPlugin(moduleType)
       }
@@ -38,8 +45,15 @@ public class Bridge {
   }
   
   func registerPlugin(_ pluginType: Plugin.Type) {
-    let bridgeType = pluginType as! AvocadoBridgeModule.Type
+    let bridgeType = pluginType as! AvocadoBridgePlugin.Type
     knownPlugins[bridgeType.pluginId()] = pluginType
+  }
+  
+  public func getOrLoadPlugin(pluginId: String) -> Plugin? {
+    guard let plugin = self.getPlugin(pluginId: pluginId) ?? self.loadPlugin(pluginId: pluginId) else {
+      return nil
+    }
+    return plugin
   }
   
   public func getPlugin(pluginId: String) -> Plugin? {
@@ -52,7 +66,7 @@ public class Bridge {
       return nil
     }
     
-    let bridgeType = pluginType as! AvocadoBridgeModule.Type
+    let bridgeType = pluginType as! AvocadoBridgePlugin.Type
     let p = pluginType.init(self, id: bridgeType.pluginId())
     p.load()
     self.plugins[bridgeType.pluginId()] = p

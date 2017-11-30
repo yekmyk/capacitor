@@ -1,5 +1,15 @@
 import { NativePlugin, Plugin } from '../plugin';
 
+export interface SplashScreenShowOptions {
+  autoHide?: boolean;
+  fadeInDuration?: number;
+  fadeOutDuration?: number;
+  showDuration?: number;
+}
+
+export interface SplashScreenHideOptions {
+  fadeOutDuration?: number;
+}
 
 @NativePlugin({
   name: 'SplashScreen',
@@ -14,10 +24,4 @@ export class SplashScreen extends Plugin {
   hide(options?: SplashScreenHideOptions, callback?: Function) {
     this.nativeCallback('hide', options, callback);
   }
-
 }
-
-
-export interface SplashScreenShowOptions {}
-
-export interface SplashScreenHideOptions {}

@@ -18,7 +18,8 @@ import {
   Network,
   SplashScreen,
   StatusBar,
-  StatusBarStyle
+  StatusBarStyle,
+  Test
 } from 'avocado-js';
 import { toBase64String } from '@angular/compiler/src/output/source_map';
 
@@ -46,11 +47,16 @@ export class HomePage {
   profileSamples = null;
 
   constructor(public navCtrl: NavController, public zone: NgZone) {
+    let splash = new SplashScreen();
+    splash.hide();
+    
     let network = new Network();
     network.onStatusChange((err, status) => {
       console.log("Network status changed", status);
-      alert('New network status: ' + JSON.stringify(status))
     });
+
+    let t = new Test();
+    t.test();
 
     this.doStuff();
   }
@@ -68,6 +74,24 @@ export class HomePage {
     }))
 
     toDataURL('assets/ionitron.png');
+  }
+
+  showSplash() {
+    let s = new SplashScreen();
+    s.show({
+      autoHide: false
+    });
+    setTimeout(() => {
+      s.hide();
+    }, 6000);
+  }
+
+  showSplashAutoFade() {
+    let s = new SplashScreen();
+    s.show({
+      showDuration: 2000,
+      autoHide: true
+    });
   }
 
   scheduleLocalNotification() {

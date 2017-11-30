@@ -12,3 +12,4 @@ export { Motion } from './motion';
 export { Network } from './network';
 export { SplashScreen } from './splashscreen';
 export { StatusBar, StatusBarStyle } from './statusbar';
+export { Test } from './test';

@@ -22,15 +22,13 @@ declare var global: any;
   // keep a counter of callback ids
   let callbackIdCount = 0;
 
-  // get the original window.console for use later
-  const browserConsole = win.console;
-
   // create global
   const avocado: Avocado = win.avocado = {
     isNative: false,
     platform: 'browser'
   };
 
+  // create the postToNative() fn if needed
   let postToNative: (call: PluginCall) => void;
   if (win.androidBridge) {
     // android platform
@@ -50,29 +48,75 @@ declare var global: any;
     avocado.platform = 'ios';
   }
 
+  // patch window.console and store original console fns
+  const orgConsole: { [level: string]: Function } = {};
+  Object.keys(win.console).forEach(level => {
+    if (typeof win.console[level] === 'function') {
+      // loop through all the console functions and keep references to the original
+      orgConsole[level] = win.console[level];
+
+      win.console[level] = function avocadoConsole() {
+        let msgs: any[] = Array.prototype.slice.call(arguments);
+
+        // console log to browser
+        orgConsole[level].apply(win.console, msgs);
+
+        if (avocado.isNative) {
+          // send log to native to print
+          try {
+            // convert all args to strings
+            msgs = msgs.map(arg => {
+              if (typeof arg === 'function') {
+                arg = '[function]';
+
+              } else if (typeof arg === 'object') {
+                arg = JSON.stringify(arg);
+              }
+              // convert to string
+              return arg + '';
+            });
+            avocado.toNative('com.avocadojs.plugin.console', 'log', {
+              level,
+              message: msgs.join(' ')
+            });
+
+          } catch (e) {
+            // error converting/posting console messages
+            orgConsole.error.apply(win.console, e);
+          }
+        }
+      };
+    }
+  });
+
   /**
    * Send a plugin method call to the native layer
    */
   avocado.toNative = function toNative(pluginId, methodName, options, storedCallback) {
-    if (avocado.isNative) {
-      let callbackId = '-1';
+    try {
+      if (avocado.isNative) {
+        let callbackId = '-1';
 
-      if (storedCallback && typeof storedCallback.callback === 'function' || typeof storedCallback.resolve === 'function') {
-        // store the call for later lookup
-        callbackId = ++callbackIdCount + '';
-        calls[callbackId] = storedCallback;
+        if (storedCallback && (typeof storedCallback.callback === 'function' || typeof storedCallback.resolve === 'function')) {
+          // store the call for later lookup
+          callbackId = ++callbackIdCount + '';
+          calls[callbackId] = storedCallback;
+        }
+
+        // post the call data to native
+        postToNative({
+          callbackId,
+          pluginId,
+          methodName,
+          options: options || {}
+        });
+
+      } else {
+        orgConsole.warn.call(win.console, `browser implementation unavailable for: ${pluginId}`);
       }
 
-      // post the call data to native
-      postToNative({
-        callbackId,
-        pluginId,
-        methodName,
-        options: options || {}
-      });
-
-    } else {
-      browserConsole.warn.call(browserConsole, `browser implementation unavailable for: ${pluginId}`);
+    } catch (e) {
+      orgConsole.error.call(win.console, e);
     }
   };
 
@@ -81,35 +125,40 @@ declare var global: any;
    */
   avocado.fromNative = function fromNative(result) {
     // get the stored call, if it exists
-    const storedCall = calls[result.callbackId];
+    try {
+      const storedCall = calls[result.callbackId];
 
-    if (storedCall) {
-      // looks like we've got a stored call
+      if (storedCall) {
+        // looks like we've got a stored call
 
-      if (typeof storedCall.callback === 'function') {
-        // callback
-        if (result.success) {
-          storedCall.callback(null, result.data);
-        } else {
-          storedCall.callback(result.error, null);
+        if (typeof storedCall.callback === 'function') {
+          // callback
+          if (result.success) {
+            storedCall.callback(null, result.data);
+          } else {
+            storedCall.callback(result.error, null);
+          }
+
+        } else if (typeof storedCall.resolve === 'function') {
+          // promise
+          if (result.success) {
+            storedCall.resolve(result.data);
+          } else {
+            storedCall.reject(result.error);
+          }
+
+          // no need to keep this stored callback
+          // around for a one time resolve promise
+          delete calls[result.callbackId];
         }
 
-      } else if (typeof storedCall.resolve === 'function') {
-        // promise
-        if (result.success) {
-          storedCall.resolve(result.data);
-        } else {
-          storedCall.reject(result.error);
-        }
-
-        // no need to keep this stored callback
-        // around for a one time resolve promise
-        delete calls[result.callbackId];
+      } else if (!result.success && result.error) {
+        // no stored callback, but if there was an error let's log it
+        orgConsole.warn.call(win.console, result.error);
       }
 
-    } else if (!result.success && result.error) {
-      // no stored callback, but if there was an error let's log it
-      browserConsole.error.call(browserConsole, result.error);
+    } catch (e) {
+      orgConsole.error.call(win.console, e);
     }
 
     // always delete to prevent memory leaks
@@ -117,24 +166,5 @@ declare var global: any;
     delete result.data;
     delete result.error;
   };
-
-
-  if (avocado.isNative) {
-    // override window.console so we can also send logs to native
-    ['log', 'error', 'debug', 'warn', 'info'].forEach(level => {
-      win.console[level] = function() {
-        const msgs: string[] = Array.prototype.slice.call(arguments);
-
-        // console log to browser
-        browserConsole[level].apply(browserConsole, msgs);
-
-        // send log to native to print
-        avocado.toNative('com.avocadojs.plugin.console', 'log', {
-          level,
-          message: msgs.join(' ')
-        });
-      };
-    });
-  }
 
 })((typeof window !== 'undefined' ? window : global) as any);

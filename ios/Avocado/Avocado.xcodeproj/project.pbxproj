@@ -22,7 +22,6 @@
 		50503EF01FC08595003606DC /* Avocado.h in Headers */ = {isa = PBXBuildFile; fileRef = 50503EE21FC08594003606DC /* Avocado.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		50503EFF1FC08662003606DC /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50503EFD1FC08662003606DC /* Device.swift */; };
 		50503F001FC08662003606DC /* Geolocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50503EFE1FC08662003606DC /* Geolocation.swift */; };
-		50503F211FC0962F003606DC /* JS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50503F201FC0962F003606DC /* JS.swift */; };
 		50503F231FC0968E003606DC /* Bridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50503F221FC0968E003606DC /* Bridge.swift */; };
 		50503F251FC098A3003606DC /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50503F241FC098A3003606DC /* Plugin.swift */; };
 		5053E8FD1FC874DE00166FBE /* Loader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5053E8FC1FC874DE00166FBE /* Loader.swift */; };
@@ -38,6 +37,9 @@
 		50B80BE81FCDE1E8000717DF /* Clipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B80BE71FCDE1E8000717DF /* Clipboard.swift */; };
 		50B80BEA1FCDECE2000717DF /* Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B80BE91FCDECE2000717DF /* Share.swift */; };
 		50BFB9081FC4E82C00C19F8B /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFB9071FC4E82C00C19F8B /* Motion.swift */; };
+		50D5038C1FDDF5910050E5CE /* JS.m in Sources */ = {isa = PBXBuildFile; fileRef = 50D5038B1FDDF5910050E5CE /* JS.m */; };
+		50D5038E1FDDF59D0050E5CE /* JS.h in Headers */ = {isa = PBXBuildFile; fileRef = 50D5038D1FDDF59A0050E5CE /* JS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		50D503901FDDF6B10050E5CE /* JS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D5038F1FDDF6B10050E5CE /* JS.swift */; };
 		50E3D63F1FCE6EA500BBEB06 /* BridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */; };
 		50ED86F01FCA66CB00E48884 /* DocLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ED86EF1FCA66CB00E48884 /* DocLinks.swift */; };
 		50ED86F31FCB728D00E48884 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ED86F21FCB728D00E48884 /* Network.swift */; };
@@ -76,7 +78,6 @@
 		50503EEF1FC08595003606DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50503EFD1FC08662003606DC /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		50503EFE1FC08662003606DC /* Geolocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geolocation.swift; sourceTree = "<group>"; };
-		50503F201FC0962F003606DC /* JS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JS.swift; sourceTree = "<group>"; };
 		50503F221FC0968E003606DC /* Bridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bridge.swift; sourceTree = "<group>"; };
 		50503F241FC098A3003606DC /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		5053E8FC1FC874DE00166FBE /* Loader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loader.swift; sourceTree = "<group>"; };
@@ -93,6 +94,9 @@
 		50B80BE71FCDE1E8000717DF /* Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clipboard.swift; sourceTree = "<group>"; };
 		50B80BE91FCDECE2000717DF /* Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Share.swift; sourceTree = "<group>"; };
 		50BFB9071FC4E82C00C19F8B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
+		50D5038B1FDDF5910050E5CE /* JS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JS.m; sourceTree = "<group>"; };
+		50D5038D1FDDF59A0050E5CE /* JS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JS.h; sourceTree = "<group>"; };
+		50D5038F1FDDF6B10050E5CE /* JS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JS.swift; sourceTree = "<group>"; };
 		50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeViewController.swift; sourceTree = "<group>"; };
 		50ED86EF1FCA66CB00E48884 /* DocLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocLinks.swift; sourceTree = "<group>"; };
 		50ED86F21FCB728D00E48884 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
@@ -164,7 +168,6 @@
 				50503F1F1FC095EA003606DC /* Plugins */,
 				50503EE21FC08594003606DC /* Avocado.h */,
 				50503EE31FC08594003606DC /* Info.plist */,
-				50503F201FC0962F003606DC /* JS.swift */,
 				50503F221FC0968E003606DC /* Bridge.swift */,
 				50503F241FC098A3003606DC /* Plugin.swift */,
 				5053E8FC1FC874DE00166FBE /* Loader.swift */,
@@ -176,6 +179,9 @@
 				50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */,
 				50584D151FDA163B00E3227C /* AVCPlugin.m */,
 				50584D171FDA164A00E3227C /* AVCPlugin.h */,
+				50D5038B1FDDF5910050E5CE /* JS.m */,
+				50D5038D1FDDF59A0050E5CE /* JS.h */,
+				50D5038F1FDDF6B10050E5CE /* JS.swift */,
 			);
 			path = Avocado;
 			sourceTree = "<group>";
@@ -225,6 +231,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50D5038E1FDDF59D0050E5CE /* JS.h in Headers */,
 				5053E9101FC8FEEC00166FBE /* PluginBridge.h in Headers */,
 				5053E90D1FC8D24000166FBE /* DefaultPlugins.h in Headers */,
 				50584D3D1FDAE62C00E3227C /* AVCPlugin.h in Headers */,
@@ -332,6 +339,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50D503901FDDF6B10050E5CE /* JS.swift in Sources */,
+				50D5038C1FDDF5910050E5CE /* JS.m in Sources */,
 				501CBABD1FC29EDE009B0D4D /* SplashScreen.swift in Sources */,
 				50BFB9081FC4E82C00C19F8B /* Motion.swift in Sources */,
 				50ED86F91FCC69C200E48884 /* LocalNotifications.swift in Sources */,
@@ -343,7 +352,6 @@
 				50ED86F01FCA66CB00E48884 /* DocLinks.swift in Sources */,
 				501CBABF1FC2A22A009B0D4D /* Browser.swift in Sources */,
 				50E3D63F1FCE6EA500BBEB06 /* BridgeViewController.swift in Sources */,
-				50503F211FC0962F003606DC /* JS.swift in Sources */,
 				50503F231FC0968E003606DC /* Bridge.swift in Sources */,
 				504C7E371FCCE6BC0020DFD2 /* Reachability.swift in Sources */,
 				50584D131FDA15A300E3227C /* Keyboard.m in Sources */,

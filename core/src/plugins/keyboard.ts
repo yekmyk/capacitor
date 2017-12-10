@@ -9,7 +9,7 @@ export class KeyboardPlugin extends Plugin {
 
   constructor() {
     super();
-    this._init();
+    //this._init();
   }
 
   _onChange(_err: any, d: any) { console.log('Keyboard change', d);

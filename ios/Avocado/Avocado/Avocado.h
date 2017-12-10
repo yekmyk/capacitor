@@ -11,6 +11,7 @@ extern NSArray<Class> *AvocadoGetPluginClasses(void);
 #import "AVCPlugin.h"
 #import "PluginBridge.h"
 #import "DefaultPlugins.h"
+#import "JS.h"
 
 
 // In this header, you should import all the public headers of your framework using statements like #import <Avocado/PublicHeader.h>

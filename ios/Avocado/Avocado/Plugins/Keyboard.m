@@ -14,7 +14,7 @@
  specific language governing permissions and limitations
  under the License.
  */
-
+/*
 #import "Keyboard.h"
 #import "PluginBridge.h"
 #import <Foundation/Foundation.h>
@@ -40,7 +40,7 @@ typedef enum : NSUInteger {
 @implementation AVCKeyboard
 
 // Define the plugin
-AVOCADO_EXPORT_PLUGIN("com.avocadojs.plugin.keyboard")
+//AVOCADO_EXPORT_PLUGIN("com.avocadojs.plugin.keyboard")
 
 
 - (void)load
@@ -237,5 +237,5 @@ static IMP WKOriginalImp;
 }
 
 @end
-
+*/
 

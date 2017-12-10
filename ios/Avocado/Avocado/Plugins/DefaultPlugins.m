@@ -2,9 +2,18 @@
 
 #import "PluginBridge.h"
 
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.browser", Browser)
-@end
+/*JS_PLUGIN("com.avocadojs.plugin.browser", Browser) {
+JS_METHOD("open", "url:string", JS_PROMISE)
+}*/
+               
+//@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.browser", Browser)
+//@end
 
+AVC_PLUGIN("com.avocadojs.plugin.browser", Browser,
+  JS_METHOD(open, "url:string", "promise");
+)
+
+/*
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.camera", Camera)
 @end
 
@@ -43,4 +52,4 @@
 
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.statusbar", StatusBar)
 @end
-
+*/

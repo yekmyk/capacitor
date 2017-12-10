@@ -21,3 +21,10 @@ void AvocadoRegisterPlugin(Class PluginClass)
   // Register Plugin
   [AvocadoPluginClasses addObject:PluginClass];
 }
+
+@implementation AVCPluginMethod
+-(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types {
+  NSLog(@"Initializing plugin with names and types: %@ %@", name, types);
+  return self;
+}
+@end

@@ -5,8 +5,8 @@ import SafariServices
 public class Browser : Plugin, SFSafariViewControllerDelegate {
   var vc: SFSafariViewController?
   
-  @objc(open:url:)
-  func open(_ call: PluginCall, url: String) {
+  /*
+  @objc func open(_ call: PluginCall) {
     if let urlString = call.options["url"] as? String {
       let url = URL(string: urlString)
       vc = SFSafariViewController.init(url: url!)
@@ -15,6 +15,16 @@ public class Browser : Plugin, SFSafariViewControllerDelegate {
         
       })
     }
+  }
+ */
+  
+  @objc func open(url: String) {
+    let url = URL(string: url)
+    vc = SFSafariViewController.init(url: url!)
+    vc!.delegate = self
+    bridge.viewController.present(vc!, animated: true, completion: {
+      
+    })
   }
 }
 

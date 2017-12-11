@@ -10,7 +10,7 @@ JS_METHOD("open", "url:string", JS_PROMISE)
 //@end
 
 AVC_PLUGIN("com.avocadojs.plugin.browser", Browser,
-  JS_METHOD(open, "url:string", "promise");
+  JS_METHOD(open, "url:string", JS_PROMISE);
 )
 
 /*

@@ -18,12 +18,12 @@ public class Browser : Plugin, SFSafariViewControllerDelegate {
   }
  */
   
-  @objc func open(url: String) {
+  @objc func open(url: String, success: @escaping ACVSuccessCallback, error: ACVErrorCallback) {
     let url = URL(string: url)
     vc = SFSafariViewController.init(url: url!)
     vc!.delegate = self
     bridge.viewController.present(vc!, animated: true, completion: {
-      
+      success(NSNull())
     })
   }
 }

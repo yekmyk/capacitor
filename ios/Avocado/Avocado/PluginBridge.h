@@ -8,6 +8,12 @@
 #define AVC_EXTERN extern __attribute__((visibility("default")))
 #endif
 
+#define JS_CALLBACK "callback"
+#define JS_PROMISE "promise"
+
+typedef void (^ACVSuccessCallback)(id result);
+typedef void (^ACVErrorCallback)(NSError *error);
+
 @interface AVCPluginMethod : NSObject
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, strong) NSString *types;

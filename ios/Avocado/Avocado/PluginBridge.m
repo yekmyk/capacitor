@@ -27,12 +27,29 @@ void AvocadoRegisterPlugin(Class PluginClass)
   NSLog(@"Initializing plugin with names and types: %@ %@", name, types);
   self.name = name;
   self.types = types;
+  
+  self.selector = [self makeSelector];
+  
   return self;
 }
 
--(SEL)getSelector {
-  NSLog(@"Getting selector for method: %@ %@", self.name, self.types);
+-(SEL)makeSelector {
+  NSMutableString *nameSelector = [[NSMutableString alloc] initWithString:self.name];
+  [nameSelector appendString:@":"];
+  NSMutableArray *selectorParts = [[NSMutableArray alloc] initWithObjects:nameSelector, nil];
   NSArray *typeParts = [self.types componentsSeparatedByString:@","];
-  return NSSelectorFromString(@"");
+  for(NSString *t in typeParts) {
+    NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
+    NSMutableString *paramName = [[NSMutableString alloc] initWithString:[paramParts objectAtIndex:0]];
+    [paramName appendString:@":"];
+    [selectorParts addObject:paramName];
+  }
+  NSString *selectorString = [selectorParts componentsJoinedByString:@""];
+  return NSSelectorFromString(selectorString);
+}
+
+-(SEL)getSelector {
+  return self.selector;
 }
 @end

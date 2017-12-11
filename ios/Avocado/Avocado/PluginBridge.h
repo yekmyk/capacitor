@@ -8,15 +8,16 @@
 #define AVC_EXTERN extern __attribute__((visibility("default")))
 #endif
 
-#define JS_CALLBACK "callback"
-#define JS_PROMISE "promise"
+#define AVC_JS_CALLBACK "callback"
+#define AVC_JS_PROMISE "promise"
 
-typedef void (^ACVSuccessCallback)(id result);
-typedef void (^ACVErrorCallback)(NSError *error);
+typedef void (^AVCSuccessCallback)(id result);
+typedef void (^AVCErrorCallback)(NSError *error);
 
 @interface AVCPluginMethod : NSObject
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, strong) NSString *types;
+@property (nonatomic, assign) SEL selector;
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types;
 
@@ -30,8 +31,8 @@ typedef void (^ACVErrorCallback)(NSError *error);
 AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 + (NSString *)pluginId { return @plugin_id; } \
 + (void)load { AvocadoRegisterPlugin(self); }
-+ (NSArray *)jsMethods;
-#define JS_METHOD(method_name, method_types, method_return_type) \
++ (NSArray *)pluginMethods;
+#define AVC_PLUGIN_METHOD(method_name, method_types, method_return_type) \
 [methods addObject:[[AVCPluginMethod alloc] initWithNameAndTypes:@#method_name types:@method_types]]
 
 + (NSString *)pluginId;
@@ -44,7 +45,7 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 @interface objc_name (AVCPluginCategory) <AVCBridgedPlugin> \
 @end \
 @implementation objc_name (AVCPluginCategory) \
-+ (NSArray *)jsMethods { \
++ (NSArray *)pluginMethods { \
   NSMutableArray *methods = [NSMutableArray new]; \
   methods_body \
   return methods; \

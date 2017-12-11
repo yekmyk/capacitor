@@ -44,30 +44,8 @@ import WebKit
   
   func registerPlugin(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
     let bridgeType = pluginType as! AVCBridgedPlugin.Type
-    let methods = bridgeType.jsMethods() as! [AVCPluginMethod]
-    print("Plugin has methods", methods);
-    for method in methods {
-      print("METHOD", method.name, method.types)
-      //let selector = method.getSelector()
-      let selector = selectorFromTypeString(name: method.name, types: method.types!)
-    }
     knownPlugins[bridgeType.pluginId()] = pluginType
     defineJS(pluginClassName, pluginType)
-  }
-  
-  func selectorFromTypeString(name: String, types: String) -> Selector {
-    var selectorParts = [String]()
-    selectorParts.append(name + ":")
-    let typeParts = types.split(separator: ",")
-    for t in typeParts {
-      let paramPart = t.trimmingCharacters(in: .whitespacesAndNewlines)
-      let paramParts = paramPart.split(separator: ":")
-      let paramName = paramParts[0]
-      selectorParts.append(paramName + ":")
-    }
-    let selectorString = selectorParts.flatMap({$0}).joined()
-    print("Made selector string", selectorString)
-    return NSSelectorFromString(selectorString)
   }
   
   public func getOrLoadPlugin(pluginId: String) -> AVCPlugin? {
@@ -95,11 +73,6 @@ import WebKit
   }
   
   public func defineJS(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
-    var mc: CUnsignedInt = 0
-    var mlist = class_copyMethodList(pluginType, &mc)
-    let olist = mlist
-    print("\(mc) methods")
-    
     var lines = [String]()
     
     lines.append("""
@@ -107,38 +80,29 @@ import WebKit
       w.Avocado = w.Avocado || {};
       w.Avocado.Plugins = w.Avocado.Plugins || {};
       var a = w.Avocado; var p = a.Plugins;
+      p['\(pluginClassName)'] = {}
+    """)
+    let bridgeType = pluginType as! AVCBridgedPlugin.Type
+    let methods = bridgeType.pluginMethods() as! [AVCPluginMethod]
+    print("Plugin has methods", methods);
+    for method in methods {
+      print("METHOD", method.name, method.types)
+      //let selector = method.getSelector()
+      let selector = method.getSelector()
+      let methodLine = """
+      p['\(pluginClassName)']['\(method.name!)'] = function() {}
+      """
+      lines.append(methodLine)
+    }
+    
+    lines.append("""
+    })(window);
     """)
     
-    for i in (0..<mc) {
-      let classLine = """
-      p['\(pluginClassName)'] = {}
-      """
-      lines.append(classLine)
-      
-      var sel: Selector = method_getName(mlist!.pointee)
-      var selName = sel_getName(sel)
-      //var sig = JSExport.getMethodSignature(sel, for: pluginType)!
-      print("Method #\(i): \(sel)")
-      //print("GOT SIG", sig)
-      
-      /*
-      if sig.numberOfArguments > 2 {
-        for argIndex in 2..<sig.numberOfArguments {
-          let arg = sig.getArgumentType(at: argIndex)
-          print("ARGUMENT TYPE", String(cString: arg))
-        }
-        print(String(cString: selName))
-      }*/
-      
-      mlist = mlist!.successor()
-      
-
-      
-    }
-    free(olist)
-    
     let js = lines.joined(separator: "\n")
+    print(js)
     self.webView?.evaluateJavaScript(js) { (result, error) in
+      print("EVALED", result, error)
       if error != nil && result != nil {
         print(result!)
       }

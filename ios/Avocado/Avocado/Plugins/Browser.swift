@@ -18,7 +18,8 @@ public class Browser : Plugin, SFSafariViewControllerDelegate {
   }
  */
   
-  @objc func open(url: String, success: @escaping ACVSuccessCallback, error: ACVErrorCallback) {
+  @objc(url:success:error:)
+  func open(url: String, success: @escaping AVCSuccessCallback, error: AVCErrorCallback) {
     let url = URL(string: url)
     vc = SFSafariViewController.init(url: url!)
     vc!.delegate = self

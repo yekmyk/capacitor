@@ -37,8 +37,6 @@
 		50B80BE81FCDE1E8000717DF /* Clipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B80BE71FCDE1E8000717DF /* Clipboard.swift */; };
 		50B80BEA1FCDECE2000717DF /* Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B80BE91FCDECE2000717DF /* Share.swift */; };
 		50BFB9081FC4E82C00C19F8B /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFB9071FC4E82C00C19F8B /* Motion.swift */; };
-		50D5038C1FDDF5910050E5CE /* JS.m in Sources */ = {isa = PBXBuildFile; fileRef = 50D5038B1FDDF5910050E5CE /* JS.m */; };
-		50D5038E1FDDF59D0050E5CE /* JS.h in Headers */ = {isa = PBXBuildFile; fileRef = 50D5038D1FDDF59A0050E5CE /* JS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		50D503901FDDF6B10050E5CE /* JS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D5038F1FDDF6B10050E5CE /* JS.swift */; };
 		50E3D63F1FCE6EA500BBEB06 /* BridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */; };
 		50ED86F01FCA66CB00E48884 /* DocLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ED86EF1FCA66CB00E48884 /* DocLinks.swift */; };
@@ -94,8 +92,6 @@
 		50B80BE71FCDE1E8000717DF /* Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clipboard.swift; sourceTree = "<group>"; };
 		50B80BE91FCDECE2000717DF /* Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Share.swift; sourceTree = "<group>"; };
 		50BFB9071FC4E82C00C19F8B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
-		50D5038B1FDDF5910050E5CE /* JS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JS.m; sourceTree = "<group>"; };
-		50D5038D1FDDF59A0050E5CE /* JS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JS.h; sourceTree = "<group>"; };
 		50D5038F1FDDF6B10050E5CE /* JS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JS.swift; sourceTree = "<group>"; };
 		50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeViewController.swift; sourceTree = "<group>"; };
 		50ED86EF1FCA66CB00E48884 /* DocLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocLinks.swift; sourceTree = "<group>"; };
@@ -179,8 +175,6 @@
 				50E3D63E1FCE6EA500BBEB06 /* BridgeViewController.swift */,
 				50584D151FDA163B00E3227C /* AVCPlugin.m */,
 				50584D171FDA164A00E3227C /* AVCPlugin.h */,
-				50D5038B1FDDF5910050E5CE /* JS.m */,
-				50D5038D1FDDF59A0050E5CE /* JS.h */,
 				50D5038F1FDDF6B10050E5CE /* JS.swift */,
 			);
 			path = Avocado;
@@ -231,7 +225,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50D5038E1FDDF59D0050E5CE /* JS.h in Headers */,
 				5053E9101FC8FEEC00166FBE /* PluginBridge.h in Headers */,
 				5053E90D1FC8D24000166FBE /* DefaultPlugins.h in Headers */,
 				50584D3D1FDAE62C00E3227C /* AVCPlugin.h in Headers */,
@@ -340,7 +333,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				50D503901FDDF6B10050E5CE /* JS.swift in Sources */,
-				50D5038C1FDDF5910050E5CE /* JS.m in Sources */,
 				501CBABD1FC29EDE009B0D4D /* SplashScreen.swift in Sources */,
 				50BFB9081FC4E82C00C19F8B /* Motion.swift in Sources */,
 				50ED86F91FCC69C200E48884 /* LocalNotifications.swift in Sources */,

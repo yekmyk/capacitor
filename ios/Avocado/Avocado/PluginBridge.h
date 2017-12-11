@@ -9,7 +9,13 @@
 #endif
 
 @interface AVCPluginMethod : NSObject
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSString *types;
+
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types;
+
+-(SEL)getSelector;
+
 @end
 
 @protocol AVCBridgedPlugin <NSObject>
@@ -18,7 +24,7 @@
 AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 + (NSString *)pluginId { return @plugin_id; } \
 + (void)load { AvocadoRegisterPlugin(self); }
-
++ (NSArray *)jsMethods;
 #define JS_METHOD(method_name, method_types, method_return_type) \
 [methods addObject:[[AVCPluginMethod alloc] initWithNameAndTypes:@#method_name types:@method_types]]
 
@@ -32,9 +38,10 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 @interface objc_name (AVCPluginCategory) <AVCBridgedPlugin> \
 @end \
 @implementation objc_name (AVCPluginCategory) \
-+ (void)jsMethods { \
++ (NSArray *)jsMethods { \
   NSMutableArray *methods = [NSMutableArray new]; \
   methods_body \
+  return methods; \
 } \
 AVC_PLUGIN_CONFIG(plugin_id) \
 @end

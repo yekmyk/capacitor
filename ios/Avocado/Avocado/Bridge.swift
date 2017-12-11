@@ -36,16 +36,38 @@ import WebKit
       let c = classes![i]
       if class_conformsToProtocol(c, AVCBridgedPlugin.self) {
         let pluginClassName = NSStringFromClass(c)
-        let moduleType = c as! AVCPlugin.Type
-        registerPlugin(pluginClassName, moduleType)
+        let pluginType = c as! AVCPlugin.Type
+        registerPlugin(pluginClassName, pluginType)
       }
     }
   }
   
   func registerPlugin(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
     let bridgeType = pluginType as! AVCBridgedPlugin.Type
+    let methods = bridgeType.jsMethods() as! [AVCPluginMethod]
+    print("Plugin has methods", methods);
+    for method in methods {
+      print("METHOD", method.name, method.types)
+      //let selector = method.getSelector()
+      let selector = selectorFromTypeString(name: method.name, types: method.types!)
+    }
     knownPlugins[bridgeType.pluginId()] = pluginType
     defineJS(pluginClassName, pluginType)
+  }
+  
+  func selectorFromTypeString(name: String, types: String) -> Selector {
+    var selectorParts = [String]()
+    selectorParts.append(name + ":")
+    let typeParts = types.split(separator: ",")
+    for t in typeParts {
+      let paramPart = t.trimmingCharacters(in: .whitespacesAndNewlines)
+      let paramParts = paramPart.split(separator: ":")
+      let paramName = paramParts[0]
+      selectorParts.append(paramName + ":")
+    }
+    let selectorString = selectorParts.flatMap({$0}).joined()
+    print("Made selector string", selectorString)
+    return NSSelectorFromString(selectorString)
   }
   
   public func getOrLoadPlugin(pluginId: String) -> AVCPlugin? {

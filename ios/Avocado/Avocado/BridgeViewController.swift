@@ -17,11 +17,6 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
   public var bridge: Bridge?
   
   override func loadView() {
-    bridge = Bridge(self, [
-      "com.avocadojs.plugin.device",
-      "com.avocadojs.plugin.geolocation",
-      ])
-    
     let webViewConfiguration = WKWebViewConfiguration()
     
     let o = WKUserContentController()
@@ -38,7 +33,8 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
     webView?.configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
     view = webView
     
-    self.bridge!.setWebView(webView: webView!)
+    // Create the bridge with our ViewController and WebView
+    bridge = Bridge(self, webView!)
   }
   
   override func viewDidLoad() {

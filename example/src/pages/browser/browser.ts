@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import {
-  Browser
+  Avocado
 } from '@avocadojs/core';
 
 /**
@@ -26,8 +26,9 @@ export class BrowserPage {
   }
 
   browserOpen() {
-    let browser = new Browser()
-    browser.open('http://ionicframework.com');
+    console.log('OBJECTS');
+    console.log((<any>window).Avocado);
+    Avocado.Plugins.Browser.open('http://ionicframework.com');
   }
 
 }

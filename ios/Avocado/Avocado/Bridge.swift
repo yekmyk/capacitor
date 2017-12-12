@@ -3,7 +3,7 @@ import Dispatch
 import WebKit
 
 @objc public class Bridge : NSObject {
-  public var webView: WKWebView?
+  public var webView: WKWebView
   public var viewController: UIViewController
   
   public var lastPlugin: AVCPlugin?
@@ -17,8 +17,9 @@ import WebKit
   // TODO: Unique label?
   public var dispatchQueue = DispatchQueue(label: "bridge")
   
-  public init(_ vc: UIViewController, _ pluginIds: [String]) {
+  public init(_ vc: UIViewController, _ webView: WKWebView) {
     self.viewController = vc
+    self.webView = webView
     super.init()
     registerPlugins()
   }
@@ -33,7 +34,7 @@ import WebKit
     var numClasses = UInt32(0);
     let classes = objc_copyClassList(&numClasses)
     for i in 0..<Int(numClasses) {
-      let c = classes![i]
+      let c: AnyClass = classes![i]
       if class_conformsToProtocol(c, AVCBridgedPlugin.self) {
         let pluginClassName = NSStringFromClass(c)
         let pluginType = c as! AVCPlugin.Type
@@ -45,7 +46,7 @@ import WebKit
   func registerPlugin(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
     let bridgeType = pluginType as! AVCBridgedPlugin.Type
     knownPlugins[bridgeType.pluginId()] = pluginType
-    defineJS(pluginClassName, pluginType)
+    PluginExport.exportJS(webView: self.webView, pluginClassName: pluginClassName, pluginType: pluginType)
   }
   
   public func getOrLoadPlugin(pluginId: String) -> AVCPlugin? {
@@ -72,42 +73,7 @@ import WebKit
     return p
   }
   
-  public func defineJS(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
-    var lines = [String]()
-    
-    lines.append("""
-    (function(w) {
-      w.Avocado = w.Avocado || {};
-      w.Avocado.Plugins = w.Avocado.Plugins || {};
-      var a = w.Avocado; var p = a.Plugins;
-      p['\(pluginClassName)'] = {}
-    """)
-    let bridgeType = pluginType as! AVCBridgedPlugin.Type
-    let methods = bridgeType.pluginMethods() as! [AVCPluginMethod]
-    print("Plugin has methods", methods);
-    for method in methods {
-      print("METHOD", method.name, method.types)
-      //let selector = method.getSelector()
-      let selector = method.getSelector()
-      let methodLine = """
-      p['\(pluginClassName)']['\(method.name!)'] = function() {}
-      """
-      lines.append(methodLine)
-    }
-    
-    lines.append("""
-    })(window);
-    """)
-    
-    let js = lines.joined(separator: "\n")
-    print(js)
-    self.webView?.evaluateJavaScript(js) { (result, error) in
-      print("EVALED", result, error)
-      if error != nil && result != nil {
-        print(result!)
-      }
-    }
-  }
+ 
   
   public func isSimulator() -> Bool {
     var isSimulator = false
@@ -127,9 +93,6 @@ import WebKit
   }
   
   public func reload() {
-    guard let webView = self.webView else {
-      return
-    }
     webView.reload()
   }
   
@@ -193,7 +156,7 @@ import WebKit
   public func toJs(result: JSResult) {
     let resultJson = result.toJson()
     print("TO JS", result.toJson())
-    self.webView?.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(result.call.callbackId)', pluginId: '\(result.call.pluginId)', methodName: '\(result.call.method)', success: true, data: \(resultJson)})") { (result, error) in
+    self.webView.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(result.call.callbackId)', pluginId: '\(result.call.pluginId)', methodName: '\(result.call.method)', success: true, data: \(resultJson)})") { (result, error) in
       if error != nil && result != nil {
         print(result!)
       }
@@ -204,7 +167,7 @@ import WebKit
    * Send an error result to the JavaScript layer.
    */
   public func toJsError(error: JSResultError) {
-    self.webView?.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(error.call.callbackId)', pluginId: '\(error.call.pluginId)', methodName: '\(error.call.method)', success: false, error: \(error.toJson())})") { (result, error) in
+    self.webView.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(error.call.callbackId)', pluginId: '\(error.call.pluginId)', methodName: '\(error.call.method)', success: false, error: \(error.toJson())})") { (result, error) in
       if error != nil && result != nil {
         print(result!)
       }
@@ -218,7 +181,7 @@ import WebKit
       \(js)
     });
     """
-    self.webView?.evaluateJavaScript(wrappedJs, completionHandler: { (result, error) in
+    self.webView.evaluateJavaScript(wrappedJs, completionHandler: { (result, error) in
       if error != nil {
         print("JS Eval error", error?.localizedDescription)
       }

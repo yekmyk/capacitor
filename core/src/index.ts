@@ -9,8 +9,5 @@ export {
   PluginConfig
 } from './definitions';
 
-export {
-  Plugin, NativePlugin
-} from './plugin';
-
-export * from './plugins/index';
+export * from './core-plugin-definitions';
+export * from './global';

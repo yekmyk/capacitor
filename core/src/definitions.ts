@@ -1,3 +1,8 @@
+declare global {
+  export interface PluginRegistry {}
+}
+//const Plugins: PluginRegistry = {};
+//export { Plugins };
 
 export interface PluginResultData {
   [key: string]: any;
@@ -58,6 +63,7 @@ export interface Avocado {
   toNative?: (pluginId: string, methodName: string, options: any, storedCallback?: StoredCallback) => void;
   fromNative?: (result: PluginResult) => void;
   withPlugin?: (pluginId: string, fn: Function) => void;
+  Plugins: PluginRegistry;
 }
 
 export interface WindowAvocado {

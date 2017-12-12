@@ -1,9 +1,12 @@
 import {
-  Avocado,
   PluginCall,
+  PluginResult,
   StoredCallbacks,
-  WindowAvocado
+  WindowAvocado,
+  StoredCallback
 } from './definitions';
+
+import { Avocado } from './global';
 
 declare var global: any;
 
@@ -19,11 +22,15 @@ declare var global: any;
   // keep a counter of callback ids
   let callbackIdCount = 0;
 
+  const avocado = Avocado;
   // create global
+  /*
   const avocado: Avocado = win.avocado = {
     isNative: false,
-    platform: 'browser'
+    platform: 'browser',
+    Plugins: {}
   };
+  */
 
   // create the postToNative() fn if needed
   let postToNative: (call: PluginCall) => void;
@@ -88,7 +95,7 @@ declare var global: any;
   /**
    * Send a plugin method call to the native layer
    */
-  avocado.toNative = function toNative(pluginId, methodName, options, storedCallback) {
+  avocado.toNative = function toNative(pluginId: string, methodName: string, options: any, storedCallback: StoredCallback) {
     try {
       if (avocado.isNative) {
         let callbackId = '-1';
@@ -119,7 +126,7 @@ declare var global: any;
   /**
    * Process a response from the native layer.
    */
-  avocado.fromNative = function fromNative(result) {
+  avocado.fromNative = function fromNative(result: PluginResult) {
     // get the stored call, if it exists
     try {
       const storedCall = calls[result.callbackId];

@@ -47,11 +47,11 @@ public class PluginExport {
     """)
     if returnType == AVCPluginReturnPromise {
       lines.append("""
-        return window.Avocado.nativePromise('\(methodName)', {});
+        return window.Avocado.nativePromise('\(pluginClassName)', '\(methodName)', {});
       """)
     } else if returnType == AVCPluginReturnCallback {
       lines.append("""
-        return window.Avocado.nativeCallback('\(methodName)', {});
+        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', {});
         """)
     } else {
       print("Error: plugin method return type \(returnType) is not supported!")

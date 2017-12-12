@@ -173,4 +173,26 @@ declare var global: any;
   avocado.withPlugin = function withPlugin(_pluginId: string, _fn: Function) {
   };
 
+  avocado.nativeCallback = (pluginId: string, methodName: string, options?: any, callback?: any): void => {
+    if (typeof options === 'function') {
+      // 2nd arg was a function
+      // so it's the callback, not options
+      callback = options;
+      options = {};
+    }
+
+    avocado.toNative(pluginId, methodName, options, {
+      callback
+    });
+  }
+
+  avocado.nativePromise = (pluginId: string, methodName: string, options?: any): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      avocado.toNative(pluginId, methodName, options, {
+        resolve,
+        reject
+      });
+    });
+  };
+
 })((typeof window !== 'undefined' ? window : global) as any);

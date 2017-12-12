@@ -63,7 +63,9 @@ export interface Avocado {
   toNative?: (pluginId: string, methodName: string, options: any, storedCallback?: StoredCallback) => void;
   fromNative?: (result: PluginResult) => void;
   withPlugin?: (pluginId: string, fn: Function) => void;
-  Plugins: PluginRegistry;
+  nativeCallback?: (pluginId: string, methodName: string, options?: any, callback?: any) => void;
+  nativePromise?: (pluginId: string, methodName: string, options?: any) => Promise<any>;
+  Plugins?: PluginRegistry;
 }
 
 export interface WindowAvocado {

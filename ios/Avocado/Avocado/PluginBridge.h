@@ -33,7 +33,7 @@ typedef void (^AVCErrorCallback)(NSError *error);
 
 #define AVC_PLUGIN_CONFIG(plugin_id) \
 AVC_EXTERN void AvocadoRegisterPlugin(Class); \
-+ (NSString *)pluginId { return @plugin_id; } \
++ (NSString *)pluginId { return @#plugin_id; } \
 + (void)load { AvocadoRegisterPlugin(self); }
 + (NSArray *)pluginMethods;
 #define AVC_PLUGIN_METHOD(method_name, method_types, method_return_type) \
@@ -43,7 +43,7 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 
 @optional
 
-#define AVC_PLUGIN(plugin_id, objc_name, methods_body) \
+#define AVC_PLUGIN(objc_name, methods_body) \
 @interface objc_name : NSObject \
 @end \
 @interface objc_name (AVCPluginCategory) <AVCBridgedPlugin> \
@@ -54,7 +54,7 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
   methods_body \
   return methods; \
 } \
-AVC_PLUGIN_CONFIG(plugin_id) \
+AVC_PLUGIN_CONFIG(objc_name) \
 @end
 
 @end

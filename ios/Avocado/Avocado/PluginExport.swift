@@ -6,7 +6,6 @@ public class PluginExport {
     var lines = [String]()
     
     lines.append("""
-      alert('LOADING NATIVE JS');
       (function(w) {
       w.Avocado = w.Avocado || {};
       w.Avocado.Plugins = w.Avocado.Plugins || {};

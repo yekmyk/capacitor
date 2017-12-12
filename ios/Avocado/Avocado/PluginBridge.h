@@ -1,7 +1,3 @@
-#ifndef PluginBridge_h
-#define PluginBridge_h
-
-
 #if defined(__cplusplus)
 #define AVC_EXTERN extern "C" __attribute__((visibility("default")))
 #else
@@ -17,6 +13,7 @@ typedef void (^AVCSuccessCallback)(id result);
 typedef void (^AVCErrorCallback)(NSError *error);
 
 @interface AVCPluginMethod : NSObject
+
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, strong) NSString *types;
 @property (nonatomic, strong) NSArray *params;
@@ -30,18 +27,19 @@ typedef void (^AVCErrorCallback)(NSError *error);
 @end
 
 @protocol AVCBridgedPlugin <NSObject>
++(NSString *)pluginId;
++(NSArray *)pluginMethods;
++(AVCPluginMethod *)getMethod:(NSString *)methodName;
+@optional
+@end
 
 #define AVC_PLUGIN_CONFIG(plugin_id) \
 AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 + (NSString *)pluginId { return @#plugin_id; } \
 + (void)load { AvocadoRegisterPlugin(self); }
-+ (NSArray *)pluginMethods;
 #define AVC_PLUGIN_METHOD(method_name, method_types, method_return_type) \
 [methods addObject:[[AVCPluginMethod alloc] initWithNameAndTypes:@#method_name types:@method_types returnType:method_return_type]]
 
-+ (NSString *)pluginId;
-
-@optional
 
 #define AVC_PLUGIN(objc_name, methods_body) \
 @interface objc_name : NSObject \
@@ -54,38 +52,15 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
   methods_body \
   return methods; \
 } \
++ (AVCPluginMethod *)getMethod:(NSString *)methodName { \
+  NSArray *methods = [self pluginMethods]; \
+  for(AVCPluginMethod *method in methods) { \
+    if([method.name isEqualToString:methodName]) { \
+      return method; \
+    } \
+  } \
+  return nil; \
+} \
 AVC_PLUGIN_CONFIG(objc_name) \
 @end
 
-@end
-/*
-@protocol AvocadoBridgePlugin <NSObject>
-
-#define AVOCADO_EXPORT_PLUGIN(plugin_id) \
-AVC_EXTERN void AvocadoRegisterPlugin(Class); \
-+ (NSString *)pluginId { return @plugin_id; } \
-+ (void)load { AvocadoRegisterPlugin(self); }
-
-+ (NSString *)pluginId;
-
-@optional
-
-#define AVOCADO_PLUGIN_DEFINE(plugin_id, objc_name) \
-objc_name : NSObject \
-@end \
-@implementation objc_name \
-AVOCADO_EXPORT_PLUGIN(plugin_id)
-
-#define AVOCADO_PLUGIN(plugin_id, objc_name) \
-@interface objc_name : NSObject \
-@end \
-@interface objc_name (AvocadoExternPlugin) <AvocadoBridgePlugin> \
-@end \
-@implementation objc_name (AvocadoExternPlugin) \
-AVOCADO_EXPORT_PLUGIN(plugin_id) \
-@end
-
-@end
- */
-
-#endif /* PluginBridge_h */

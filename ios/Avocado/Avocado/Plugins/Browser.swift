@@ -2,7 +2,7 @@ import Foundation
 import SafariServices
 
 @objc(Browser)
-public class Browser : Plugin, SFSafariViewControllerDelegate {
+public class Browser : AVCPlugin, SFSafariViewControllerDelegate {
   var vc: SFSafariViewController?
   
   /*
@@ -18,7 +18,8 @@ public class Browser : Plugin, SFSafariViewControllerDelegate {
   }
  */
   
-  @objc func open(url: String, success: @escaping AVCSuccessCallback, error: AVCErrorCallback) {
+  @objc(open:success:error:)
+  func open(url: String, success: @escaping AVCSuccessCallback, error: AVCErrorCallback) {
     let url = URL(string: url)
     vc = SFSafariViewController.init(url: url!)
     vc!.delegate = self

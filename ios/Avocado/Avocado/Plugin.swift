@@ -15,6 +15,7 @@ public typealias PluginEventListener = PluginCall
  * Extends NSObject to allow for calling methods with selectors
  */
 @objc open class Plugin : AVCPlugin {
+  
   var eventListeners = [String:[PluginEventListener]]()
 
   public required override init(bridge: Bridge, pluginId: String) {

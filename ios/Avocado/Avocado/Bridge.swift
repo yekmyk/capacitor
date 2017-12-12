@@ -73,8 +73,6 @@ import WebKit
     return p
   }
   
- 
-  
   public func isSimulator() -> Bool {
     var isSimulator = false
     #if arch(i386) || arch(x86_64)
@@ -117,15 +115,25 @@ import WebKit
    * construct a selector, and perform that selector on the plugin instance.
    */
   public func handleJSCall(call: JSCall) {
-    // Create a selector to send to the plugin
-    let selector = NSSelectorFromString("\(call.method):")
-    
     guard let plugin = self.getPlugin(pluginId: call.pluginId) ?? self.loadPlugin(pluginId: call.pluginId) else {
       print("Error loading plugin \(call.pluginId) for call. Check that the pluginId is correct")
       return
     }
+    guard let pluginType = knownPlugins[plugin.getId()] else {
+      return
+    }
+    let bridgeType = pluginType as! AVCBridgedPlugin.Type
+    guard let method = bridgeType.getMethod(call.method) else {
+      print("Error calling method \(call.method) on plugin \(call.pluginId): No method found.")
+      print("Ensure plugin method exists and uses @objc in its declaration, and has been defined")
+      return
+    }
     
     print("Calling method \(call.method) on plugin \(plugin.getId())")
+    print("FOUND METHOD", method)
+    
+    let selector = method.getSelector()
+    print("Got selector for method", selector)
     
     if !plugin.responds(to: selector) {
       print("Error: Plugin \(plugin.getId()) does not respond to method call \(call.method).")

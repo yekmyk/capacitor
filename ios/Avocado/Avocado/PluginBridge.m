@@ -22,6 +22,7 @@ void AvocadoRegisterPlugin(Class PluginClass)
   [AvocadoPluginClasses addObject:PluginClass];
 }
 
+
 @implementation AVCPluginMethod
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
@@ -54,13 +55,21 @@ void AvocadoRegisterPlugin(Class PluginClass)
   [nameSelector appendString:@":"];
   NSMutableArray *selectorParts = [[NSMutableArray alloc] initWithObjects:nameSelector, nil];
   NSArray *typeParts = [self.types componentsSeparatedByString:@","];
-  for(NSString *t in typeParts) {
-    NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
-    NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
-    NSMutableString *paramName = [[NSMutableString alloc] initWithString:[paramParts objectAtIndex:0]];
-    [paramName appendString:@":"];
-    [selectorParts addObject:paramName];
+  
+  // We skip the first param because Objective-C selectors don't use the first argument
+  // as part of the selector. Example: method setName with arg "name:string" becomes just setName:
+  if([typeParts count] > 1) {
+    NSArray *typePartsMinusFirstArg = [typeParts subarrayWithRange:NSMakeRange(1, [typeParts count])];
+    for(NSString *t in typePartsMinusFirstArg) {
+      NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+      NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
+      NSMutableString *paramName = [[NSMutableString alloc] initWithString:[paramParts objectAtIndex:0]];
+      [paramName appendString:@":"];
+      [selectorParts addObject:paramName];
+    }
   }
+  // Add our required success/error callback handlers
+  [selectorParts addObject:@"success:error:"];
   NSString *selectorString = [selectorParts componentsJoinedByString:@""];
   return NSSelectorFromString(selectorString);
 }

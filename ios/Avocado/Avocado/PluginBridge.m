@@ -1,4 +1,5 @@
 #import <foundation/foundation.h>
+#import <Avocado/Avocado-Swift.h>
 
 #import "PluginBridge.h"
 
@@ -76,5 +77,9 @@ void AvocadoRegisterPlugin(Class PluginClass)
 
 -(SEL)getSelector {
   return self.selector;
+}
+
+-(void)invoke:(AVCPluginCall *)pluginCall {
+  NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
 }
 @end

@@ -33,7 +33,7 @@ public class Network : Plugin {
     ])
   }
   
-  @objc func onStatusChange(_ call: PluginCall) {
+  @objc func onStatusChange(_ call: AVCPluginCall) {
     addEventListener("networkStatusChanged", call)
   }
 }

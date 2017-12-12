@@ -145,13 +145,13 @@ import WebKit
     dispatchQueue.sync {
       //let startTime = CFAbsoluteTimeGetCurrent()
       
-      let pluginCall = PluginCall(options: call.options, success: {(result: PluginResult) -> Void in
+      let pluginCall = AVCPluginCall(options: call.options, success: {(result: PluginResult) -> Void in
         self.toJs(result: JSResult(call: call, result: result.data))
       }, error: {(error: PluginCallError) -> Void in
         self.toJsError(error: JSResultError(call: call, message: error.message, error: error.data))
       })
-      // Perform the plugin call
-      plugin.perform(selector, with: pluginCall)
+      
+      method.invoke(pluginCall)
       
       //let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       //print("Native call took", timeElapsed)

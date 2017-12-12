@@ -3,7 +3,7 @@ import CoreMotion
 
 @objc(Clipboard)
 public class Clipboard : Plugin {
-  @objc func set(_ call: PluginCall) {
+  @objc func set(_ call: AVCPluginCall) {
     if let string = call.get("string", String.self) {
       UIPasteboard.general.string = string
       return
@@ -27,7 +27,7 @@ public class Clipboard : Plugin {
     call.success()
   }
   
-  @objc func get(_ call: PluginCall) {
+  @objc func get(_ call: AVCPluginCall) {
     let type = call.get("type", String.self, "string")!
     
     if type == "string" && UIPasteboard.general.hasStrings {

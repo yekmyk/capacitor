@@ -22,7 +22,7 @@ public class Filesystem : Plugin {
   /**
    * Read a file from the filesystem.
    */
-  @objc func readFile(_ call: PluginCall) {
+  @objc func readFile(_ call: AVCPluginCall) {
     //let encoding = call.get("encoding") as? String ?? "utf8"
     // TODO: Allow them to switch encoding
     guard let file = call.get("file", String.self) else {
@@ -53,7 +53,7 @@ public class Filesystem : Plugin {
   /**
    * Write a file to the filesystem.
    */
-  @objc func writeFile(_ call: PluginCall) {
+  @objc func writeFile(_ call: AVCPluginCall) {
     //let encoding = call.get("encoding") as? String ?? "utf8"
     // TODO: Allow them to switch encoding
     guard let file = call.get("file", String.self) else {
@@ -87,7 +87,7 @@ public class Filesystem : Plugin {
   /**
    * Append to a file.
    */
-  @objc func appendFile(_ call: PluginCall) {
+  @objc func appendFile(_ call: AVCPluginCall) {
     //let encoding = call.get("encoding") as? String ?? "utf8"
     // TODO: Allow them to switch encoding
     guard let file = call.get("file", String.self) else {
@@ -136,7 +136,7 @@ public class Filesystem : Plugin {
   /**
    * Append to a file.
    */
-  @objc func deleteFile(_ call: PluginCall) {
+  @objc func deleteFile(_ call: AVCPluginCall) {
     //let encoding = call.get("encoding") as? String ?? "utf8"
     // TODO: Allow them to switch encoding
     guard let file = call.get("file", String.self) else {
@@ -168,7 +168,7 @@ public class Filesystem : Plugin {
   /**
    * Make a new directory, optionally creating parent folders first.
    */
-  @objc func mkdir(_ call: PluginCall) {
+  @objc func mkdir(_ call: AVCPluginCall) {
     guard let path = call.get("path", String.self) else {
       handleError(call, "Path must be provided and must be a string.")
       return
@@ -197,7 +197,7 @@ public class Filesystem : Plugin {
   /**
    * Remove a directory.
    */
-  @objc func rmdir(_ call: PluginCall) {
+  @objc func rmdir(_ call: AVCPluginCall) {
     guard let path = call.get("path", String.self) else {
       handleError(call, "Path must be provided and must be a string.")
       return
@@ -225,7 +225,7 @@ public class Filesystem : Plugin {
   /**
    * Read the contents of a directory.
    */
-  @objc func readdir(_ call: PluginCall) {
+  @objc func readdir(_ call: AVCPluginCall) {
     guard let path = call.get("path", String.self) else {
       handleError(call, "Path must be provided and must be a string.")
       return
@@ -257,7 +257,7 @@ public class Filesystem : Plugin {
     }
   }
   
-  @objc func stat(_ call: PluginCall) {
+  @objc func stat(_ call: AVCPluginCall) {
     guard let path = call.get("path", String.self) else {
       handleError(call, "Path must be provided and must be a string.")
       return
@@ -287,7 +287,7 @@ public class Filesystem : Plugin {
   }
 
   // Helper function for handling errors
-  func handleError(_ call: PluginCall, _ message: String, _ error: Error? = nil) {
+  func handleError(_ call: AVCPluginCall, _ message: String, _ error: Error? = nil) {
     call.error(message, error)
   }
 }

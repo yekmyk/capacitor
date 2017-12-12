@@ -6,7 +6,7 @@ import Foundation
  */
 @objc(StatusBar)
 public class StatusBar: Plugin {
-  @objc public func setStyle(_ call: PluginCall) {
+  @objc public func setStyle(_ call: AVCPluginCall) {
     let options = call.options
 
     if let style = options["style"] as? String {

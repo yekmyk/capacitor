@@ -14,9 +14,9 @@ public struct GeolocationCoords {
 
 class GetLocationHandler:NSObject, CLLocationManagerDelegate {
   var locationManager = CLLocationManager()
-  var call: PluginCall?
+  var call: AVCPluginCall?
   
-  init(call: PluginCall, options: PluginCallOptions) {
+  init(call: AVCPluginCall, options: PluginCallOptions) {
     super.init()
     
     self.call = call
@@ -64,13 +64,13 @@ public class Geolocation : Plugin {
   var locationHandler: CLLocationManagerDelegate?
   var watchLocationHandler: CLLocationManagerDelegate?
   
-  @objc public func getCurrentPosition(_ call: PluginCall) {
+  @objc public func getCurrentPosition(_ call: AVCPluginCall) {
     self.locationHandler = GetLocationHandler(call: call, options:[
       "watch": false
     ])
   }
   
-  @objc public func watchPosition(_ call: PluginCall) {
+  @objc public func watchPosition(_ call: AVCPluginCall) {
     self.watchLocationHandler = GetLocationHandler(call: call, options:[
       "watch": true
     ]);

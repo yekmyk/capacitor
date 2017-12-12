@@ -8,6 +8,8 @@
 #define AVCPluginReturnPromise @"promise"
 #define AVCPluginReturnSync @"sync" // not used
 
+@class AVCPluginCall;
+
 typedef NSString AVCPluginReturnType;
 typedef void (^AVCSuccessCallback)(id result);
 typedef void (^AVCErrorCallback)(NSError *error);
@@ -23,6 +25,7 @@ typedef void (^AVCErrorCallback)(NSError *error);
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType;
 
 -(SEL)getSelector;
+-(void)invoke:(AVCPluginCall *)pluginCall;
 
 @end
 

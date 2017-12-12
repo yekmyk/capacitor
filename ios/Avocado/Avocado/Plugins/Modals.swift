@@ -5,7 +5,7 @@ import Foundation
  */
 @objc(Modals)
 public class Modals : Plugin {
-  @objc public func alert(_ call: PluginCall) {
+  @objc public func alert(_ call: AVCPluginCall) {
     guard let title = call.options["title"] as? String else {
       call.error("title must be provided")
       return
@@ -21,7 +21,7 @@ public class Modals : Plugin {
     call.success()
   }
   
-  @objc public func confirm(_ call: PluginCall) {
+  @objc public func confirm(_ call: AVCPluginCall) {
     guard let title = call.options["title"] as? String else {
       call.error("title must be provided")
       return
@@ -44,7 +44,7 @@ public class Modals : Plugin {
     self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
   
-  @objc public func prompt (_ call: PluginCall) {
+  @objc public func prompt (_ call: AVCPluginCall) {
     guard let title = call.options["title"] as? String else {
       call.error("title must be provided")
       return

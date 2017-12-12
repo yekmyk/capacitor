@@ -6,7 +6,7 @@ public class Motion : Plugin {
   var motion: CMMotionManager?
   var timer: Timer?
   
-  @objc func watchAccel(_ call: PluginCall) {
+  @objc func watchAccel(_ call: AVCPluginCall) {
     self.motion = CMMotionManager()
     
     if self.motion!.isAccelerometerAvailable {

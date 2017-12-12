@@ -7,7 +7,7 @@ public typealias PluginSuccessCallback = (_ : PluginResult) -> Void
 public typealias PluginErrorCallback = (_ error: PluginCallError) -> Void
 public typealias PluginResultData = [String:Any]
 public typealias PluginCallOptions = [String:Any]
-public typealias PluginEventListener = PluginCall
+public typealias PluginEventListener = AVCPluginCall
 
 /**
  * Base class for all plugins.
@@ -52,7 +52,8 @@ public typealias PluginEventListener = PluginCall
 /**
  * A call down to a native plugin
  */
-@objc public class PluginCall : NSObject {
+@objcMembers
+public class AVCPluginCall : NSObject {
   public var options: [String:Any] = [:]
   public var successCallback: PluginSuccessCallback
   public var errorCallback: PluginErrorCallback
@@ -67,15 +68,15 @@ public typealias PluginEventListener = PluginCall
     return self.options[key] as? T ?? defaultValue
   }
   
-  @objc public func getBool(_ key: String, defaultValue: NSNumber?) -> NSNumber? {
+  public func getBool(_ key: String, defaultValue: NSNumber?) -> NSNumber? {
     return self.options[key] as? NSNumber ?? defaultValue
   }
   
-  @objc public func success() {
+  public func success() {
     successCallback(PluginResult())
   }
   
-  @objc public func success(_ data: PluginResultData = [:]) {
+  public func success(_ data: PluginResultData = [:]) {
     successCallback(PluginResult(data))
   }
   

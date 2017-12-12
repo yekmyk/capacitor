@@ -4,10 +4,10 @@ import CoreMotion
 @objc(Camera)
 public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPopoverPresentationControllerDelegate {
   var imagePicker: UIImagePickerController?
-  var call: PluginCall?
+  var call: AVCPluginCall?
   var quality: Float = 1.0
   
-  @objc func getPhoto(_ call: PluginCall) {
+  @objc func getPhoto(_ call: AVCPluginCall) {
     self.call = call
     self.quality = call.get("quality", Float.self, 100)!
     let allowEditing = call.get("allowEditing", Bool.self, false)!

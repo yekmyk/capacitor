@@ -81,5 +81,10 @@ void AvocadoRegisterPlugin(Class PluginClass)
 
 -(void)invoke:(AVCPluginCall *)pluginCall {
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
+  NSDictionary *options = pluginCall.options;
+  for(NSString *param in self.params) {
+    id arg = [options objectForKey:param];
+    NSLog(@"Found param arg %@ %@", param, arg);
+  }
 }
 @end

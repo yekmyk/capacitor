@@ -28,7 +28,6 @@ public class PluginExport {
     print(js)
     
     webView.evaluateJavaScript(js) { (result, error) in
-      print("EVALED", result, error)
       if error != nil && result != nil {
         print(result!)
       }
@@ -40,20 +39,42 @@ public class PluginExport {
     let returnType = method.returnType!
     let params = method.params as! [String]
     let paramString = params.joined(separator: ", ")
+    
+    let argObjectString = generateArgObject(method: method)
+    
     var lines = [String]()
-    lines.append("""
-    p['\(pluginClassName)']['\(method.name!)'] = function(\(paramString)) {
-    """)
+    
+    // Create the function declaration
+    lines.append("p['\(pluginClassName)']['\(method.name!)'] = function(\(paramString)) {")
+    
+    // Create the call to Avocado...
     if returnType == AVCPluginReturnPromise {
+      // ...using a promise
       lines.append("""
-        return window.Avocado.nativePromise('\(pluginClassName)', '\(methodName)', {});
+        return window.Avocado.nativePromise('\(pluginClassName)', '\(methodName)', \(argObjectString));
       """)
     } else if returnType == AVCPluginReturnCallback {
+      // ...using a callback
       lines.append("""
-        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', {});
+        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString));
         """)
     } else {
       print("Error: plugin method return type \(returnType) is not supported!")
+    }
+    
+    // Close the function
+    lines.append("}")
+    return lines.joined(separator: "\n")
+  }
+  
+  private static func generateArgObject(method: AVCPluginMethod) -> String {
+    let params = method.params as! [String]
+    var lines = [String]()
+    lines.append("""
+    {
+    """)
+    for param in params {
+      lines.append("\(param): \(param)")
     }
     lines.append("}")
     return lines.joined(separator: "\n")

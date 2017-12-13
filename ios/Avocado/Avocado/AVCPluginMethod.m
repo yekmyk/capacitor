@@ -62,6 +62,7 @@
   NSDictionary *options = pluginCall.options;
   
   NSMethodSignature * mySignature = [plugin methodSignatureForSelector:self.selector];
+
   NSInvocation * myInvocation = [NSInvocation
                                  invocationWithMethodSignature:mySignature];
   [myInvocation setTarget:plugin];
@@ -74,12 +75,15 @@
     [myInvocation setArgument:&arg atIndex:i+2]; // We're at an offset of 2 for the invocation args
   }
   
-  AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
-  AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
+  const AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
+  const AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
   
   [myInvocation setArgument:&successHandler atIndex:numParams];
   [myInvocation setArgument:&errorHandler atIndex:numParams+1];
   
+  // TODO: Look into manual retain per online discussion
+  // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html
+  // Possible adding to autorelease pool is not desirable given our lifecycle
   [myInvocation retainArguments];
   
   CFTimeInterval start = CACurrentMediaTime();

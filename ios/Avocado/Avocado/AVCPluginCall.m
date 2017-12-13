@@ -5,17 +5,17 @@
 @implementation AVCPluginCall
 -(instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler) success error:(AVCPluginCallErrorHandler) error {
   self.options = options;
-  self->successHandler = success;
-  self->errorHandler = error;
+  self.successHandler = success;
+  self.errorHandler = error;
   return self;
 }
 
 - (const AVCPluginCallSuccessHandler *)getSuccessHandler {
-  return &self->successHandler;
+  return &_successHandler;
 }
 
 - (const AVCPluginCallErrorHandler *)getErrorHandler {
-  return &self->errorHandler;
+  return &_errorHandler;
 }
 
 @end

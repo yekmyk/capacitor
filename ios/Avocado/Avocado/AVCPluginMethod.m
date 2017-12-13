@@ -1,6 +1,17 @@
 #import <Avocado/Avocado-Swift.h>
 #import "AVCPluginMethod.h"
 
+@implementation AVCPluginMethodArgument
+
+- (instancetype)initWithName:(NSString *)name nullability:(AVCPluginMethodArgumentNullability)nullability type:(NSString *)type {
+  self.name = name;
+  self.type = type;
+  self.nullability = nullability;
+  return self;
+}
+
+@end
+
 @implementation AVCPluginMethod
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
@@ -13,14 +24,21 @@
   return self;
 }
 
--(NSArray *)makeParams {
-  NSMutableArray *parts = [[NSMutableArray alloc] init];
+-(NSArray<AVCPluginMethodArgument *> *)makeParams {
+  NSMutableArray<AVCPluginMethodArgument *> *parts = [[NSMutableArray alloc] init];
   NSArray *typeParts = [self.types componentsSeparatedByString:@","];
   for(NSString *t in typeParts) {
     NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
-    NSMutableString *paramName = [[NSMutableString alloc] initWithString:[paramParts objectAtIndex:0]];
-    [parts addObject:paramName];
+    NSString *paramName = [[NSString alloc] initWithString:[paramParts objectAtIndex:0]];
+    NSString *typeName = [[NSString alloc] initWithString:[paramParts objectAtIndex:1]];
+    NSString *flag = [paramName substringFromIndex:MAX([paramName length] - 2, 0)];
+    AVCPluginMethodArgumentNullability nullability = AVCPluginMethodArgumentNotNullable;
+    if([flag isEqualToString:@"?"]) {
+      nullability = AVCPluginMethodArgumentNullable;
+    }
+    AVCPluginMethodArgument *arg = [[AVCPluginMethodArgument alloc] initWithName:paramName nullability:nullability type:typeName];
+    [parts addObject:arg];
   }
   return parts;
 }
@@ -37,7 +55,7 @@
   // We skip the first param because Objective-C selectors don't use the first argument
   // as part of the selector. Example: method setName with arg "name:string" becomes just setName:
   if([typeParts count] > 1) {
-    NSArray *typePartsMinusFirstArg = [typeParts subarrayWithRange:NSMakeRange(1, [typeParts count])];
+    NSArray *typePartsMinusFirstArg = [typeParts subarrayWithRange:NSMakeRange(1, [typeParts count]-1)];
     for(NSString *t in typePartsMinusFirstArg) {
       NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
       NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];

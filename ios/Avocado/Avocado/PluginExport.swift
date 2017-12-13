@@ -28,7 +28,9 @@ public class PluginExport {
     print(js)
     
     webView.evaluateJavaScript(js) { (result, error) in
-      if error != nil && result != nil {
+      if error != nil {
+        print("ERROR EXPORTTING PLUGIN JS", js)
+      } else if result != nil {
         print(result!)
       }
     }

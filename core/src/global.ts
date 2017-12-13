@@ -4,9 +4,9 @@ var Avocado:_Avocado = {
   Plugins: null
 };
 
-const Plugins = Avocado.Plugins;
-
 declare var window: any;
-Avocado = window.Avocado = window.Avocado || Avocado;
+Avocado = window.Avocado || Avocado;
+
+const Plugins = Avocado.Plugins;
 
 export { Avocado, Plugins };

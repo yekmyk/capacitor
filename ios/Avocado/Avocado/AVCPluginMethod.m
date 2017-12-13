@@ -4,15 +4,26 @@
 @implementation AVCPluginMethodArgument
 
 - (instancetype)initWithName:(NSString *)name nullability:(AVCPluginMethodArgumentNullability)nullability type:(NSString *)type {
-  self.name = name;
-  self.type = type;
-  self.nullability = nullability;
+  if(self = [super init]) {
+    _name = [name copy];
+    _type = [type copy];
+    _nullability = nullability;
+  }
+  //self.name = name;
+  //self.type = type;
+  //self.nullability = nullability;
   return self;
 }
 
 @end
 
-@implementation AVCPluginMethod
+@implementation AVCPluginMethod {
+  // NSInvocation's retainArguments doesn't work with our arguments
+  // so we have to retain args manually
+  NSMutableArray *_manualRetainArgs;
+  // Retain invocation instance
+  NSInvocation *_invocation;
+}
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
   self.name = name;
@@ -66,7 +77,7 @@
   }
   
   // Add our required success/error callback handlers
-  [selectorParts addObject:@"success:error:"];
+  //[selectorParts addObject:@"success:error:"];
   NSString *selectorString = [selectorParts componentsJoinedByString:@""];
   return NSSelectorFromString(selectorString);
 }
@@ -81,35 +92,39 @@
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
   NSDictionary *options = pluginCall.options;
   
-  NSMethodSignature * mySignature = [plugin methodSignatureForSelector:self.selector];
+  NSMethodSignature * mySignature = [[plugin class] instanceMethodSignatureForSelector:self.selector];
 
-  NSInvocation * myInvocation = [NSInvocation
-                                 invocationWithMethodSignature:mySignature];
-  [myInvocation setTarget:plugin];
-  [myInvocation setSelector:self.selector];
+  _invocation = [NSInvocation invocationWithMethodSignature:mySignature];
+  [_invocation setTarget:plugin];
+  [_invocation setSelector:self.selector];
   NSUInteger numArgs = [self.args count];
   for(int i = 0; i < numArgs; i++) {
     AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
     id callArg = [options objectForKey:arg.name];
     NSLog(@"Found callArg and arg %@ %@", callArg, arg);
-    [myInvocation setArgument:&arg atIndex:i+2]; // We're at an offset of 2 for the invocation args
+    [_invocation setArgument:&callArg atIndex:i+2]; // We're at an offset of 2 for the invocation args
+    [_manualRetainArgs addObject:arg];
   }
   
   const AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
   const AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
   
-  [myInvocation setArgument:&successHandler atIndex:numArgs];
-  [myInvocation setArgument:&errorHandler atIndex:numArgs+1];
+  //[_invocation setArgument:&successHandler atIndex:numArgs];
+  //[_invocation setArgument:&errorHandler atIndex:numArgs+1];
+  
+  // https://stackoverflow.com/questions/7997666/storing-blocks-in-an-array
+  //[_manualRetainArgs addObject:*successHandler];
+  //[_manualRetainArgs addObject:*errorHandler];
   
   // TODO: Look into manual retain per online discussion
   // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html
   // Possible adding to autorelease pool is not desirable given our lifecycle
-  [myInvocation retainArguments];
+  // [myInvocation retainArguments];
   
   CFTimeInterval start = CACurrentMediaTime();
-  [myInvocation invoke];
+  [_invocation invoke];
   CFTimeInterval duration = CACurrentMediaTime() - start;
-  NSLog(@"Method invocation took %@", duration);
+  NSLog(@"Method invocation took %d", duration);
 }
 @end
 

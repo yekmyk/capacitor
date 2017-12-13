@@ -44,7 +44,7 @@ public class JSResult {
           "Ensure that all data passed to success callback from module method is JSON serializable!")
         
       }
-    } catch let error as Error {
+    } catch {
       print("Unable to serialize plugin response as JSON: \(error.localizedDescription)")
     }
     

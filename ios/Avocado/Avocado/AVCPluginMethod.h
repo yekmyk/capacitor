@@ -7,16 +7,16 @@ typedef enum {
 } AVCPluginMethodArgumentNullability;
 
 typedef NSString AVCPluginReturnType;
-typedef void (^AVCSuccessCallback)(id result);
-typedef void (^AVCErrorCallback)(NSError *error);
+//typedef void (^AVCSuccessCallback)(id result);
+//typedef void (^AVCErrorCallback)(NSError *error);
 
 /**
  * Represents a single argument to a plugin method.
  */
 @interface AVCPluginMethodArgument : NSObject
 
-@property (nonatomic, strong) NSString *name;
-@property (nonatomic, strong) NSString *type;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *type;
 @property (nonatomic, assign) AVCPluginMethodArgumentNullability nullability;
 
 - (instancetype)initWithName:(NSString *)name nullability:(AVCPluginMethodArgumentNullability)nullability type:(NSString *)type;

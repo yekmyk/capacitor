@@ -134,7 +134,6 @@ import WebKit
     print("FOUND METHOD", method)
     
     let selector = method.getSelector()
-    print("Got selector for method", selector)
     
     if !plugin.responds(to: selector) {
       print("Error: Plugin \(plugin.getId()) does not respond to method call \(call.method).")

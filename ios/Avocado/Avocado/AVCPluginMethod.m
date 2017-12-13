@@ -124,7 +124,7 @@
   CFTimeInterval start = CACurrentMediaTime();
   [_invocation invoke];
   CFTimeInterval duration = CACurrentMediaTime() - start;
-  NSLog(@"Method invocation took %d", duration);
+  NSLog(@"Method invocation took %dms", (int)(duration * 1000));
 }
 @end
 

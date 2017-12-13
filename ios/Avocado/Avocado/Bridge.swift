@@ -141,7 +141,7 @@ import WebKit
     
     if !plugin.responds(to: selector) {
       print("🥑  Error: Plugin \(plugin.getId()!) does not respond to method call \"\(call.method)\" using selector \"\(selector!)\".")
-      print("🥑  Ensure plugin method exists, uses @objc in its declaration, and arguments match selector in AVC_PLUGIN_METHOD.")
+      print("🥑  Ensure plugin method exists, uses @objc in its declaration, and arguments match selector without callbacks in AVC_PLUGIN_METHOD.")
       print("🥑  Learn more: \(docLink(DocLinks.AVCPluginMethodSelector.rawValue))")
       return
     }

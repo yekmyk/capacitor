@@ -77,7 +77,7 @@
   }
   
   // Add our required success/error callback handlers
-  //[selectorParts addObject:@"success:error:"];
+  [selectorParts addObject:@"success:error:"];
   NSString *selectorString = [selectorParts componentsJoinedByString:@""];
   return NSSelectorFromString(selectorString);
 }
@@ -106,15 +106,23 @@
     [_manualRetainArgs addObject:arg];
   }
   
-  const AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
-  const AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
+  id successHandler = [[pluginCall getSuccessHandler] copy];
+  id errorHandler = [[pluginCall getErrorHandler] copy];
+  /*
+  id successHandler = [(^() {
+    NSLog(@"SUCCESS");
+  }) copy];
+  id errorHandler = [(^() {
+    NSLog(@"ERROR");
+  }) copy];
+  */
   
-  //[_invocation setArgument:&successHandler atIndex:numArgs];
-  //[_invocation setArgument:&errorHandler atIndex:numArgs+1];
+  [_invocation setArgument:&successHandler atIndex:numArgs];
+  [_invocation setArgument:&errorHandler atIndex:numArgs+1];
   
   // https://stackoverflow.com/questions/7997666/storing-blocks-in-an-array
-  //[_manualRetainArgs addObject:*successHandler];
-  //[_manualRetainArgs addObject:*errorHandler];
+  [_manualRetainArgs addObject:successHandler];
+  [_manualRetainArgs addObject:errorHandler];
   
   // TODO: Look into manual retain per online discussion
   // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html

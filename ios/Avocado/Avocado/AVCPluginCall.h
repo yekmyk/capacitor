@@ -24,8 +24,8 @@ typedef void(^AVCPluginCallErrorHandler)(AVCPluginCallError *error);
 @property (nonatomic, copy) AVCPluginCallErrorHandler errorHandler;
 
 - (instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler)success error:(AVCPluginCallErrorHandler)error;
-- (const AVCPluginCallSuccessHandler *)getSuccessHandler;
-- (const AVCPluginCallErrorHandler *)getErrorHandler;
+- (AVCPluginCallSuccessHandler)getSuccessHandler;
+- (AVCPluginCallErrorHandler)getErrorHandler;
 
 @end
 

@@ -10,12 +10,12 @@
   return self;
 }
 
-- (const AVCPluginCallSuccessHandler *)getSuccessHandler {
-  return &_successHandler;
+- (AVCPluginCallSuccessHandler)getSuccessHandler {
+  return _successHandler;
 }
 
-- (const AVCPluginCallErrorHandler *)getErrorHandler {
-  return &_errorHandler;
+- (AVCPluginCallErrorHandler)getErrorHandler {
+  return _errorHandler;
 }
 
 @end

@@ -25,9 +25,10 @@ import WebKit
   }
   
   public func willAppear() {
+    /*
     if let splash = getOrLoadPlugin(pluginId: "com.avocadojs.plugin.splashscreen") as? SplashScreen {
       splash.showOnLaunch()
-    }
+    }*/
   }
   
   func registerPlugins() {
@@ -94,7 +95,7 @@ import WebKit
     webView.reload()
   }
   
-  public func modulePrint(_ plugin: Plugin, _ items: Any...) {
+  public func modulePrint(_ plugin: AVCPlugin, _ items: Any...) {
     let output = items.map { "\($0)" }.joined(separator: " ")
     Swift.print(plugin.pluginId, "-", output)
   }
@@ -145,13 +146,13 @@ import WebKit
     dispatchQueue.sync {
       //let startTime = CFAbsoluteTimeGetCurrent()
       
-      let pluginCall = AVCPluginCall(options: call.options, success: {(result: PluginResult) -> Void in
-        self.toJs(result: JSResult(call: call, result: result.data))
-      }, error: {(error: PluginCallError) -> Void in
-        self.toJsError(error: JSResultError(call: call, message: error.message, error: error.data))
+      let pluginCall = AVCPluginCall(options: call.options, success: {(result: AVCPluginCallResult?) -> Void in
+        self.toJs(result: JSResult(call: call, result: result!.data))
+      }, error: {(error: AVCPluginCallError?) -> Void in
+        self.toJsError(error: JSResultError(call: call, message: error!.message, error: error!.data))
       })
       
-      method.invoke(pluginCall)
+      method.invoke(pluginCall, on: plugin)
       
       //let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       //print("Native call took", timeElapsed)

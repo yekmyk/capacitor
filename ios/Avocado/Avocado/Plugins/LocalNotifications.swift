@@ -4,6 +4,7 @@ import UserNotifications
 /**
  * Implement three common modal types: alert, confirm, and prompt
  */
+/*
 @objc(LocalNotifications)
 public class LocalNotifications : Plugin {
   @objc public func schedule(_ call: AVCPluginCall) {
@@ -69,4 +70,5 @@ public class LocalNotifications : Plugin {
     ])
   }
 }
+ */
 

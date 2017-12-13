@@ -1,3 +1,5 @@
+#import "AVCPluginMethod.h"
+
 #if defined(__cplusplus)
 #define AVC_EXTERN extern "C" __attribute__((visibility("default")))
 #else
@@ -9,25 +11,7 @@
 #define AVCPluginReturnSync @"sync" // not used
 
 @class AVCPluginCall;
-
-typedef NSString AVCPluginReturnType;
-typedef void (^AVCSuccessCallback)(id result);
-typedef void (^AVCErrorCallback)(NSError *error);
-
-@interface AVCPluginMethod : NSObject
-
-@property (nonatomic, strong) NSString *name;
-@property (nonatomic, strong) NSString *types;
-@property (nonatomic, strong) NSArray *params;
-@property (nonatomic, strong) AVCPluginReturnType *returnType;
-@property (nonatomic, assign) SEL selector;
-
--(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType;
-
--(SEL)getSelector;
--(void)invoke:(AVCPluginCall *)pluginCall;
-
-@end
+@class AVCPlugin;
 
 @protocol AVCBridgedPlugin <NSObject>
 +(NSString *)pluginId;

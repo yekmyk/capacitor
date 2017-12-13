@@ -1,5 +1,5 @@
 import Foundation
-
+/*
 @objc(Network)
 public class Network : Plugin {
   let reachability = Reachability()!
@@ -38,4 +38,4 @@ public class Network : Plugin {
   }
 }
 
-
+*/

@@ -1,3 +1,4 @@
+/*
 import Foundation
 import AudioToolbox
 
@@ -120,4 +121,5 @@ public class SplashScreen : Plugin {
     }
   }
 }
+ */
 

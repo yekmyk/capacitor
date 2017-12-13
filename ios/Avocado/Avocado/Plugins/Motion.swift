@@ -1,6 +1,6 @@
 import Foundation
 import CoreMotion
-
+/*
 @objc(Motion)
 public class Motion : Plugin {
   var motion: CMMotionManager?
@@ -35,4 +35,4 @@ public class Motion : Plugin {
       call.error("Accelerometer isn't available.", nil)
     }
   }
-}
+}*/

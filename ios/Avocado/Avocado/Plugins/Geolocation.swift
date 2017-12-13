@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreLocation
 
+/*
 
 public struct GeolocationCoords {
   public var latitude: Double
@@ -76,5 +77,5 @@ public class Geolocation : Plugin {
     ]);
   }
   
-}
+}*/
 

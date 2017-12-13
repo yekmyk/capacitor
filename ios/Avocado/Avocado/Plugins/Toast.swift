@@ -1,3 +1,4 @@
+/*
 import Foundation
 
 @IBDesignable class UIPaddingLabel: UILabel {
@@ -79,5 +80,6 @@ public class Toast : Plugin {
     }
   }
 }
+ */
 
 

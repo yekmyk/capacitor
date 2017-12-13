@@ -3,6 +3,7 @@ import Foundation
 /**
  * Implement three common modal types: alert, confirm, and prompt
  */
+/*
 @objc(Modals)
 public class Modals : Plugin {
   @objc public func alert(_ call: AVCPluginCall) {
@@ -77,6 +78,7 @@ public class Modals : Plugin {
     self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
 }
+ */
 
 
 

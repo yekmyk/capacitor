@@ -1,6 +1,6 @@
 import Foundation
 import CoreMotion
-
+/*
 @objc(Camera)
 public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPopoverPresentationControllerDelegate {
   var imagePicker: UIImagePickerController?
@@ -120,7 +120,7 @@ public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationContr
     vc.popoverPresentationController?.sourceView = self.bridge.viewController.view
     vc.popoverPresentationController?.permittedArrowDirections = UIPopoverArrowDirection(rawValue: 0)
   }
-}
+}*/
 
 
 

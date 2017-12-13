@@ -1,6 +1,7 @@
 import Foundation
 import CoreMotion
 
+/*
 @objc(Clipboard)
 public class Clipboard : Plugin {
   @objc func set(_ call: AVCPluginCall) {
@@ -56,7 +57,7 @@ public class Clipboard : Plugin {
       return
     }
   }
-}
+}*/
 
 
 

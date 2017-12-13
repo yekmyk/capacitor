@@ -1,28 +1,5 @@
-#import <foundation/foundation.h>
 #import <Avocado/Avocado-Swift.h>
-
-#import "PluginBridge.h"
-
-static NSMutableArray<Class> *AvocadoPluginClasses;
-NSArray<Class> *AvocadoGetPluginClasses(void)
-{
-  return AvocadoPluginClasses;
-}
-
-void AvocadoRegisterPlugin(Class);
-void AvocadoRegisterPlugin(Class PluginClass)
-{
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    AvocadoPluginClasses = [NSMutableArray new];
-  });
-
-  // TODO: Make sure the class conforms to the protocol
-  NSLog(@"Registering Plugin %@", PluginClass);
-  // Register Plugin
-  [AvocadoPluginClasses addObject:PluginClass];
-}
-
+#import "AVCPluginMethod.h"
 
 @implementation AVCPluginMethod
 
@@ -79,12 +56,36 @@ void AvocadoRegisterPlugin(Class PluginClass)
   return self.selector;
 }
 
--(void)invoke:(AVCPluginCall *)pluginCall {
+// See https://stackoverflow.com/a/3224774/32140 for NSInvocation background
+-(void)invoke:(AVCPluginCall *)pluginCall onPlugin:(AVCPlugin *)plugin {
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
   NSDictionary *options = pluginCall.options;
-  for(NSString *param in self.params) {
+  
+  NSMethodSignature * mySignature = [plugin methodSignatureForSelector:self.selector];
+  NSInvocation * myInvocation = [NSInvocation
+                                 invocationWithMethodSignature:mySignature];
+  [myInvocation setTarget:plugin];
+  [myInvocation setSelector:self.selector];
+  NSUInteger numParams = [self.params count];
+  for(int i = 0; i < numParams; i++) {
+    NSString *param = [self.params objectAtIndex:i];
     id arg = [options objectForKey:param];
     NSLog(@"Found param arg %@ %@", param, arg);
+    [myInvocation setArgument:&arg atIndex:i+2]; // We're at an offset of 2 for the invocation args
   }
+  
+  AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
+  AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
+  
+  [myInvocation setArgument:&successHandler atIndex:numParams];
+  [myInvocation setArgument:&errorHandler atIndex:numParams+1];
+  
+  [myInvocation retainArguments];
+  
+  CFTimeInterval start = CACurrentMediaTime();
+  [myInvocation invoke];
+  CFTimeInterval duration = CACurrentMediaTime() - start;
+  NSLog(@"Method invocation took %@", duration);
 }
 @end
+

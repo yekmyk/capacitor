@@ -1,5 +1,5 @@
 import Foundation
-
+/*
 @objc(Filesystem)
 public class Filesystem : Plugin {
   let DEFAULT_DIRECTORY = "DOCUMENTS"
@@ -291,4 +291,4 @@ public class Filesystem : Plugin {
     call.error(message, error)
   }
 }
-
+*/

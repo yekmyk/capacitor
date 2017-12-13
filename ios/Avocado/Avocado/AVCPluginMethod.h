@@ -29,20 +29,16 @@ typedef void (^AVCErrorCallback)(NSError *error);
  */
 @interface AVCPluginMethod : NSObject
 
-// Raw method name
-@property (nonatomic, strong) NSString *name;
-// Raw method type string
-@property (nonatomic, strong) NSString *types;
-// Computed method argument object
-@property (nonatomic, strong) NSArray<AVCPluginMethodArgument *> *params;
-// Return type of method (i.e. callback/promise/sync)
-@property (nonatomic, strong) AVCPluginReturnType *returnType;
-// Stored selector for the method
-@property (nonatomic, assign) SEL selector;
+@property (nonatomic, strong) NSString *name; // Raw method name
+@property (nonatomic, strong) NSString *types; // Raw method type string
+@property (nonatomic, strong) NSArray<AVCPluginMethodArgument *> *args; // Computed method argument object
+@property (nonatomic, strong) AVCPluginReturnType *returnType; // Return type of method (i.e. callback/promise/sync)
+@property (nonatomic, assign) SEL selector; // Stored selector for the method
 
 - (instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType;
 
 - (SEL)getSelector;
+
 - (void)invoke:(AVCPluginCall *)pluginCall onPlugin:(AVCPlugin *)plugin;
 
 @end

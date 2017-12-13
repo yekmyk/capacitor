@@ -39,8 +39,10 @@ public class PluginExport {
   private static func generateMethod(pluginClassName: String, method: AVCPluginMethod) -> String {
     let methodName = method.name!
     let returnType = method.returnType!
-    let params = method.params as! [String]
-    let paramString = params.joined(separator: ", ")
+    let args = method.args!
+    
+    // Create a param string of the form "param1, param2, param3"
+    let paramString = args.map { $0.name }.joined(separator: ", ")
     
     let argObjectString = generateArgObject(method: method)
     
@@ -70,13 +72,13 @@ public class PluginExport {
   }
   
   private static func generateArgObject(method: AVCPluginMethod) -> String {
-    let params = method.params as! [String]
+    let args = method.args!
     var lines = [String]()
     lines.append("""
     {
     """)
-    for param in params {
-      lines.append("\(param): \(param)")
+    for arg in args {
+      lines.append("\(arg.name!): \(arg.name!),")
     }
     lines.append("}")
     return lines.joined(separator: "\n")

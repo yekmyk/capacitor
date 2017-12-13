@@ -18,13 +18,13 @@
   self.name = name;
   self.types = types;
   self.returnType = returnType;
-  self.params = [self makeParams];
+  self.args = [self makeArgs];
   self.selector = [self makeSelector];
   
   return self;
 }
 
--(NSArray<AVCPluginMethodArgument *> *)makeParams {
+-(NSArray<AVCPluginMethodArgument *> *)makeArgs {
   NSMutableArray<AVCPluginMethodArgument *> *parts = [[NSMutableArray alloc] init];
   NSArray *typeParts = [self.types componentsSeparatedByString:@","];
   for(NSString *t in typeParts) {
@@ -32,10 +32,11 @@
     NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
     NSString *paramName = [[NSString alloc] initWithString:[paramParts objectAtIndex:0]];
     NSString *typeName = [[NSString alloc] initWithString:[paramParts objectAtIndex:1]];
-    NSString *flag = [paramName substringFromIndex:MAX([paramName length] - 2, 0)];
+    NSString *flag = [paramName substringFromIndex:MAX([paramName length] - 1, 0)];
     AVCPluginMethodArgumentNullability nullability = AVCPluginMethodArgumentNotNullable;
     if([flag isEqualToString:@"?"]) {
       nullability = AVCPluginMethodArgumentNullable;
+      paramName = [paramName substringWithRange:NSMakeRange(0, [paramName length] - 1)];
     }
     AVCPluginMethodArgument *arg = [[AVCPluginMethodArgument alloc] initWithName:paramName nullability:nullability type:typeName];
     [parts addObject:arg];
@@ -85,19 +86,19 @@
                                  invocationWithMethodSignature:mySignature];
   [myInvocation setTarget:plugin];
   [myInvocation setSelector:self.selector];
-  NSUInteger numParams = [self.params count];
-  for(int i = 0; i < numParams; i++) {
-    NSString *param = [self.params objectAtIndex:i];
-    id arg = [options objectForKey:param];
-    NSLog(@"Found param arg %@ %@", param, arg);
+  NSUInteger numArgs = [self.args count];
+  for(int i = 0; i < numArgs; i++) {
+    AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
+    id callArg = [options objectForKey:arg];
+    NSLog(@"Found callArg and arg %@ %@", callArg, arg);
     [myInvocation setArgument:&arg atIndex:i+2]; // We're at an offset of 2 for the invocation args
   }
   
   const AVCPluginCallSuccessHandler *successHandler = [pluginCall getSuccessHandler];
   const AVCPluginCallErrorHandler *errorHandler = [pluginCall getErrorHandler];
   
-  [myInvocation setArgument:&successHandler atIndex:numParams];
-  [myInvocation setArgument:&errorHandler atIndex:numParams+1];
+  [myInvocation setArgument:&successHandler atIndex:numArgs];
+  [myInvocation setArgument:&errorHandler atIndex:numArgs+1];
   
   // TODO: Look into manual retain per online discussion
   // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html

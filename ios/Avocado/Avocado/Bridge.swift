@@ -3,6 +3,8 @@ import Dispatch
 import WebKit
 
 @objc public class Bridge : NSObject {
+  public var AVC_SITE = "https://avocado.ionicframework.com"
+  
   public var webView: WKWebView
   public var viewController: UIViewController
   
@@ -63,7 +65,7 @@ import WebKit
   
   public func loadPlugin(pluginId: String) -> AVCPlugin? {
     guard let pluginType = knownPlugins[pluginId] else {
-      print("Unable to load plugin \(pluginId). No such module found.")
+      print("🥑  Unable to load plugin \(pluginId). No such module found.")
       return nil
     }
     
@@ -97,7 +99,7 @@ import WebKit
   
   public func modulePrint(_ plugin: AVCPlugin, _ items: Any...) {
     let output = items.map { "\($0)" }.joined(separator: " ")
-    Swift.print(plugin.pluginId, "-", output)
+    Swift.print("🥑 ", plugin.pluginId, "-", output)
   }
   
   public func alert(_ title: String, _ message: String, _ buttonTitle: String = "OK") {
@@ -110,6 +112,9 @@ import WebKit
     self.webView = webView
   }
 
+  func docLink(_ url: String) -> String {
+    return "\(AVC_SITE)/docs/\(url)"
+  }
   
   /**
    * Handle a call from JavaScript. First, find the corresponding plugin,
@@ -117,7 +122,7 @@ import WebKit
    */
   public func handleJSCall(call: JSCall) {
     guard let plugin = self.getPlugin(pluginId: call.pluginId) ?? self.loadPlugin(pluginId: call.pluginId) else {
-      print("Error loading plugin \(call.pluginId) for call. Check that the pluginId is correct")
+      print("🥑  Error loading plugin \(call.pluginId) for call. Check that the pluginId is correct")
       return
     }
     guard let pluginType = knownPlugins[plugin.getId()] else {
@@ -125,19 +130,19 @@ import WebKit
     }
     let bridgeType = pluginType as! AVCBridgedPlugin.Type
     guard let method = bridgeType.getMethod(call.method) else {
-      print("Error calling method \(call.method) on plugin \(call.pluginId): No method found.")
-      print("Ensure plugin method exists and uses @objc in its declaration, and has been defined")
+      print("🥑  Error calling method \(call.method) on plugin \(call.pluginId): No method found.")
+      print("🥑  Ensure plugin method exists and uses @objc in its declaration, and has been defined")
       return
     }
     
-    print("Calling method \(call.method) on plugin \(plugin.getId())")
-    print("FOUND METHOD", method)
+    print("\n🥑  Calling method \"\(call.method)]\" on plugin \(plugin.getId()!)")
     
     let selector = method.getSelector()
     
     if !plugin.responds(to: selector) {
-      print("Error: Plugin \(plugin.getId()) does not respond to method call \(call.method).")
-      print("Ensure plugin method exists and uses @objc in its declaration")
+      print("🥑  Error: Plugin \(plugin.getId()!) does not respond to method call \"\(call.method)\" using selector \"\(selector!)\".")
+      print("🥑  Ensure plugin method exists, uses @objc in its declaration, arguments match  selector in AVC_PLUGIN_METHOD.")
+      print("🥑  Learn more: \(docLink(DocLinks.AVCPluginMethodSelector.rawValue))")
       return
     }
     
@@ -182,6 +187,9 @@ import WebKit
     }
   }
   
+  /**
+   * Eval JS for a specific plugin.
+   */
   @objc public func evalWithPlugin(_ plugin: AVCPlugin, js: String) {
     let wrappedJs = """
     avocado.withPlugin('\(plugin.getId())', function(plugin) {
@@ -191,7 +199,7 @@ import WebKit
     """
     self.webView.evaluateJavaScript(wrappedJs, completionHandler: { (result, error) in
       if error != nil {
-        print("JS Eval error", error?.localizedDescription)
+        print("🥑 JS Eval error", error?.localizedDescription)
       }
     })
   }

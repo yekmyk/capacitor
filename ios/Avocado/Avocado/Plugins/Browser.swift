@@ -18,11 +18,9 @@ public class Browser : AVCPlugin, SFSafariViewControllerDelegate {
   }
  */
   
-  @objc(open:)
-  func open(url: String) {
+  @objc(open:success:error:)
+  func open(url: String, success: @escaping AVCPluginCallSuccessHandler, error: AVCPluginCallErrorHandler) {
     let url = URL(string: url)
-    //let locationString = location ?? "BLANK"
-    //print("GOT LOCATION", locationString)
     vc = SFSafariViewController.init(url: url!)
     vc!.delegate = self
     bridge.viewController.present(vc!, animated: true, completion: {

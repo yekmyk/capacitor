@@ -26,11 +26,12 @@ AVC_PLUGIN(Clipboard,
 AVC_PLUGIN(Console,
            AVC_PLUGIN_METHOD(log, "message:string,level?:string", AVCPluginReturnNone);
 )
+
+AVC_PLUGIN(Device,
+           AVC_PLUGIN_METHOD(getInfo, "", AVCPluginReturnPromise);
+)
+
 /*
-
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.device", Device)
-@end
-
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.filesystem", Filesystem)
 @end
 

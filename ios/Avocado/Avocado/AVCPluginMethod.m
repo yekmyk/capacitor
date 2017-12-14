@@ -47,9 +47,19 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
 -(NSArray<AVCPluginMethodArgument *> *)makeArgs {
   NSMutableArray<AVCPluginMethodArgument *> *parts = [[NSMutableArray alloc] init];
   NSArray *typeParts = [self.types componentsSeparatedByString:@","];
+  
+  if([typeParts count] == 0) {
+    return @[];
+  }
+  
   for(NSString *t in typeParts) {
     NSString *paramPart = [t stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     NSArray *paramParts = [paramPart componentsSeparatedByString:@":"];
+    
+    if([paramParts count] < 2) {
+      continue;
+    }
+    
     NSString *paramName = [[NSString alloc] initWithString:[paramParts objectAtIndex:0]];
     NSString *typeName = [[NSString alloc] initWithString:[paramParts objectAtIndex:1]];
     NSString *flag = [paramName substringFromIndex:MAX([paramName length] - 1, 0)];

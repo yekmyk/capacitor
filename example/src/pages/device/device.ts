@@ -28,6 +28,7 @@ export class DevicePage {
 
   async getDeviceInfo() {
     const info = await Plugins.Device.getInfo()
+    console.log('Got device info', info);
     this.zone.run(() => {
       this.deviceInfoJson = JSON.stringify(info, null, 2);
     });

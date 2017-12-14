@@ -1,9 +1,9 @@
 import Foundation
-/*
+
 public typealias DeviceInfo = [String:Any]
 
 @objc(Device)
-public class Device: Plugin {
+public class Device: AVCPlugin {
   let diagnostics: Diagnostics = Diagnostics()
   
   @objc func getInfo(_ call: AVCPluginCall) {
@@ -35,4 +35,4 @@ public class Device: Plugin {
   }
 
 }
-*/
+

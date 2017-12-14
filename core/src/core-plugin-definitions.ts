@@ -21,7 +21,8 @@ declare global {
 //
 
 export interface BrowserPlugin {
-  open(url: string) : Promise<any>;
+  open(url: string): Promise<any>;
+  close(options: any): Promise<any>;
 }
 
 //

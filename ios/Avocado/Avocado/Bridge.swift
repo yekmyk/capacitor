@@ -152,7 +152,7 @@ import WebKit
       
       let pluginCall = AVCPluginCall(options: call.options, success: {(result: AVCPluginCallResult?) -> Void in
         if result != nil {
-          self.toJs(result: JSResult(call: call, result: result!.data))
+          self.toJs(result: JSResult(call: call, result: result!.data ?? [:]))
         } else {
           self.toJs(result: JSResult(call: call, result: [:]))
         }

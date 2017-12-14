@@ -29,11 +29,13 @@ typedef NSString AVCPluginReturnType;
  */
 @interface AVCPluginMethod : NSObject
 
+@property (nonatomic, assign) SEL selector;
 @property (nonatomic, strong) NSString *name; // Raw method name
 @property (nonatomic, strong) NSString *types; // Raw method type string
 @property (nonatomic, strong) NSArray<AVCPluginMethodArgument *> *args; // Computed method argument object
 @property (nonatomic, strong) AVCPluginReturnType *returnType; // Return type of method (i.e. callback/promise/sync)
 
+- (instancetype)initWithName:(NSString *)name returnType:(AVCPluginReturnType *)returnType;
 - (instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType;
 
 - (SEL)getSelector;

@@ -27,7 +27,6 @@ AVC_EXTERN void AvocadoRegisterPlugin(Class); \
 #define AVC_PLUGIN_METHOD(method_name, method_types, method_return_type) \
 [methods addObject:[[AVCPluginMethod alloc] initWithNameAndTypes:@#method_name types:@method_types returnType:method_return_type]]
 
-
 #define AVC_PLUGIN(objc_name, methods_body) \
 @interface objc_name : NSObject \
 @end \

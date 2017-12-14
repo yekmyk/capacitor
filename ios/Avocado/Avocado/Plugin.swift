@@ -1,12 +1,14 @@
-
+public typealias PluginCallErrorData = [String:Any]
+public typealias PluginResultData = [String:Any]
+public typealias PluginEventListener = AVCPluginCall
 
 /**
  * Base class for all plugins.
  *
  * Extends NSObject to allow for calling methods with selectors
  */
-/*
-@objc open class Plugin : AVCPlugin {
+
+open class Plugin : AVCPlugin {
   
   //var eventListeners = [String:[PluginEventListener]]()
 
@@ -14,6 +16,7 @@
     super.init(bridge: bridge, pluginId: pluginId)
   }
 
+  /*
   public func addEventListener(_ eventName: String, _ listener: PluginEventListener) {
     if var listenersForEvent = eventListeners[eventName] {
       listenersForEvent.append(listener)
@@ -38,7 +41,32 @@
       }
     }
   }
-}*/
+ */
+}
 
+/**
+ * A call down to a native plugin
+ */
+public extension AVCPluginCall {
 
+  public func get<T>(_ key: String, _ ofType: T.Type, _ defaultValue: T? = nil) -> T? {
+    return self.options[key] as? T ?? defaultValue
+  }
+  
+  @objc public func getBool(_ key: String, defaultValue: NSNumber?) -> NSNumber? {
+    return self.options[key] as? NSNumber ?? defaultValue
+  }
+  
+  public func success() {
+    successHandler(AVCPluginCallResult())
+  }
+  
+  public func success(_ data: PluginResultData = [:]) {
+    successHandler(AVCPluginCallResult(data))
+  }
+  
+  public func error(_ message: String, _ error: Error? = nil, _ data: PluginCallErrorData = [:]) {
+    errorHandler(AVCPluginCallError(message: message, error: error, data: data))
+  }
+}
 

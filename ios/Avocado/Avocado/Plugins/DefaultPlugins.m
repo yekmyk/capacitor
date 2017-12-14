@@ -11,6 +11,7 @@ JS_METHOD("open", "url:string", JS_PROMISE)
 
 AVC_PLUGIN(Browser,
            AVC_PLUGIN_METHOD(open, "url:string", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(close, "options:any", AVCPluginReturnPromise);
 )
 
 /*

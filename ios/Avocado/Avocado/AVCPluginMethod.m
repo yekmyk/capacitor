@@ -30,13 +30,16 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
   SEL _selector;
 }
 
+-(instancetype)initWithName:(NSString *)name returnType:(AVCPluginReturnType *)returnType {
+  return [self initWithNameAndTypes:name types:nil returnType:returnType];
+}
+
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
   self.name = name;
+  self.selector = NSSelectorFromString([name stringByAppendingString:@":"]);
   self.types = types;
   self.returnType = returnType;
   self.args = [self makeArgs];
-  
-  _selector = [self makeSelector];
 
   return self;
 }
@@ -59,31 +62,6 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
     [parts addObject:arg];
   }
   return parts;
-}
-
-/**
- * Make an objective-c selector for the given plugin method.
- */
--(SEL)makeSelector {
-  // Name of method must be the first part of the selector
-  NSMutableString *nameSelector = [[NSMutableString alloc] initWithString:self.name];
-  [nameSelector appendString:@":"];
-  
-  // Building up our selector here, starting with the name part
-  NSMutableArray *selectorParts = [[NSMutableArray alloc] initWithObjects:nameSelector, nil];
-  
-  // Skip the first argument because its not part of the selector
-  if([self.args count] > 1) {
-    NSArray<AVCPluginMethodArgument *> *argsMinusFirst = [self.args subarrayWithRange:NSMakeRange(1, [self.args count]-1)];
-    for(AVCPluginMethodArgument *arg in argsMinusFirst) {
-      NSMutableString *paramName = [[NSMutableString alloc] initWithString:arg.name];
-      [paramName appendString:@":"];
-      [selectorParts addObject:paramName];
-    }
-  }
-  
-  NSString *selectorString = [selectorParts componentsJoinedByString:@""];
-  return NSSelectorFromString(selectorString);
 }
 
 -(SEL)getSelector {

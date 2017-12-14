@@ -43,6 +43,7 @@ public class PluginExport {
     
     // Create a param string of the form "param1, param2, param3"
     let paramString = args.map { $0.name }.joined(separator: ", ")
+  
     
     let argObjectString = generateArgObject(method: method)
     
@@ -77,9 +78,11 @@ public class PluginExport {
     lines.append("""
     {
     """)
+
     for arg in args {
       lines.append("\(arg.name!): \(arg.name!),")
     }
+
     lines.append("}")
     return lines.joined(separator: "\n")
   }

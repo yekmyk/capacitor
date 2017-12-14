@@ -29,6 +29,9 @@ export class BrowserPage {
     console.log('OBJECTS');
     console.log((<any>window).Avocado);
     Avocado.Plugins.Browser.open('http://ionicframework.com');
+    Avocado.Plugins.Browser.close({
+      "type": "HELLO"
+    });
   }
 
 }

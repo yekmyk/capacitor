@@ -78,7 +78,7 @@ declare var global: any;
               // convert to string
               return arg + '';
             });
-            avocado.toNative('com.avocadojs.plugin.console', 'log', {
+            avocado.toNative('Console', 'log', {
               level,
               message: msgs.join(' ')
             });

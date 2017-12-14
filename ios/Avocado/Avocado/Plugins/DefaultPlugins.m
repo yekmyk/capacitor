@@ -38,7 +38,7 @@ AVC_PLUGIN(Filesystem,
   AVC_PLUGIN_METHOD(deleteFile, "file:string,directory:string", AVCPluginReturnPromise);
   AVC_PLUGIN_METHOD(mkdir, "path:string,directory:string,createIntermediateDirectories:boolean", AVCPluginReturnPromise);
   AVC_PLUGIN_METHOD(rmdir, "path:string,directory:string", AVCPluginReturnPromise);
-  AVC_PLUGIN_METHOD(rmdir, "path:string,directory:string", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(readdir, "path:string,directory:string", AVCPluginReturnPromise);
   AVC_PLUGIN_METHOD(stat, "path:string,directory:string", AVCPluginReturnPromise);
 )
 

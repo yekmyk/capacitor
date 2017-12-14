@@ -173,7 +173,7 @@ import WebKit
   public func toJs(result: JSResult) {
     let resultJson = result.toJson()
     print("TO JS", result.toJson())
-    self.webView.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(result.call.callbackId)', pluginId: '\(result.call.pluginId)', methodName: '\(result.call.method)', success: true, data: \(resultJson)})") { (result, error) in
+    self.webView.evaluateJavaScript("window.Avocado.fromNative({ callbackId: '\(result.call.callbackId)', pluginId: '\(result.call.pluginId)', methodName: '\(result.call.method)', success: true, data: \(resultJson)})") { (result, error) in
       if error != nil && result != nil {
         print(result!)
       }
@@ -184,7 +184,7 @@ import WebKit
    * Send an error result to the JavaScript layer.
    */
   public func toJsError(error: JSResultError) {
-    self.webView.evaluateJavaScript("window.avocado.fromNative({ callbackId: '\(error.call.callbackId)', pluginId: '\(error.call.pluginId)', methodName: '\(error.call.method)', success: false, error: \(error.toJson())})") { (result, error) in
+    self.webView.evaluateJavaScript("window.Avocado.fromNative({ callbackId: '\(error.call.callbackId)', pluginId: '\(error.call.pluginId)', methodName: '\(error.call.method)', success: false, error: \(error.toJson())})") { (result, error) in
       if error != nil && result != nil {
         print(result!)
       }
@@ -196,7 +196,7 @@ import WebKit
    */
   @objc public func evalWithPlugin(_ plugin: AVCPlugin, js: String) {
     let wrappedJs = """
-    avocado.withPlugin('\(plugin.getId())', function(plugin) {
+    window.Avocado.withPlugin('\(plugin.getId())', function(plugin) {
       if(!plugin) { console.error('Unable to execute JS in plugin, no such plugin found for id \(plugin.getId())'); }
       \(js)
     });

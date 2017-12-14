@@ -26,6 +26,7 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
   // Retain invocation instance
   NSInvocation *_invocation;
   NSMutableArray *_methodArgumentCallbacks;
+  AVCPluginCall *_call;
   SEL _selector;
 }
 
@@ -116,13 +117,16 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
     [_methodArgumentCallbacks addObject:callBlock];
   }
   
-  id successBlockArg = ^(__unused id _arg, NSInteger index) {
+  id successBlockArg = ^(AVCPluginCall *__call, NSInteger index) {
+    AVCPluginCallSuccessHandler _block = [[self.call getSuccessHandler] copy];
+    //AVCPluginCall *localCall
     id block = (^() {
       NSLog(@"Success callback");
-      //AVCPluginCallSuccessHandler block = [pluginCall getSuccessHandler];
-      //AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
+      AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
+      _block(result);
     });
     [_invocation setArgument:&block atIndex:index];
+    [_manualRetainArgs addObject:_block];
     [_manualRetainArgs addObject:block];
   };
   
@@ -132,6 +136,8 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
 
 // See https://stackoverflow.com/a/3224774/32140 for NSInvocation background
 -(void)invoke:(AVCPluginCall *)pluginCall onPlugin:(AVCPlugin *)plugin {
+  self.call = pluginCall;
+  
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
   NSDictionary *options = pluginCall.options;
 
@@ -153,7 +159,7 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
   }
   
   AVCCallback successBlock = [_methodArgumentCallbacks objectAtIndex:numArgs];
-  successBlock(nil, numArgs+2);
+  successBlock(_call, numArgs+2);
 
   CFTimeInterval start = CACurrentMediaTime();
   [_invocation invoke];

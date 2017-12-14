@@ -154,7 +154,7 @@ import WebKit
         self.toJs(result: JSResult(call: call, result: result!.data))
       }, error: {(error: AVCPluginCallError?) -> Void in
         self.toJsError(error: JSResultError(call: call, message: error!.message, error: error!.data))
-      })
+      })!
       
       method.invoke(pluginCall, on: plugin)
       

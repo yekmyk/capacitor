@@ -16,14 +16,9 @@
 typedef void(^AVCPluginCallSuccessHandler)(AVCPluginCallResult *result);
 typedef void(^AVCPluginCallErrorHandler)(AVCPluginCallError *error);
 
-@interface AVCPluginCall : NSObject {
-  // AVCPluginCallSuccessHandler successHandler;
-  // AVCPluginCallErrorHandler errorHandler;
-}
+@interface AVCPluginCall : NSObject
 
 @property (nonatomic, strong) NSDictionary *options;
-@property (nonatomic, copy) AVCPluginCallSuccessHandler successHandler;
-@property (nonatomic, copy) AVCPluginCallErrorHandler errorHandler;
 
 - (instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler)success error:(AVCPluginCallErrorHandler)error;
 - (AVCPluginCallSuccessHandler)getSuccessHandler;

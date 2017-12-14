@@ -5,18 +5,18 @@ import SafariServices
 public class Browser : AVCPlugin, SFSafariViewControllerDelegate {
   var vc: SFSafariViewController?
   
-  /*
+  
   @objc func open(_ call: PluginCall) {
     if let urlString = call.options["url"] as? String {
       let url = URL(string: urlString)
       vc = SFSafariViewController.init(url: url!)
       vc!.delegate = self
       bridge.viewController.present(vc!, animated: true, completion: {
-        
+        call.success()
       })
     }
   }
- */
+ 
   
   @objc(open:success:)
   func open(url: String, success: @escaping AVCPluginCallSuccessHandler) {//}, error: AVCPluginCallErrorHandler) {

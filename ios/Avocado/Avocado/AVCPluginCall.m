@@ -9,11 +9,14 @@
 }
 @end
 
-@implementation AVCPluginCall
+@implementation AVCPluginCall {
+  AVCPluginCallSuccessHandler _successHandler;
+  AVCPluginCallErrorHandler _errorHandler;
+}
 -(instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler) success error:(AVCPluginCallErrorHandler) error {
   self.options = options;
-  self.successHandler = success;
-  self.errorHandler = error;
+  _successHandler = [success copy];
+  _errorHandler = [error copy];
   return self;
 }
 

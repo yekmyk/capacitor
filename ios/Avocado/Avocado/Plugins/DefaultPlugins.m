@@ -18,10 +18,11 @@ AVC_PLUGIN(Camera,
            AVC_PLUGIN_METHOD(getPhoto, "options:any", AVCPluginReturnPromise);
 )
 
+AVC_PLUGIN(Clipboard,
+           AVC_PLUGIN_METHOD(get, "options:any", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(set, "options:any", AVCPluginReturnPromise);
+)
 /*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.clipboard", Clipboard)
-@end
-
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.console", Console)
 @end
 

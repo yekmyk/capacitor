@@ -46,7 +46,7 @@ export interface CameraPhoto {
 //
 
 export interface ClipboardPlugin {
-  set(options: ClipboardSet) : Promise<void>;
+  set(options: ClipboardSet): Promise<void>;
   get(options: ClipboardGet): Promise<ClipboardGetResult>;
 }
 

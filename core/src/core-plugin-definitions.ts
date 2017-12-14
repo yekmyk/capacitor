@@ -183,14 +183,17 @@ export interface StatResult {
 //
 
 export interface GeolocationPlugin {
-  getCurrentPosition(): Promise<GeolocationPositon>;
-  watchPosition(callback: GeolocationWatchCallback) : void;
+  getCurrentPosition(options?: GeolocationOptions): Promise<GeolocationPositon>;
+  watchPosition(options: GeolocationOptions, callback: GeolocationWatchCallback) : void;
 }
 export interface GeolocationPositon {
   coords: {
     latitude: number;
     longitude: number;
   };
+}
+export interface GeolocationOptions {
+  
 }
 
 export type GeolocationWatchCallback = (err: any, position: GeolocationPositon) => void;

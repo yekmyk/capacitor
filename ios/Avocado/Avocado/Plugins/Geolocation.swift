@@ -2,8 +2,6 @@ import Foundation
 import UIKit
 import CoreLocation
 
-/*
-
 public struct GeolocationCoords {
   public var latitude: Double
   public var longitude: Double
@@ -13,11 +11,11 @@ public struct GeolocationCoords {
   }
 }
 
-class GetLocationHandler:NSObject, CLLocationManagerDelegate {
+class GetLocationHandler: NSObject, CLLocationManagerDelegate {
   var locationManager = CLLocationManager()
   var call: AVCPluginCall?
   
-  init(call: AVCPluginCall, options: PluginCallOptions) {
+  init(call: AVCPluginCall, options: [String:Any]) {
     super.init()
     
     self.call = call
@@ -37,21 +35,21 @@ class GetLocationHandler:NSObject, CLLocationManagerDelegate {
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     print("Error while updating location " + error.localizedDescription)
     if let call = self.call {
-      call.errorCallback(PluginCallError(message: error.localizedDescription, error: error, data: [
+      call.error(error.localizedDescription, error, [
         "message": error.localizedDescription
-      ]))
+      ])
     }
   }
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     if let location = locations.first  {
-      let result = PluginResult([
+      let result = [
         "coords": [
           "latitude": location.coordinate.latitude,
           "longitude": location.coordinate.longitude
         ]
-      ])
-      call!.successCallback(result)
+      ]
+      call!.success(result)
 
     } else {
       // TODO: Handle case where location is nil
@@ -60,7 +58,7 @@ class GetLocationHandler:NSObject, CLLocationManagerDelegate {
 }
 
 @objc(Geolocation)
-public class Geolocation : Plugin {
+public class Geolocation : AVCPlugin {
   // TODO: Figure out better way to save the call hander (strong reference)
   var locationHandler: CLLocationManagerDelegate?
   var watchLocationHandler: CLLocationManagerDelegate?
@@ -77,5 +75,5 @@ public class Geolocation : Plugin {
     ]);
   }
   
-}*/
+}
 

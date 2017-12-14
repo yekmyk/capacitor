@@ -40,15 +40,18 @@ public class PluginExport {
     let methodName = method.name!
     let returnType = method.returnType!
     let args = method.args!
+    var paramList = args.map { $0.name } as! [String]
+    
+    if returnType == AVCPluginReturnCallback {
+      paramList.append("_callback")
+    }
     
     // Create a param string of the form "param1, param2, param3"
-    let paramString = args.map { $0.name }.joined(separator: ", ")
-  
+    let paramString = paramList.joined(separator: ", ")
     
     let argObjectString = generateArgObject(method: method)
     
     var lines = [String]()
-    
     // Create the function declaration
     lines.append("p['\(pluginClassName)']['\(method.name!)'] = function(\(paramString)) {")
     
@@ -59,6 +62,7 @@ public class PluginExport {
         return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString));
         """)
     } else if returnType == AVCPluginReturnPromise {
+      
       // ...using a promise
       lines.append("""
         return window.Avocado.nativePromise('\(pluginClassName)', '\(methodName)', \(argObjectString));
@@ -66,7 +70,7 @@ public class PluginExport {
     } else if returnType == AVCPluginReturnCallback {
       // ...using a callback
       lines.append("""
-        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString));
+        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString), _callback);
         """)
     } else {
       print("Error: plugin method return type \(returnType) is not supported!")

@@ -49,7 +49,7 @@ export class GeolocationPage {
 
   watchPosition() {
     try {
-      const wait = Plugins.Geolocation.watchPosition((err, position) => {
+      const wait = Plugins.Geolocation.watchPosition({}, (err, position) => {
         console.log('Watch', position);
         this.zone.run(() => {
           this.watchCoords = position.coords;

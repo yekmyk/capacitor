@@ -42,10 +42,12 @@ AVC_PLUGIN(Filesystem,
   AVC_PLUGIN_METHOD(stat, "path:string,directory:string", AVCPluginReturnPromise);
 )
 
-/*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.geolocation", Geolocation)
-@end
+AVC_PLUGIN(Geolocation,
+  AVC_PLUGIN_METHOD(getCurrentPosition, "options:any", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(watchPosition, "options:any", AVCPluginReturnCallback);
+)
 
+/*
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.haptics", Haptics)
 @end
 

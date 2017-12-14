@@ -1,8 +1,10 @@
 
 @interface AVCPluginCallResult : NSObject
+
 @property (nonatomic, strong) NSDictionary<NSString *, id>* data;
 
 - (instancetype)initWithData:(NSDictionary<NSString *, id>*)data;
+
 @end
 
 @interface AVCPluginCallError
@@ -19,10 +21,10 @@ typedef void(^AVCPluginCallErrorHandler)(AVCPluginCallError *error);
 @interface AVCPluginCall : NSObject
 
 @property (nonatomic, strong) NSDictionary *options;
+@property (nonatomic, copy) AVCPluginCallSuccessHandler success;
+@property (nonatomic, copy) AVCPluginCallErrorHandler error;
 
 - (instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler)success error:(AVCPluginCallErrorHandler)error;
-- (AVCPluginCallSuccessHandler)getSuccessHandler;
-- (AVCPluginCallErrorHandler)getErrorHandler;
 
 @end
 

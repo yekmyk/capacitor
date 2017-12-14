@@ -36,11 +36,8 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
   self.returnType = returnType;
   self.args = [self makeArgs];
   
-  //self.selector = [self makeSelector];
   _selector = [self makeSelector];
-  
-  [self prepareCall];
-  
+
   return self;
 }
 
@@ -85,86 +82,13 @@ typedef void(^AVCCallback)(id _arg, NSInteger index);
     }
   }
   
-  // Add our required success/error callback handlers
-  [selectorParts addObject:@"success:"];//error:"];
   NSString *selectorString = [selectorParts componentsJoinedByString:@""];
   return NSSelectorFromString(selectorString);
 }
-
 
 -(SEL)getSelector {
   return _selector;
 }
 
--(void)prepareCall {
-  // Get all our possible arguments and build up blocks to easily retain
-  // arguments for calls
-  
-  // TODO: Cache this once and repeat calls
-  _methodArgumentCallbacks = [NSMutableArray arrayWithCapacity:2];
-  
-  //NSMutableArray *manualRetainArgs = _manualRetainArgs;
-  //NSInvocation *invocation = _invocation;
-  
-  NSUInteger numArgs = [self.args count];
-  for(int i = 0; i < numArgs; i++) {
-    AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
-    id callBlock = ^(id _arg, NSInteger index) {
-      [_manualRetainArgs addObject:_arg];
-      [_invocation setArgument:&_arg atIndex:index];
-    };
-    
-    [_methodArgumentCallbacks addObject:callBlock];
-  }
-  
-  id successBlockArg = ^(AVCPluginCall *__call, NSInteger index) {
-    AVCPluginCallSuccessHandler _block = [[self.call getSuccessHandler] copy];
-    //AVCPluginCall *localCall
-    id block = (^() {
-      NSLog(@"Success callback");
-      AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
-      _block(result);
-    });
-    [_invocation setArgument:&block atIndex:index];
-    [_manualRetainArgs addObject:_block];
-    [_manualRetainArgs addObject:block];
-  };
-  
-
-  [_methodArgumentCallbacks addObject:successBlockArg];
-}
-
-// See https://stackoverflow.com/a/3224774/32140 for NSInvocation background
--(void)invoke:(AVCPluginCall *)pluginCall onPlugin:(AVCPlugin *)plugin {
-  self.call = pluginCall;
-  
-  NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
-  NSDictionary *options = pluginCall.options;
-
-  NSMethodSignature * mySignature = [plugin methodSignatureForSelector:_selector];
-  NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:mySignature];
-  
-  _invocation = invocation;
-  [_invocation setTarget:plugin];
-  [_invocation setSelector:_selector];
-  
-  NSUInteger numArgs = [self.args count];
-  for(int i = 0; i < numArgs; i++) {
-    AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
-    id callArg = [options objectForKey:arg.name];
-    NSLog(@"Found callArg and arg %@ %@", callArg, arg);
-    
-    AVCCallback block = [_methodArgumentCallbacks objectAtIndex:i];
-    block(callArg, i+2);
-  }
-  
-  AVCCallback successBlock = [_methodArgumentCallbacks objectAtIndex:numArgs];
-  successBlock(_call, numArgs+2);
-
-  CFTimeInterval start = CACurrentMediaTime();
-  [_invocation invoke];
-  CFTimeInterval duration = CACurrentMediaTime() - start;
-  NSLog(@"Method invocation took %dms", (int)(duration * 1000));
-}
 @end
 

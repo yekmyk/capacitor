@@ -6,26 +6,15 @@ public class Browser : AVCPlugin, SFSafariViewControllerDelegate {
   var vc: SFSafariViewController?
   
   
-  @objc func open(_ call: PluginCall) {
+  @objc func open(_ call: AVCPluginCall) {
     if let urlString = call.options["url"] as? String {
       let url = URL(string: urlString)
       vc = SFSafariViewController.init(url: url!)
       vc!.delegate = self
       bridge.viewController.present(vc!, animated: true, completion: {
-        call.success()
+        call.success(nil)
       })
     }
-  }
- 
-  
-  @objc(open:success:)
-  func open(url: String, success: @escaping AVCPluginCallSuccessHandler) {//}, error: AVCPluginCallErrorHandler) {
-    let url = URL(string: url)
-    vc = SFSafariViewController.init(url: url!)
-    vc!.delegate = self
-    bridge.viewController.present(vc!, animated: true, completion: {
-      success(nil)
-    })
   }
 }
 

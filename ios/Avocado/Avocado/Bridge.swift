@@ -151,12 +151,16 @@ import WebKit
       //let startTime = CFAbsoluteTimeGetCurrent()
       
       let pluginCall = AVCPluginCall(options: call.options, success: {(result: AVCPluginCallResult?) -> Void in
-        self.toJs(result: JSResult(call: call, result: result!.data))
+        if result != nil {
+          self.toJs(result: JSResult(call: call, result: result!.data))
+        } else {
+          self.toJs(result: JSResult(call: call, result: [:]))
+        }
       }, error: {(error: AVCPluginCallError?) -> Void in
         self.toJsError(error: JSResultError(call: call, message: error!.message, error: error!.data))
       })!
       
-      method.invoke(pluginCall, on: plugin)
+      plugin.perform(selector, with: pluginCall)
       
       //let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       //print("Native call took", timeElapsed)

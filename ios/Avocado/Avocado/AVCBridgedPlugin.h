@@ -6,6 +6,7 @@
 #define AVC_EXTERN extern __attribute__((visibility("default")))
 #endif
 
+#define AVCPluginReturnNone @"none"
 #define AVCPluginReturnCallback @"callback"
 #define AVCPluginReturnPromise @"promise"
 #define AVCPluginReturnSync @"sync" // not used

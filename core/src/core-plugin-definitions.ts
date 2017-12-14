@@ -28,7 +28,7 @@ export interface BrowserPlugin {
 //
 
 export interface CameraPlugin {
-  getPhoto(options: CameraOptions) : Promise<CameraPhoto>;
+  getPhoto(options: CameraOptions): Promise<CameraPhoto>;
 }
 
 export interface CameraOptions {

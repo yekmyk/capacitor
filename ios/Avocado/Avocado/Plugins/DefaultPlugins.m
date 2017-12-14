@@ -22,9 +22,11 @@ AVC_PLUGIN(Clipboard,
            AVC_PLUGIN_METHOD(get, "options:any", AVCPluginReturnPromise);
            AVC_PLUGIN_METHOD(set, "options:any", AVCPluginReturnPromise);
 )
+
+AVC_PLUGIN(Console,
+           AVC_PLUGIN_METHOD(log, "message:string,level?:string", AVCPluginReturnNone);
+)
 /*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.console", Console)
-@end
 
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.device", Device)
 @end

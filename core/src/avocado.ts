@@ -184,7 +184,7 @@ declare var global: any;
     avocado.toNative(pluginId, methodName, options, {
       callback
     });
-  }
+  };
 
   avocado.nativePromise = (pluginId: string, methodName: string, options?: any): Promise<any> => {
     return new Promise((resolve, reject) => {

@@ -53,7 +53,12 @@ public class PluginExport {
     lines.append("p['\(pluginClassName)']['\(method.name!)'] = function(\(paramString)) {")
     
     // Create the call to Avocado...
-    if returnType == AVCPluginReturnPromise {
+    if returnType == AVCPluginReturnNone {
+      // ...using none
+      lines.append("""
+        return window.Avocado.nativeCallback('\(pluginClassName)', '\(methodName)', \(argObjectString));
+        """)
+    } else if returnType == AVCPluginReturnPromise {
       // ...using a promise
       lines.append("""
         return window.Avocado.nativePromise('\(pluginClassName)', '\(methodName)', \(argObjectString));

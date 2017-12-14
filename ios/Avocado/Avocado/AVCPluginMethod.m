@@ -1,7 +1,7 @@
 #import <Avocado/Avocado-Swift.h>
 #import "AVCPluginMethod.h"
 
-typedef void(^AVCCallback)();
+typedef void(^AVCCallback)(id _arg, NSInteger index);
 
 @implementation AVCPluginMethodArgument
 
@@ -26,6 +26,7 @@ typedef void(^AVCCallback)();
   // Retain invocation instance
   NSInvocation *_invocation;
   NSMutableArray *_methodArgumentCallbacks;
+  SEL _selector;
 }
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
@@ -33,7 +34,11 @@ typedef void(^AVCCallback)();
   self.types = types;
   self.returnType = returnType;
   self.args = [self makeArgs];
-  self.selector = [self makeSelector];
+  
+  //self.selector = [self makeSelector];
+  _selector = [self makeSelector];
+  
+  [self prepareCall];
   
   return self;
 }
@@ -87,52 +92,69 @@ typedef void(^AVCCallback)();
 
 
 -(SEL)getSelector {
-  return self.selector;
+  return _selector;
+}
+
+-(void)prepareCall {
+  // Get all our possible arguments and build up blocks to easily retain
+  // arguments for calls
+  
+  // TODO: Cache this once and repeat calls
+  _methodArgumentCallbacks = [NSMutableArray arrayWithCapacity:2];
+  
+  //NSMutableArray *manualRetainArgs = _manualRetainArgs;
+  //NSInvocation *invocation = _invocation;
+  
+  NSUInteger numArgs = [self.args count];
+  for(int i = 0; i < numArgs; i++) {
+    AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
+    id callBlock = ^(id _arg, NSInteger index) {
+      [_manualRetainArgs addObject:_arg];
+      [_invocation setArgument:&_arg atIndex:index];
+    };
+    
+    [_methodArgumentCallbacks addObject:callBlock];
+  }
+  
+  id successBlockArg = ^(__unused id _arg, NSInteger index) {
+    id block = (^() {
+      NSLog(@"Success callback");
+      //AVCPluginCallSuccessHandler block = [pluginCall getSuccessHandler];
+      //AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
+    });
+    [_invocation setArgument:&block atIndex:index];
+    [_manualRetainArgs addObject:block];
+  };
+  
+
+  [_methodArgumentCallbacks addObject:successBlockArg];
 }
 
 // See https://stackoverflow.com/a/3224774/32140 for NSInvocation background
 -(void)invoke:(AVCPluginCall *)pluginCall onPlugin:(AVCPlugin *)plugin {
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
   NSDictionary *options = pluginCall.options;
-  
-  // TODO: Cache this once and repeat calls
-  _methodArgumentCallbacks = [NSMutableArray arrayWithCapacity:2];
-  NSMethodSignature * mySignature = [[plugin class] instanceMethodSignatureForSelector:self.selector];
 
+  NSMethodSignature * mySignature = [plugin methodSignatureForSelector:_selector];
   NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:mySignature];
-  NSMutableArray *manualRetainArgs = [NSMutableArray array];
   
   _invocation = invocation;
   [_invocation setTarget:plugin];
-  [_invocation setSelector:self.selector];
+  [_invocation setSelector:_selector];
   
   NSUInteger numArgs = [self.args count];
   for(int i = 0; i < numArgs; i++) {
     AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
     id callArg = [options objectForKey:arg.name];
     NSLog(@"Found callArg and arg %@ %@", callArg, arg);
-    [_invocation setArgument:&callArg atIndex:i+2]; // We're at an offset of 2 for the invocation args
-    [_manualRetainArgs addObject:arg];
+    
+    AVCCallback block = [_methodArgumentCallbacks objectAtIndex:i];
+    block(callArg, i+2);
   }
   
-   // https://stackoverflow.com/questions/7997666/storing-blocks-in-an-array
-  [_methodArgumentCallbacks addObject:^() {
-    id value = [(^() {
-      AVCPluginCallSuccessHandler block = [pluginCall getSuccessHandler];
-      AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
-    }) copy];
-    [invocation setArgument:&value atIndex:numArgs];
-    [manualRetainArgs addObject:value];
-  }];
+  AVCCallback successBlock = [_methodArgumentCallbacks objectAtIndex:numArgs];
+  successBlock(nil, numArgs+2);
 
-  for(AVCCallback block in _methodArgumentCallbacks) {
-    block();
-  }
-  // TODO: Look into manual retain per online discussion
-  // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html
-  // Possible adding to autorelease pool is not desirable given our lifecycle
-  // [myInvocation retainArguments];
-  
   CFTimeInterval start = CACurrentMediaTime();
   [_invocation invoke];
   CFTimeInterval duration = CACurrentMediaTime() - start;

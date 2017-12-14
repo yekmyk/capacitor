@@ -2,6 +2,13 @@
 
 #import "AVCPluginCall.h"
 
+@implementation AVCPluginCallResult
+- (instancetype)initWithData:(NSDictionary<NSString *, id>*)data {
+  self.data = data;
+  return self;
+}
+@end
+
 @implementation AVCPluginCall
 -(instancetype)initWithOptions:(NSDictionary *)options success:(AVCPluginCallSuccessHandler) success error:(AVCPluginCallErrorHandler) error {
   self.options = options;

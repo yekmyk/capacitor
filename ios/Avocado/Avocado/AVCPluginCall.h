@@ -1,6 +1,8 @@
 
-@interface AVCPluginCallResult
+@interface AVCPluginCallResult : NSObject
 @property (nonatomic, strong) NSDictionary<NSString *, id>* data;
+
+- (instancetype)initWithData:(NSDictionary<NSString *, id>*)data;
 @end
 
 @interface AVCPluginCallError

@@ -18,13 +18,13 @@ public class Browser : AVCPlugin, SFSafariViewControllerDelegate {
   }
  */
   
-  @objc(open:success:error:)
-  func open(url: String, success: @escaping AVCPluginCallSuccessHandler, error: AVCPluginCallErrorHandler) {
+  @objc(open:success:)
+  func open(url: String, success: @escaping AVCPluginCallSuccessHandler) {//}, error: AVCPluginCallErrorHandler) {
     let url = URL(string: url)
     vc = SFSafariViewController.init(url: url!)
     vc!.delegate = self
     bridge.viewController.present(vc!, animated: true, completion: {
-      //success(nil)
+      success(nil)
     })
   }
 }

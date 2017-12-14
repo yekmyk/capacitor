@@ -1,6 +1,8 @@
 #import <Avocado/Avocado-Swift.h>
 #import "AVCPluginMethod.h"
 
+typedef void(^AVCCallback)();
+
 @implementation AVCPluginMethodArgument
 
 - (instancetype)initWithName:(NSString *)name nullability:(AVCPluginMethodArgumentNullability)nullability type:(NSString *)type {
@@ -23,6 +25,7 @@
   NSMutableArray *_manualRetainArgs;
   // Retain invocation instance
   NSInvocation *_invocation;
+  NSMutableArray *_methodArgumentCallbacks;
 }
 
 -(instancetype)initWithNameAndTypes:(NSString *)name types:(NSString *)types returnType:(AVCPluginReturnType *)returnType {
@@ -77,7 +80,7 @@
   }
   
   // Add our required success/error callback handlers
-  [selectorParts addObject:@"success:error:"];
+  [selectorParts addObject:@"success:"];//error:"];
   NSString *selectorString = [selectorParts componentsJoinedByString:@""];
   return NSSelectorFromString(selectorString);
 }
@@ -92,11 +95,17 @@
   NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:[pluginCall.options count]];
   NSDictionary *options = pluginCall.options;
   
+  // TODO: Cache this once and repeat calls
+  _methodArgumentCallbacks = [NSMutableArray arrayWithCapacity:2];
   NSMethodSignature * mySignature = [[plugin class] instanceMethodSignatureForSelector:self.selector];
 
-  _invocation = [NSInvocation invocationWithMethodSignature:mySignature];
+  NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:mySignature];
+  NSMutableArray *manualRetainArgs = [NSMutableArray array];
+  
+  _invocation = invocation;
   [_invocation setTarget:plugin];
   [_invocation setSelector:self.selector];
+  
   NSUInteger numArgs = [self.args count];
   for(int i = 0; i < numArgs; i++) {
     AVCPluginMethodArgument *arg = [self.args objectAtIndex:i];
@@ -106,24 +115,19 @@
     [_manualRetainArgs addObject:arg];
   }
   
-  id successHandler = [[pluginCall getSuccessHandler] copy];
-  id errorHandler = [[pluginCall getErrorHandler] copy];
-  /*
-  id successHandler = [(^() {
-    NSLog(@"SUCCESS");
-  }) copy];
-  id errorHandler = [(^() {
-    NSLog(@"ERROR");
-  }) copy];
-  */
-  
-  [_invocation setArgument:&successHandler atIndex:numArgs];
-  [_invocation setArgument:&errorHandler atIndex:numArgs+1];
-  
-  // https://stackoverflow.com/questions/7997666/storing-blocks-in-an-array
-  [_manualRetainArgs addObject:successHandler];
-  [_manualRetainArgs addObject:errorHandler];
-  
+   // https://stackoverflow.com/questions/7997666/storing-blocks-in-an-array
+  [_methodArgumentCallbacks addObject:^() {
+    id value = [(^() {
+      AVCPluginCallSuccessHandler block = [pluginCall getSuccessHandler];
+      AVCPluginCallResult *result = [[AVCPluginCallResult alloc] initWithData:nil];
+    }) copy];
+    [invocation setArgument:&value atIndex:numArgs];
+    [manualRetainArgs addObject:value];
+  }];
+
+  for(AVCCallback block in _methodArgumentCallbacks) {
+    block();
+  }
   // TODO: Look into manual retain per online discussion
   // http://www.cocoabuilder.com/archive/cocoa/241994-surprise-nsinvocation-retainarguments-also-autoreleases-them.html
   // Possible adding to autorelease pool is not desirable given our lifecycle

@@ -14,10 +14,11 @@ AVC_PLUGIN(Browser,
            AVC_PLUGIN_METHOD(close, "options:any", AVCPluginReturnPromise);
 )
 
-/*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.camera", Camera)
-@end
+AVC_PLUGIN(Camera,
+           AVC_PLUGIN_METHOD(getPhoto, "options:any", AVCPluginReturnPromise);
+)
 
+/*
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.clipboard", Clipboard)
 @end
 

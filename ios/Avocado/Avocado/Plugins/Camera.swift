@@ -1,8 +1,9 @@
 import Foundation
 import CoreMotion
-/*
+
+
 @objc(Camera)
-public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPopoverPresentationControllerDelegate {
+public class Camera : AVCPlugin, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPopoverPresentationControllerDelegate {
   var imagePicker: UIImagePickerController?
   var call: AVCPluginCall?
   var quality: Float = 1.0
@@ -48,6 +49,12 @@ public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationContr
 
       self.bridge.viewController.present(self.imagePicker!, animated: true, completion: nil)
     }))
+    
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction) in
+      call.error("User closed action sheet")
+      alert.dismiss(animated: true, completion: nil)
+    }))
+    
     setPopover(alert)
     self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
@@ -120,7 +127,4 @@ public class Camera : Plugin, UIImagePickerControllerDelegate, UINavigationContr
     vc.popoverPresentationController?.sourceView = self.bridge.viewController.view
     vc.popoverPresentationController?.permittedArrowDirections = UIPopoverArrowDirection(rawValue: 0)
   }
-}*/
-
-
-
+}

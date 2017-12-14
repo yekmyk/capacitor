@@ -4,9 +4,8 @@ import UserNotifications
 /**
  * Implement three common modal types: alert, confirm, and prompt
  */
-/*
 @objc(LocalNotifications)
-public class LocalNotifications : Plugin {
+public class LocalNotifications : AVCPlugin {
   @objc public func schedule(_ call: AVCPluginCall) {
     guard let title = call.get("title", String.self) else {
       call.error("Must provide a title")
@@ -70,5 +69,4 @@ public class LocalNotifications : Plugin {
     ])
   }
 }
- */
 

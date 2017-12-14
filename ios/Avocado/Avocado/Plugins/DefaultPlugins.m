@@ -47,9 +47,18 @@ AVC_PLUGIN(Geolocation,
   AVC_PLUGIN_METHOD(watchPosition, "options:any", AVCPluginReturnCallback);
 )
 
+AVC_PLUGIN(Haptics,
+  AVC_PLUGIN_METHOD(impact, "style:string", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(selectionStart, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(selectionChanged, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(selectionEnd, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(vibrate, "", AVCPluginReturnPromise);
+)
+
+AVC_PLUGIN(LocalNotifications,
+           AVC_PLUGIN_METHOD(schedule, "options:any", AVCPluginReturnPromise);
+           )
 /*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.haptics", Haptics)
-@end
 
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.localnotifications", LocalNotifications)
 @end

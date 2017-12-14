@@ -1,7 +1,8 @@
 import Foundation
-/*
+
+
 @objc(Filesystem)
-public class Filesystem : Plugin {
+public class Filesystem : AVCPlugin {
   let DEFAULT_DIRECTORY = "DOCUMENTS"
   
   // Get the SearchPathDirectory corresponding to the JS string
@@ -291,4 +292,4 @@ public class Filesystem : Plugin {
     call.error(message, error)
   }
 }
-*/
+

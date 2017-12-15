@@ -204,13 +204,34 @@
   function injectCSS() {
     var css = `
     ._avc-modal {
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
       position: fixed;
       top: 0;
       right: 0;
       bottom: 0;
       left: 0;
       z-index: 9999;
+    }
+    ._avc-modal-header {
+      padding: 20px 15px;
+      font-size: 14px;
+      position: relative;
       background-color: #eee;
+    }
+    ._avc-modal-content {
+      background-color: #eee;
+    }
+    ._avc-modal-header-button {
+      float: right;
+      font-size: 14px;
+    }
+    ._avc-modal-title {
+      position: absolute;
+      text-align: center;
+      width: 100px;
+      left: 50%;
+      margin-left: -50px;
+      font-weight: 600;
     }
     `
     var style = document.createElement('style');
@@ -221,13 +242,12 @@
   function makeModal() {
     injectCSS();
     var html = `
-    <div class="_avc-modal">
       <div class="_avc-modal-header">
+        <div class="_avc-modal-title">Error</div>
         <button type="button" class="_avc-modal-header-button">Close</button>
       </div>
       <div class="_avc-modal-content">
       </div>
-    </div>
     `
     var el = document.createElement('div');
     el.innerHTML = html;

@@ -219,7 +219,10 @@
       background-color: #eee;
     }
     ._avc-modal-content {
-      background-color: #eee;
+      width: 100%;
+      height: 100%;
+      -webkit-backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.3);
     }
     ._avc-modal-header-button {
       float: right;

@@ -38,23 +38,27 @@ enum BridgeError: Error {
     }*/
   }
   
-  static func fatalError(_ error: Error) {
-    print("🥑 ❌ Avocado: FATAL ERROR")
+  static func fatalError(_ error: Error, _ originalError: Error) {
+    print("🥑 ❌  Avocado: FATAL ERROR")
+    print("🥑 ❌  Error was: ", originalError.localizedDescription)
     switch error {
     case BridgeError.errorExportingCoreJS:
-      print("🥑 ❌ Unable to export required Bridge JavaScript. Bridge will not function.")
+      print("🥑 ❌  Unable to export required Bridge JavaScript. Bridge will not function.")
+      if let wke = originalError as? WKError {
+        print("🥑 ❌ ", wke.userInfo)
+      }
     default:
-      print("🥑 ❌ Unknown error")
+      print("🥑 ❌  Unknown error")
     }
-    print("🥑 ❌ Error was: ", error.localizedDescription)
-    print("🥑 ❌ Please verify your installation or file an issue")
+    
+    print("🥑 ❌  Please verify your installation or file an issue")
   }
   
   func exportCoreJS() {
     do {
       try JSExport.exportAvocadoJS(webView: self.webView)
     } catch {
-      Bridge.fatalError(error)
+      Bridge.fatalError(error, error)
     }
   }
   

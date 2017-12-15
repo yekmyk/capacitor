@@ -4,11 +4,10 @@ import Foundation
  * StatusBar plugin. Requires "View controller-based status bar appearance" to
  * be "NO" in Info.plist
  */
-/*
 @objc(StatusBar)
-public class StatusBar: Plugin {
+public class StatusBar: AVCPlugin {
   @objc public func setStyle(_ call: AVCPluginCall) {
-    let options = call.options
+    let options = call.options!
 
     if let style = options["style"] as? String {
       if style == "DARK" {
@@ -18,7 +17,7 @@ public class StatusBar: Plugin {
       }
     }
     
-    call.successCallback(PluginResult([:]))
+    call.success([:])
   }
 }
-*/
+

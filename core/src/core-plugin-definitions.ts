@@ -302,7 +302,8 @@ export type MotionWatchAccelCallback = (err: any, accel: MotionAccel) => void;
 //
 
 export interface NetworkPlugin {
-  onStatusChange(callback: NetworkStatusChangeCallback) : void;
+  getStatus(): Promise<NetworkStatus>;
+  onStatusChange(callback: NetworkStatusChangeCallback): void;
 }
 
 export interface NetworkStatus {
@@ -311,7 +312,7 @@ export interface NetworkStatus {
 }
 
 export type NetworkStatusChangeCallback = (err: any, status: NetworkStatus) => void;
-  
+
 //
 
 export interface SplashScreenPlugin {

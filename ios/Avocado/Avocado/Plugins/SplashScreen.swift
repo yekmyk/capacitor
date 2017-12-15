@@ -1,9 +1,8 @@
-/*
 import Foundation
 import AudioToolbox
 
 @objc(SplashScreen)
-public class SplashScreen : Plugin {
+public class SplashScreen : AVCPlugin {
   var imageView = UIImageView()
   var image: UIImage?
   var call: AVCPluginCall?
@@ -121,5 +120,4 @@ public class SplashScreen : Plugin {
     }
   }
 }
- */
 

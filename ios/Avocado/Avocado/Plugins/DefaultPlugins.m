@@ -56,7 +56,7 @@ AVC_PLUGIN(Haptics,
 )
 
 AVC_PLUGIN(LocalNotifications,
-           AVC_PLUGIN_METHOD(schedule, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(schedule, "", AVCPluginReturnPromise);
 )
 
 AVC_PLUGIN(Modals,
@@ -66,16 +66,16 @@ AVC_PLUGIN(Modals,
 )
 
 AVC_PLUGIN(Network,
-           AVC_PLUGIN_METHOD(alert, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(onStatusChange, "", AVCPluginReturnCallback);
+  AVC_PLUGIN_METHOD(getStatus, "", AVCPluginReturnPromise);
+)
 
-           )
-/*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.network", Network)
-@end
+AVC_PLUGIN(SplashScreen,
+           AVC_PLUGIN_METHOD(show, "", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(hide, "", AVCPluginReturnPromise);)
 
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.splashscreen", SplashScreen)
-@end
+AVC_PLUGIN(StatusBar,
+           AVC_PLUGIN_METHOD(setStyle, "", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(show, "", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(hide, "", AVCPluginReturnPromise);)
 
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.statusbar", StatusBar)
-@end
-*/

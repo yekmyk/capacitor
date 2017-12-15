@@ -152,6 +152,10 @@
   };
 
   avocado.nativeCallback = function (pluginId, methodName, options, callback) {
+    if(typeof options === 'function') {
+      callback = options;
+      options = null;
+    }
     avocado.toNative(pluginId, methodName, options, {
       callback
     });

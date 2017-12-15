@@ -22,6 +22,13 @@ export class NetworkPage {
     Plugins.Network.onStatusChange((err, status) => {
       console.log("Network status changed", status);
     });
+
+    this.getStatus();
+  }
+
+  async getStatus() {
+    let status = await Plugins.Network.getStatus();
+    console.log('NETWORK STATUS', status);
   }
 
   ionViewDidLoad() {

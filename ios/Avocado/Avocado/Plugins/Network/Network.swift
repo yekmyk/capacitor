@@ -27,6 +27,24 @@ public class Network : AVCPlugin {
     }
   }
   
+  @objc func getStatus(_ call: AVCPluginCall) {
+    var connected = false
+    var type = ""
+    if reachability.connection == .wifi {
+      connected = true
+      type = "wifi"
+    }
+    if reachability.connection == .cellular {
+      connected = true
+      type = "cellular"
+    }
+    
+    call.success([
+      "connected": connected,
+      "connectionType": type
+    ])
+  }
+  
   func notifyStatusChangeListeners(connected: Bool, type: String) {
     notifyListeners("networkStatusChanged", data: [
       "connected": connected,

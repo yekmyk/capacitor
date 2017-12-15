@@ -164,7 +164,7 @@ enum BridgeError: Error {
       return
     }
     
-    print("\n🥑  Calling method \"\(call.method)\" on plugin \"\(plugin.getId()!)\"")
+    //print("\n🥑  Calling method \"\(call.method)\" on plugin \"\(plugin.getId()!)\"")
     
     let selector = method.getSelector()
     

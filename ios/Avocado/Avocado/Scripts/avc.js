@@ -2,7 +2,7 @@
   win.Avocado = win.Avocado || {};
 
   // keep a collection of callbacks for native response data
-    var calls = {};
+  var calls = {};
 
   // keep a counter of callback ids
   var callbackIdCount = 0;
@@ -149,13 +149,13 @@
   avocado.withPlugin = function withPlugin(_pluginId, _fn) {
   };
 
-  avocado.nativeCallback = (pluginId, methodName, options, callback) {
+  avocado.nativeCallback = function (pluginId, methodName, options, callback) {
     avocado.toNative(pluginId, methodName, options, {
       callback
     });
   };
 
-  avocado.nativePromise = (pluginId, methodName, options) {
+  avocado.nativePromise = function (pluginId, methodName, options) {
     return new Promise((resolve, reject) => {
       avocado.toNative(pluginId, methodName, options, {
         resolve,
@@ -164,8 +164,12 @@
     });
   };
 
+  avocado.handleError = function(error) {
+    console.log('HANDLE ERROR', error);
+  }
  
-  avc.handleWindowError = function (msg, url, lineNo, columnNo, error) {
+ 
+  avocado.handleWindowError = function (msg, url, lineNo, columnNo, error) {
     var string = msg.toLowerCase();
     var substring = "script error";
     if (string.indexOf(substring) > -1) {
@@ -181,13 +185,13 @@
           errorObject: JSON.stringify(error)
         }
       };
-      window.Avocado.handleGlobalError(errObj);
+      window.Avocado.handle(errObj);
       window.webkit.messageHandlers.avocado.postMessage(errObj);
     }
 
     return false;
   };
 
-  window.onerror = avc.handleWindowError;
+  window.onerror = avocado.handleWindowError;
    
-})();
+})(window);

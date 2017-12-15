@@ -169,10 +169,10 @@
   avocado.handleError = function(error) {
     if(!errorModal) {
       errorModal = makeErrorModal(error);
-    } else {
-      updateErrorModal(error);
-      errorModal.style.display = 'block';
     }
+      
+    errorModal.style.display = 'block';
+    updateErrorModal(error);
   }
  
  
@@ -264,8 +264,7 @@
     var modalEl = makeModal();
     modalEl.id = "_avc-error";
     document.body.appendChild(modalEl);
-
-    updateErrorModal(error);
+    return modalEl;
   }
 
   function updateErrorModal(error) {
@@ -283,8 +282,8 @@
       <div class="_avc-error-stack"></div>
     </div>
     `;
-    var messageEl = content.querySelector('._avc-modal-message');
-    var stackEl = content.querySelector('._avc-modal-stack');
+    var messageEl = content.querySelector('._avc-error-message');
+    var stackEl = content.querySelector('._avc-error-stack');
     messageEl.innerHTML = message;
     stackEl.innerHTML = stackHTML;
   }

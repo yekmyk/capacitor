@@ -60,17 +60,16 @@ AVC_PLUGIN(LocalNotifications,
 )
 
 AVC_PLUGIN(Modals,
+  AVC_PLUGIN_METHOD(alert, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(prompt, "", AVCPluginReturnPromise);
+  AVC_PLUGIN_METHOD(confirm, "", AVCPluginReturnPromise);
+)
+
+AVC_PLUGIN(Network,
            AVC_PLUGIN_METHOD(alert, "", AVCPluginReturnPromise);
-           AVC_PLUGIN_METHOD(prompt, "", AVCPluginReturnPromise);
-           AVC_PLUGIN_METHOD(confirm, "", AVCPluginReturnPromise);
+
            )
 /*
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.modals", Modals)
-@end
-
-@interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.motion", Motion)
-@end
-
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.network", Network)
 @end
 

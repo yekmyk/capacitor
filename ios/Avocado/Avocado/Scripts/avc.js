@@ -9,6 +9,8 @@
 
   var avocado = Avocado;
 
+  var errorModal = null;
+
   // create the postToNative() fn if needed
   if (win.androidBridge) {
     // android platform
@@ -165,7 +167,12 @@
   };
 
   avocado.handleError = function(error) {
-    console.log('HANDLE ERROR', error);
+    if(!errorModal) {
+      errorModal = makeErrorModal(error);
+    } else {
+      updateErrorModal(error);
+      errorModal.style.display = 'block';
+    }
   }
  
  
@@ -185,7 +192,7 @@
           errorObject: JSON.stringify(error)
         }
       };
-      window.Avocado.handle(errObj);
+      window.Avocado.handleError(errObj);
       window.webkit.messageHandlers.avocado.postMessage(errObj);
     }
 
@@ -193,5 +200,53 @@
   };
 
   window.onerror = avocado.handleWindowError;
-   
+
+  function injectCSS() {
+    var css = `
+    ._avc-modal {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 9999;
+      background-color: #eee;
+    }
+    `
+    var style = document.createElement('style');
+    style.innerHTML = css;
+    document.head.appendChild(style);
+  }
+
+  function makeModal() {
+    injectCSS();
+    var html = `
+    <div class="_avc-modal">
+      <div class="_avc-modal-header">
+        <button type="button" class="_avc-modal-header-button">Close</button>
+      </div>
+      <div class="_avc-modal-content">
+      </div>
+    </div>
+    `
+    var el = document.createElement('div');
+    el.innerHTML = html;
+    el.className ="_avc-modal";
+    return el;
+  }
+
+  function makeErrorModal(error) {
+    console.log('Making modal for error', error);
+    var modalEl = makeModal();
+    modalEl.id = "_avc-error";
+    document.body.appendChild(modalEl);
+
+    updateErrorModal(error);
+  }
+
+  function updateErrorModal(error) {
+    if(!errorModal) { return; }
+    var content = errorModal.querySelector('._avc-modal-content');
+    content.innerHTML = error;
+  }
 })(window);

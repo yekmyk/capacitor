@@ -86,7 +86,7 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
         
         let options = dict["options"] as! [String:Any]? ?? [:]
         
-        print("To Native -> ", pluginId, method, callbackId, options)
+        print("🥑  To Native -> ", pluginId, method, callbackId, options)
         
         self.bridge!.handleJSCall(call: JSCall(options: options, pluginId: pluginId, method: method, callbackId: callbackId))
       }

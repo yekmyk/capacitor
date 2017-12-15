@@ -201,7 +201,7 @@ enum BridgeError: Error {
    */
   public func toJs(result: JSResult) {
     let resultJson = result.toJson()
-    print("TO JS", result.toJson())
+    print("🥑  TO JS", result.toJson())
     self.webView.evaluateJavaScript("window.Avocado.fromNative({ callbackId: '\(result.call.callbackId)', pluginId: '\(result.call.pluginId)', methodName: '\(result.call.method)', success: true, data: \(resultJson)})") { (result, error) in
       if error != nil && result != nil {
         print(result!)
@@ -232,7 +232,7 @@ enum BridgeError: Error {
     """
     self.webView.evaluateJavaScript(wrappedJs, completionHandler: { (result, error) in
       if error != nil {
-        print("🥑 JS Eval error", error?.localizedDescription)
+        print("🥑  JS Eval error", error?.localizedDescription)
       }
     })
   }

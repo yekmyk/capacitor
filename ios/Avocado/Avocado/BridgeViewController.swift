@@ -9,7 +9,7 @@
 import UIKit
 import WebKit
 
-class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate {
+class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelegate, WKNavigationDelegate {
   
   private var webView: WKWebView?
   
@@ -28,6 +28,7 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
     webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
     webView?.scrollView.bounces = false
     webView?.uiDelegate = self
+    webView?.navigationDelegate = self
     //If you want to implement the delegate
     //webView?.navigationDelegate = self
     webView?.configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
@@ -70,6 +71,14 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
     //configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone
   }
   
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    print("WEB VIEW FINISH", webView, navigation)
+  }
+  
+  public override func canPerformUnwindSegueAction(_ action: Selector, from fromViewController: UIViewController, withSender sender: Any) -> Bool {
+    return false
+  }
+  
   public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
     let body = message.body
     if let dict = body as? [String:Any] {
@@ -104,11 +113,11 @@ class BridgeViewController: UIViewController, WKScriptMessageHandler, WKUIDelega
       filename = String(url[index...])
     }
     
-    print("\n------ STARTUP JS ERROR ------\n")
-    print("\(message)")
-    print("URL: \(url)")
-    print("\(filename):\(line):\(col)")
-    print("\nSee above for help with debugging blank-screen issues")
+    print("\n🥑  ------ STARTUP JS ERROR ------\n")
+    print("🥑  \(message)")
+    print("🥑  URL: \(url)")
+    print("🥑  \(filename):\(line):\(col)")
+    print("\n🥑  See above for help with debugging blank-screen issues")
   }
   
   override func didReceiveMemoryWarning() {

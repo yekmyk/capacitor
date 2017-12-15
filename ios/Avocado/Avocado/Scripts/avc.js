@@ -213,10 +213,11 @@
       z-index: 9999;
     }
     ._avc-modal-header {
-      padding: 20px 15px;
-      font-size: 14px;
+      padding: 32px 15px;
+      font-size: 16px;
       position: relative;
-      background-color: #eee;
+      -webkit-backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.3);
     }
     ._avc-modal-content {
       width: 100%;
@@ -226,7 +227,7 @@
     }
     ._avc-modal-header-button {
       float: right;
-      font-size: 14px;
+      font-size: 16px;
     }
     ._avc-modal-title {
       position: absolute;
@@ -269,7 +270,22 @@
 
   function updateErrorModal(error) {
     if(!errorModal) { return; }
+
+    var message = error.message;
+    var stack = error.stack;
+    var stackLines = stack.split('\n');
+    var stackHTML = stackLines.join('<br />');
+
     var content = errorModal.querySelector('._avc-modal-content');
-    content.innerHTML = error;
+    content.innerHTML = `
+    <div class="_avc-error-content">
+      <div class="_avc-error-message"></div>
+      <div class="_avc-error-stack"></div>
+    </div>
+    `;
+    var messageEl = content.querySelector('._avc-modal-message');
+    var stackEl = content.querySelector('._avc-modal-stack');
+    messageEl.innerHTML = message;
+    stackEl.innerHTML = stackHTML;
   }
 })(window);

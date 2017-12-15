@@ -1,7 +1,3 @@
-
-// always import avocado so that it's placed on window
-import './avocado';
-
 export {
   PluginCallback,
   PluginResultData,

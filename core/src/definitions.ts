@@ -65,6 +65,8 @@ export interface Avocado {
   withPlugin?: (pluginId: string, fn: Function) => void;
   nativeCallback?: (pluginId: string, methodName: string, options?: any, callback?: any) => void;
   nativePromise?: (pluginId: string, methodName: string, options?: any) => Promise<any>;
+  handleError?: (error: Error) => void;
+  handleWindowError?: (msg: string, url: string, lineNo: number, columnNo: number, error: Error) => void;
   Plugins?: PluginRegistry;
 }
 

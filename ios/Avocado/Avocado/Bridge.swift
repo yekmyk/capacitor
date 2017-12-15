@@ -2,6 +2,10 @@ import Foundation
 import Dispatch
 import WebKit
 
+enum BridgeError: Error {
+  case errorExportingCoreJS
+}
+
 @objc public class Bridge : NSObject {
   public var AVC_SITE = "https://avocado.ionicframework.com"
   
@@ -23,6 +27,7 @@ import WebKit
     self.viewController = vc
     self.webView = webView
     super.init()
+    exportCoreJS()
     registerPlugins()
   }
   
@@ -31,6 +36,26 @@ import WebKit
     if let splash = getOrLoadPlugin(pluginId: "com.avocadojs.plugin.splashscreen") as? SplashScreen {
       splash.showOnLaunch()
     }*/
+  }
+  
+  static func fatalError(_ error: Error) {
+    print("🥑 ❌ Avocado: FATAL ERROR")
+    switch error {
+    case BridgeError.errorExportingCoreJS:
+      print("🥑 ❌ Unable to export required Bridge JavaScript. Bridge will not function.")
+    default:
+      print("🥑 ❌ Unknown error")
+    }
+    print("🥑 ❌ Error was: ", error.localizedDescription)
+    print("🥑 ❌ Please verify your installation or file an issue")
+  }
+  
+  func exportCoreJS() {
+    do {
+      try JSExport.exportAvocadoJS(webView: self.webView)
+    } catch {
+      Bridge.fatalError(error)
+    }
   }
   
   func registerPlugins() {
@@ -49,7 +74,7 @@ import WebKit
   func registerPlugin(_ pluginClassName: String, _ pluginType: AVCPlugin.Type) {
     let bridgeType = pluginType as! AVCBridgedPlugin.Type
     knownPlugins[bridgeType.pluginId()] = pluginType
-    PluginExport.exportJS(webView: self.webView, pluginClassName: pluginClassName, pluginType: pluginType)
+    JSExport.exportJS(webView: self.webView, pluginClassName: pluginClassName, pluginType: pluginType)
   }
   
   public func getOrLoadPlugin(pluginId: String) -> AVCPlugin? {
@@ -208,3 +233,4 @@ import WebKit
     })
   }
 }
+

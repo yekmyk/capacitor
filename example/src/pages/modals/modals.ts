@@ -26,16 +26,25 @@ export class ModalsPage {
   }
 
   async showAlert() {
-    let alertRet = await Plugins.Modals.alert('Stop', 'this is an error');
+    let alertRet = await Plugins.Modals.alert({
+      title: 'Stop',
+      message: 'this is an error'
+    });
   }
 
   async showConfirm() {
-    let confirmRet = await Plugins.Modals.confirm('Confirm', 'Are you sure you\'d like to press the red button?');
+    let confirmRet = await Plugins.Modals.confirm({
+      title: 'Confirm',
+      message: 'Are you sure you\'d like to press the red button?'
+    });
     console.log('Confirm ret', confirmRet);
   }
 
   async showPrompt() {
-    let promptRet = await Plugins.Modals.prompt('Hello', 'What\'s your name?');
+    let promptRet = await Plugins.Modals.prompt({
+      title: 'Hello',
+      message: 'What\'s your name?'
+    });
     console.log('Prompt ret', promptRet);
   }
 

@@ -254,20 +254,28 @@ export interface LocalNotification {
 //
 
 export interface ModalsPlugin {
-  alert(title: string, message: string, buttonTitle?: string) : Promise<void>;
+  alert(options: {
+          title: string,
+          message: string,
+          buttonTitle?: string
+        }): Promise<void>;
 
-  prompt(title: string,
+  prompt(options: {
+          title: string,
           message: string,
           okButtonTitle?: string,
           cancelButtonTitle?: string,
-          inputPlaceholder?: string) : Promise<PromptResult>;
+          inputPlaceholder?: string
+        }): Promise<PromptResult>;
 
-  confirm(title: string,
-          message: string,
-          okButtonTitle?: string,
-          cancelButtonTitle?: string) : Promise<ConfirmResult>;
+  confirm(options: {
+            title: string,
+            message: string,
+            okButtonTitle?: string,
+            cancelButtonTitle?: string
+          }): Promise<ConfirmResult>;
 }
-  
+
 export interface PromptResult {
   value: string;
   cancelled: boolean;

@@ -57,6 +57,12 @@ AVC_PLUGIN(Haptics,
 
 AVC_PLUGIN(LocalNotifications,
            AVC_PLUGIN_METHOD(schedule, "", AVCPluginReturnPromise);
+)
+
+AVC_PLUGIN(Modals,
+           AVC_PLUGIN_METHOD(alert, "", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(prompt, "", AVCPluginReturnPromise);
+           AVC_PLUGIN_METHOD(confirm, "", AVCPluginReturnPromise);
            )
 /*
 @interface AVOCADO_PLUGIN_DEFINE("com.avocadojs.plugin.modals", Modals)

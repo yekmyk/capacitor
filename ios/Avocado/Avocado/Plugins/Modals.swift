@@ -3,9 +3,8 @@ import Foundation
 /**
  * Implement three common modal types: alert, confirm, and prompt
  */
-/*
 @objc(Modals)
-public class Modals : Plugin {
+public class Modals : AVCPlugin {
   @objc public func alert(_ call: AVCPluginCall) {
     guard let title = call.options["title"] as? String else {
       call.error("title must be provided")
@@ -78,7 +77,3 @@ public class Modals : Plugin {
     self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
 }
- */
-
-
-

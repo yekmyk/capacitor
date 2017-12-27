@@ -26,7 +26,7 @@ class App {
             h("div", { id: "main-div" },
                 h("site-header", null),
                 h("div", { class: "app" },
-                    h("stencil-router", null,
+                    h("stencil-router", { root: "/avocado" },
                         h("stencil-route", { url: "/", component: "landing-page", exact: true }),
                         h("stencil-route", { url: "/blog", component: "blog-page" }),
                         h("stencil-route", { url: "/demos", component: "demos-page" }),

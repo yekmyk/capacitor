@@ -20,7 +20,7 @@ importScripts('workbox-sw.prod.v2.1.2.js');
 const fileManifest = [
   {
     "url": "assets/icon/favicon.ico",
-    "revision": "99fc5f75faf5ed2c4f7b53d0034401a8"
+    "revision": "a61817507821162ce48c41fcaaa487d8"
   },
   {
     "url": "assets/img/avo-social.png",
@@ -96,59 +96,99 @@ const fileManifest = [
   },
   {
     "url": "build/app.js",
-    "revision": "60abd408f464e8b9173bd6aa3b59c496"
+    "revision": "f60b031c9b38e2d7a6f131f7b5090585"
   },
   {
-    "url": "build/app/5o20v596.js",
-    "revision": "386f6e0be17c826daca2ec7622d14920"
+    "url": "build/app/1zq3vudn.js",
+    "revision": "d81cbb6fad9d469f647c0f6764a7e27b"
   },
   {
-    "url": "build/app/app.fzkgfmxa.pf.js",
-    "revision": "8bc4c5b346d1ba35ebb73163da4921e0"
+    "url": "build/app/5e3mm8py.js",
+    "revision": "d8783a51d88a5fe606e0bd94a40261be"
+  },
+  {
+    "url": "build/app/6h3gn76l.js",
+    "revision": "b46ee5986c7fda07d6efbd4caa777cde"
+  },
+  {
+    "url": "build/app/9vp1kpca.js",
+    "revision": "ec63c784fbc2f0b40f0bcdb8ce78ee07"
+  },
+  {
+    "url": "build/app/a9pov8p9.js",
+    "revision": "396bc3afa4b6aabbea62862f6283645e"
   },
   {
     "url": "build/app/app.global.js",
-    "revision": "2a614f135b7606cb918369d08110ce13"
+    "revision": "3a5c841401a41c898207dc7d241ac038"
   },
   {
-    "url": "build/app/app.mjyk6kve.js",
-    "revision": "519e6e53bc36d7626bb49ddfb9974934"
+    "url": "build/app/app.gzgsz0co.js",
+    "revision": "177700d815356e1394adb2ecc5151597"
+  },
+  {
+    "url": "build/app/app.m3eyznes.js",
+    "revision": "f80437a8f51181860b330e2f59bbd7ad"
+  },
+  {
+    "url": "build/app/app.qnefnhxv.js",
+    "revision": "0a42ace057e984409fc0b0c5cf03e10e"
   },
   {
     "url": "build/app/app.registry.json",
-    "revision": "61d534189c9ce3be0d80de4837b1c9d5"
+    "revision": "0b49308ec70b3e32c346af21de87db28"
   },
   {
-    "url": "build/app/d7yzhjya.js",
-    "revision": "23c293d3d4babd728463ea5061f85a13"
+    "url": "build/app/ceyncfbc.js",
+    "revision": "f2c5f329883f9b2e0bd80e1eaa4e12d7"
   },
   {
-    "url": "build/app/flkavucn.js",
-    "revision": "a8a69266e1fdb328d56b137137740ced"
+    "url": "build/app/cv7cbtbi.js",
+    "revision": "b425d7fba0b1c25730cf13a34af6b556"
   },
   {
-    "url": "build/app/n4gut1z5.js",
-    "revision": "ec4080398ed11039b20cf0c94de4187a"
+    "url": "build/app/i4xaih0n.js",
+    "revision": "3632a793f1a149c2006736805f857017"
   },
   {
-    "url": "build/app/swk0mqkx.js",
-    "revision": "7c47930552dd7d0a0f6d1ee76782ac51"
+    "url": "build/app/krirex7d.js",
+    "revision": "2379293fa04a47b457246d63856c5362"
   },
   {
-    "url": "build/app/tj1ak5jr.js",
-    "revision": "4bbf0302614120a70963f023d6ebab0e"
+    "url": "build/app/lljbbqab.js",
+    "revision": "4cb1be69cd6f9e9015e3d5d93d0159e5"
   },
   {
-    "url": "build/app/vcswuqck.js",
-    "revision": "9c7adcc9af79517f78cc17277d48c526"
+    "url": "build/app/lppew0yu.js",
+    "revision": "6e6e62ef569bd610b181f19a188a47f8"
   },
   {
-    "url": "build/app/vo1ht5li.js",
-    "revision": "da961f84f66281ce2dcfe282cf3aa77e"
+    "url": "build/app/n56a2jzp.js",
+    "revision": "e954543252f3704d0f97c59bfeda6c9c"
   },
   {
-    "url": "build/app/wawblzzc.js",
-    "revision": "6b544ad3322fd7e547a56dc08dbda1d1"
+    "url": "build/app/nvgxmkhh.js",
+    "revision": "549d52c8595fc8cd8cc1dcadb5edd3c2"
+  },
+  {
+    "url": "build/app/orsdhirh.js",
+    "revision": "7438a81d2db06c201be7ba516d9071ca"
+  },
+  {
+    "url": "build/app/pxqetkvb.js",
+    "revision": "b265badb0f3b157462d6173e37e36a30"
+  },
+  {
+    "url": "build/app/rhlmfaus.js",
+    "revision": "6be3c0d5f97086f8fab64b1bf2a654a5"
+  },
+  {
+    "url": "build/app/rjkvhcbv.js",
+    "revision": "48c55f83fea984765543325f8a71dd02"
+  },
+  {
+    "url": "build/app/trqmidt5.js",
+    "revision": "69c21cff94091170fd05b0c6b94a99ed"
   },
   {
     "url": "docs-content/addons/stencil-router.html",
@@ -376,11 +416,15 @@ const fileManifest = [
   },
   {
     "url": "docs/intro/index.html",
-    "revision": "8dd43372f67e1fe158a54bab09f27266"
+    "revision": "d4dfaa7f1ffe050a1642243bc74ca667"
+  },
+  {
+    "url": "host.config.json",
+    "revision": "07ec4ca0792dffcb774ed38f4e0a504e"
   },
   {
     "url": "index.html",
-    "revision": "a78442c466d48f704d879d85a99905d2"
+    "revision": "dc89bb0f81e39d554662b59575d7e290"
   },
   {
     "url": "manifest.json",

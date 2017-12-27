@@ -96,7 +96,7 @@ const fileManifest = [
   },
   {
     "url": "build/app.js",
-    "revision": "6d73fa777c89f5ed062457a919aba265"
+    "revision": "679005491dbc16a312af4ca3369c61ae"
   },
   {
     "url": "build/app/9vp1kpca.js",
@@ -124,7 +124,7 @@ const fileManifest = [
   },
   {
     "url": "build/app/app.registry.json",
-    "revision": "61874608afe24fc379a6d37d6f0814f7"
+    "revision": "5162ef606156cff3d8feda01f7f9110b"
   },
   {
     "url": "build/app/bua0xdue.js",
@@ -133,6 +133,10 @@ const fileManifest = [
   {
     "url": "build/app/cv7cbtbi.js",
     "revision": "b425d7fba0b1c25730cf13a34af6b556"
+  },
+  {
+    "url": "build/app/htc0iely.js",
+    "revision": "2da355eab5ad45245d17a74c8a8fbbc1"
   },
   {
     "url": "build/app/krirex7d.js",
@@ -145,6 +149,10 @@ const fileManifest = [
   {
     "url": "build/app/lppew0yu.js",
     "revision": "6e6e62ef569bd610b181f19a188a47f8"
+  },
+  {
+    "url": "build/app/lxnogjew.js",
+    "revision": "58764bddc3aaf31816b68e562e586ca3"
   },
   {
     "url": "build/app/n56a2jzp.js",
@@ -177,14 +185,6 @@ const fileManifest = [
   {
     "url": "build/app/rjkvhcbv.js",
     "revision": "48c55f83fea984765543325f8a71dd02"
-  },
-  {
-    "url": "build/app/rxzk65d2.js",
-    "revision": "1bdd2d6dfb50666746e3f97c7a0cf88c"
-  },
-  {
-    "url": "build/app/wyagghmq.js",
-    "revision": "c37e27d5681ab4d55da7d16a37894677"
   },
   {
     "url": "build/app/xyfissap.js",
@@ -420,11 +420,11 @@ const fileManifest = [
   },
   {
     "url": "host.config.json",
-    "revision": "2ceed2eb45e27ae315648dcfe34dbd61"
+    "revision": "135fa1351365f86fdc42c0eaec999226"
   },
   {
     "url": "index.html",
-    "revision": "f8c417eaa2397c570ffa34c157f200c3"
+    "revision": "2640925ef2c37d1334bcb5bc58fb7961"
   },
   {
     "url": "manifest.json",

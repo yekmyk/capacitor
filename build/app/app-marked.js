@@ -7,54 +7,47 @@ App.loadComponents(
 "app-marked",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
-// @stencil/core
-
-var AppMarked = /** @class */ (function () {
-    function AppMarked() {
-    }
-    AppMarked.prototype.componentWillLoad = function () {
+class AppMarked {
+    componentWillLoad() {
         return this.fetchNewContent();
-    };
-    AppMarked.prototype.fetchNewContent = function () {
-        var _this = this;
-        return fetch("/docs-content/" + this.doc)
-            .then(function (response) { return response.text(); })
-            .then(function (data) {
-            _this.content = data;
-            var el = document.createElement('div');
+    }
+    fetchNewContent() {
+        return fetch(`/docs-content/${this.doc}`)
+            .then(response => response.text())
+            .then(data => {
+            this.content = data;
+            const el = document.createElement('div');
             el.innerHTML = data;
-            var headerEl = el.querySelector('h1');
+            const headerEl = el.querySelector('h1');
             document.title = (headerEl && headerEl.textContent + ' - Stencil') || 'Stencil';
             // requestAnimationFrame is not available for preRendering
             // or SSR, so only run this in the browser
-            if (!_this.isServer) {
-                window.requestAnimationFrame(function () {
+            if (!this.isServer) {
+                window.requestAnimationFrame(() => {
                     window.scrollTo(0, 0);
                 });
             }
         });
-    };
-    AppMarked.prototype.render = function () {
+    }
+    render() {
         return (h("div", { innerHTML: this.content }));
-    };
-    return AppMarked;
-}());
+    }
+}
 
-var DocumentComponent = /** @class */ (function () {
-    function DocumentComponent() {
+class DocumentComponent {
+    constructor() {
         this.pages = [];
     }
-    DocumentComponent.prototype.render = function () {
+    render() {
         console.log(this.pages);
         return (h("div", { class: "wrapper" },
             h("div", { class: "pull-left" },
                 h("site-menu", null)),
-            h("div", { class: "pull-right" }, this.pages.map(function (page) { return h("app-marked", { doc: page }); }))));
-    };
-    return DocumentComponent;
-}());
+            h("div", { class: "pull-right" }, this.pages.map(page => h("app-marked", { doc: page })))));
+    }
+}
 
 exports['app-marked'] = AppMarked;
 exports['document-component'] = DocumentComponent;
@@ -70,7 +63,7 @@ exports['document-component'] = DocumentComponent;
 [
   [ "content", /** state **/ 5, /** do not observe attribute **/ 0, /** type any **/ 1 ],
   [ "doc", /** prop **/ 1, /** observe attribute **/ 1, /** type string **/ 2 ],
-  [ "isServer", /** prop context **/ 3, /** observe attribute **/ 1, /** type boolean **/ 3, /** context ***/ "isServer" ]
+  [ "isServer", /** prop context **/ 3, /** do not observe attribute **/ 0, /** type any **/ 1, /** context ***/ "isServer" ]
 ],
 
 /** app-marked: host **/
@@ -100,7 +93,7 @@ exports['document-component'] = DocumentComponent;
 
 /** document-component: members **/
 [
-  [ "pages", /** prop **/ 1, /** do not observe attribute **/ 0, /** type any **/ 1 ]
+  [ "pages", /** prop **/ 1, /** observe attribute **/ 1, /** type any **/ 1 ]
 ],
 
 /** document-component: host **/

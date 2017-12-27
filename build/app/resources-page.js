@@ -7,12 +7,10 @@ App.loadComponents(
 "resources-page",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
-// @stencil/core
-
-var ResourcesPage = /** @class */ (function () {
-    function ResourcesPage() {
+class ResourcesPage {
+    constructor() {
         this.LINKS = {
             TEMPLATES: [
                 { title: 'Official Stencil App Starter Project', url: 'https://github.com/ionic-team/stencil-app-starter' },
@@ -28,9 +26,9 @@ var ResourcesPage = /** @class */ (function () {
                 //{ title: '', url: '' }
             ]
         };
-        document.title = "Stencil Resources";
+        document.title = `Stencil Resources`;
     }
-    ResourcesPage.prototype.render = function () {
+    render() {
         return (h("div", { class: "wrapper" },
             h("div", { class: "pull-left" },
                 h("site-menu", null)),
@@ -64,11 +62,11 @@ var ResourcesPage = /** @class */ (function () {
                 h("div", null,
                     h("h2", null, "Third-party Components/Templates"),
                     h("ul", null,
-                        this.LINKS.COMPONENTS.map(function (link) {
+                        this.LINKS.COMPONENTS.map(link => {
                             return (h("li", null,
                                 h("a", { target: "_blank", href: link.url }, link.title)));
                         }),
-                        this.LINKS.TEMPLATES.map(function (link) {
+                        this.LINKS.TEMPLATES.map(link => {
                             return (h("li", null,
                                 h("a", { target: "_blank", href: link.url }, link.title)));
                         }))),
@@ -82,9 +80,8 @@ var ResourcesPage = /** @class */ (function () {
                     h("a", { target: "_blank", href: "https://ionic-team.github.io/stencil-present/" }, "Stencil Presentation"),
                     h("br", null),
                     h("a", { target: "_blank", href: "https://github.com/ionic-team/stencil-present/" }, "Source")))));
-    };
-    return ResourcesPage;
-}());
+    }
+}
 
 exports['resources-page'] = ResourcesPage;
 },

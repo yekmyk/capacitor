@@ -7,15 +7,13 @@ App.loadComponents(
 "pwas-page",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
-// @stencil/core
-
-var pwasPage = /** @class */ (function () {
-    function pwasPage() {
-        document.title = "PWAs";
+class pwasPage {
+    constructor() {
+        document.title = `PWAs`;
     }
-    pwasPage.prototype.render = function () {
+    render() {
         return (h("div", { class: "wrapper" },
             h("div", { class: "pull-left" },
                 h("site-menu", null)),
@@ -57,9 +55,8 @@ var pwasPage = /** @class */ (function () {
                             h("a", { href: "https://hnpwa.com" }, "HNPWA"))),
                     h("li", null,
                         h("a", { href: "https://stencilpaint-8ba3c.firebaseapp.com/" }, "StencilPaint"))))));
-    };
-    return pwasPage;
-}());
+    }
+}
 
 exports['pwas-page'] = pwasPage;
 },

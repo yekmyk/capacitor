@@ -7,15 +7,13 @@ App.loadComponents(
 "blog-page",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
-// @stencil/core
-
-var BlogPage = /** @class */ (function () {
-    function BlogPage() {
-        document.title = "Avocado Blog - Build cross-platform apps with the web";
+class BlogPage {
+    constructor() {
+        document.title = `Avocado Blog - Build cross-platform apps with the web`;
     }
-    BlogPage.prototype.render = function () {
+    render() {
         return (h("div", { id: "blog", class: "wrapper" },
             h("div", { class: "post" },
                 h("h2", null, "Announcing Avocado"),
@@ -53,9 +51,8 @@ var BlogPage = /** @class */ (function () {
                     "The ",
                     h("a", { href: "http://ionicframework.com/" }, "Ionic"),
                     " Team"))));
-    };
-    return BlogPage;
-}());
+    }
+}
 
 exports['blog-page'] = BlogPage;
 },

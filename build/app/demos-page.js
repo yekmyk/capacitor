@@ -7,12 +7,10 @@ App.loadComponents(
 "demos-page",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
-// @stencil/core
-
-var DemosPage = /** @class */ (function () {
-    function DemosPage() {
+class DemosPage {
+    constructor() {
         this.demos = [
             {
                 title: 'Stenciljs.com',
@@ -39,16 +37,16 @@ var DemosPage = /** @class */ (function () {
                 source: 'https://github.com/ionic-team/stencil-news'
             }
         ];
-        document.title = "Stencil Demos";
+        document.title = `Stencil Demos`;
     }
-    DemosPage.prototype.render = function () {
+    render() {
         return (h("div", { class: "wrapper" },
             h("div", { class: "pull-left" },
                 h("site-menu", null)),
             h("div", { class: "pull-right" },
                 h("h1", null, "Demos"),
                 h("h4", null, "Awesome demos of apps built using Stencil and Ionic"),
-                this.demos.map(function (demo) {
+                this.demos.map(demo => {
                     return [
                         h("h4", null, demo.title),
                         h("p", null, demo.description),
@@ -58,9 +56,8 @@ var DemosPage = /** @class */ (function () {
                             h("a", { target: "_blank", rel: "noopener", href: demo.source }, "Source"))
                     ];
                 }))));
-    };
-    return DemosPage;
-}());
+    }
+}
 
 exports['demos-page'] = DemosPage;
 },

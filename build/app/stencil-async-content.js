@@ -6,7 +6,7 @@ App.loadComponents(
 "stencil-async-content",
 
 /**** component modules ****/
-function importComponent(exports, h, t, Context, publicPath) {
+function importComponent(exports, h, Context, publicPath) {
 "use strict";
 // @stencil/core
 

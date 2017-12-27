@@ -157,6 +157,7 @@ var s=document.querySelector("script[data-namespace='app']");if(s){publicPath=s.
      * SSR Attribute Names
      */
   const SSR_VNODE_ID = 'data-ssrv';
+  const SSR_CHILD_ID = 'data-ssrc';
   /**
      * Default style mode id
      */
@@ -709,6 +710,68 @@ var s=document.querySelector("script[data-namespace='app']");if(s){publicPath=s.
     const vnode = new VNode();
     vnode.vtext = textValue;
     return vnode;
+  }
+  function createVNodesFromSsr(domApi, rootElm) {
+    var elm, ssrVNodeId, ssrVNode, i, j, jlen, allSsrElms = rootElm.querySelectorAll(`[${SSR_VNODE_ID}]`), ilen = allSsrElms.length;
+    if (rootElm._hasLoaded = ilen > 0) {
+      for (i = 0; i < ilen; i++) {
+        elm = allSsrElms[i];
+        ssrVNodeId = domApi.$getAttribute(elm, SSR_VNODE_ID);
+        ssrVNode = elm._vnode = new VNode();
+        ssrVNode.vtag = domApi.$tagName(ssrVNode.elm = elm);
+        for (j = 0, jlen = elm.childNodes.length; j < jlen; j++) {
+          addChildSsrVNodes(domApi, elm.childNodes[j], ssrVNode, ssrVNodeId, true);
+        }
+      }
+    }
+  }
+  function addChildSsrVNodes(domApi, node, parentVNode, ssrVNodeId, checkNestedElements) {
+    var nodeType = domApi.$nodeType(node);
+    var previousComment;
+    var childVNodeId, childVNodeSplt, childVNode;
+    if (checkNestedElements && 1 === nodeType) {
+      childVNodeId = domApi.$getAttribute(node, SSR_CHILD_ID);
+      if (childVNodeId) {
+        // split the start comment's data with a period
+        childVNodeSplt = childVNodeId.split('.');
+        // ensure this this element is a child element of the ssr vnode
+        if (childVNodeSplt[0] === ssrVNodeId) {
+          // cool, this element is a child to the parent vnode
+          childVNode = new VNode();
+          childVNode.vtag = domApi.$tagName(childVNode.elm = node);
+          // this is a new child vnode
+          // so ensure its parent vnode has the vchildren array
+          parentVNode.vchildren || (parentVNode.vchildren = []);
+          // add our child vnode to a specific index of the vnode's children
+          parentVNode.vchildren[childVNodeSplt[1]] = childVNode;
+          // this is now the new parent vnode for all the next child checks
+          parentVNode = childVNode;
+          // if there's a trailing period, then it means there aren't any
+          // more nested elements, but maybe nested text nodes
+          // either way, don't keep walking down the tree after this next call
+          checkNestedElements = '' !== childVNodeSplt[2];
+        }
+      }
+      // keep drilling down through the elements
+      for (var i = 0; i < node.childNodes.length; i++) {
+        addChildSsrVNodes(domApi, node.childNodes[i], parentVNode, ssrVNodeId, checkNestedElements);
+      }
+    } else if (3 === nodeType && (previousComment = node.previousSibling) && 8 === domApi.$nodeType(previousComment)) {
+      // split the start comment's data with a period
+      childVNodeSplt = domApi.$getTextContent(previousComment).split('.');
+      // ensure this is an ssr text node start comment
+      // which should start with an "s" and delimited by periods
+      if ('s' === childVNodeSplt[0] && childVNodeSplt[1] === ssrVNodeId) {
+        // cool, this is a text node and it's got a start comment
+        childVNode = t(domApi.$getTextContent(node));
+        childVNode.elm = node;
+        // this is a new child vnode
+        // so ensure its parent vnode has the vchildren array
+        parentVNode.vchildren || (parentVNode.vchildren = []);
+        // add our child vnode to a specific index of the vnode's children
+        parentVNode.vchildren[childVNodeSplt[2]] = childVNode;
+      }
+    }
   }
   function createQueueClient(raf, now, resolvePending, rafPending) {
     const highPromise = Promise.resolve();
@@ -1423,6 +1486,9 @@ var s=document.querySelector("script[data-namespace='app']");if(s){publicPath=s.
     rootElm.$activeLoading = [];
     // this will fire when all components have finished loaded
     rootElm.$initLoad = (() => rootElm._hasLoaded = true);
+    // if the HTML was generated from SSR
+    // then let's walk the tree and generate vnodes out of the data
+    createVNodesFromSsr(domApi, rootElm);
     function connectHostElement(cmpMeta, elm) {
       // set the "mode" property
       elm.mode || (// looks like mode wasn't set as a property directly yet

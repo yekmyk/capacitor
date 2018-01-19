@@ -4,8 +4,8 @@
     [
       "anchor-link",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ],
       0,
       [
@@ -22,8 +22,8 @@
     [
       "app-marked",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ],
       1,
       [
@@ -49,8 +49,8 @@
     [
       "avc-code-type",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ],
       0,
       [
@@ -65,10 +65,18 @@
       1
     ],
     [
-      "avocado-site",
+      "blog-page",
       [
-        "6bo0uds8",
-        "px2eltlm"
+        "wnmbbgpp",
+        "waljrbe1"
+      ],
+      1
+    ],
+    [
+      "capacitor-site",
+      [
+        "3mk3rmrr",
+        "lfeghk8g"
       ],
       1,
       [
@@ -81,14 +89,6 @@
       ]
     ],
     [
-      "blog-page",
-      [
-        "lppew0yu",
-        "a9pov8p9"
-      ],
-      1
-    ],
-    [
       "demos-page",
       [
         "nvgxmkhh",
@@ -99,15 +99,15 @@
     [
       "doc-snippet",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ]
     ],
     [
       "document-component",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ],
       1,
       [
@@ -122,8 +122,8 @@
     [
       "landing-page",
       [
-        "6bo0uds8",
-        "px2eltlm"
+        "3mk3rmrr",
+        "lfeghk8g"
       ],
       1,
       [
@@ -136,8 +136,8 @@
     [
       "lazy-iframe",
       [
-        "6bo0uds8",
-        "px2eltlm"
+        "3mk3rmrr",
+        "lfeghk8g"
       ],
       1,
       [
@@ -166,8 +166,8 @@
     [
       "plugin-api",
       [
-        "sw8p3ksn",
-        "a67u4vho"
+        "ibgx2z2t",
+        "defza7vd"
       ],
       1,
       [
@@ -208,24 +208,24 @@
     [
       "site-bar",
       [
-        "pxqetkvb",
-        "rjkvhcbv"
+        "sqi87dqk",
+        "4aobwvoq"
       ],
       1
     ],
     [
       "site-header",
       [
-        "6bo0uds8",
-        "px2eltlm"
+        "3mk3rmrr",
+        "lfeghk8g"
       ],
       1
     ],
     [
       "site-menu",
       [
-        "6bo0uds8",
-        "px2eltlm"
+        "3mk3rmrr",
+        "lfeghk8g"
       ],
       1
     ],

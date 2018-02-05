@@ -1,4 +1,0 @@
-/*! Built with http://stenciljs.com (es5) */
-
-App.loadStyles("site-bar","site-bar{display:block;width:100%;padding:10px;background-color:red;background-color:#f54f4f;text-align:center;color:#fff;font-size:13px}site-bar a{color:#000;font-weight:500}\nsite-bar.hydrated{visibility:inherit}");
-App.loadComponents("4aobwvoq",function(e,n,t,r){"use strict";var o=function(){function e(){}return e.prototype.render=function(){return n("div",{class:"site-bar"},"Capacitor is in Private Preview. Read the ",n("stencil-route-link",{url:"/blog"},"announcement blog")," for more info on the project")},e}();e["site-bar"]=o},["site-bar",0,{}]);;

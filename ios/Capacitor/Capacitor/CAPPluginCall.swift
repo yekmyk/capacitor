@@ -15,19 +15,19 @@ public extension CAPPluginCall {
     return self.options[key] as? [T] ?? defaultValue
   }
   
-  public func getBool(_ key: String, defaultValue: Bool?) -> Bool? {
+  public func getBool(_ key: String, _ defaultValue: Bool?) -> Bool? {
     return self.options[key] as? Bool ?? defaultValue
   }
   
-  public func getInt(_ key: String, defaultValue: Int? = nil) -> Int? {
+  public func getInt(_ key: String, _ defaultValue: Int? = nil) -> Int? {
     return self.options[key] as? Int ?? defaultValue
   }
   
-  public func getString(_ key: String, defaultValue: String? = nil) -> String? {
+  public func getString(_ key: String, _ defaultValue: String? = nil) -> String? {
     return self.options[key] as? String ?? defaultValue
   }
   
-  public func getDate(_ key: String, defaultValue: Date? = nil) -> Date? {
+  public func getDate(_ key: String, _ defaultValue: Date? = nil) -> Date? {
     guard let isoString = self.options[key] as? String else {
       return defaultValue
     }

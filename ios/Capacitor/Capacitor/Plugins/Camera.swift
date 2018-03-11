@@ -88,28 +88,32 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
     DispatchQueue.main.async {
       switch settings.source {
       case CameraSource.prompt:
-        // Build the action sheet
-        let alert = UIAlertController(title: "Photo", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
-        alert.addAction(UIAlertAction(title: "From Photos", style: .default, handler: { (action: UIAlertAction) in
-          self.showPhotos(call)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Take Picture", style: .default, handler: { (action: UIAlertAction) in
-          self.showCamera(call)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction) in
-          alert.dismiss(animated: true, completion: nil)
-        }))
-        
-        self.setCenteredPopover(alert)
-        self.bridge.viewController.present(alert, animated: true, completion: nil)
+        self.showPrompt(call)
       case CameraSource.camera:
         self.showCamera(call)
       case CameraSource.photos:
         self.showPhotos(call)
       }
     }
+  }
+  
+  func showPrompt(_ call: CAPPluginCall) {
+    // Build the action sheet
+    let alert = UIAlertController(title: "Photo", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
+    alert.addAction(UIAlertAction(title: "From Photos", style: .default, handler: { (action: UIAlertAction) in
+      self.showPhotos(call)
+    }))
+    
+    alert.addAction(UIAlertAction(title: "Take Picture", style: .default, handler: { (action: UIAlertAction) in
+      self.showCamera(call)
+    }))
+    
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction) in
+      alert.dismiss(animated: true, completion: nil)
+    }))
+    
+    self.setCenteredPopover(alert)
+    self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
   
   func showCamera(_ call: CAPPluginCall) {

@@ -176,7 +176,7 @@ public class Camera extends Plugin {
   private CameraResultType getResultType(String resultType) {
     if (resultType == null) { return null; }
     try {
-      return CameraResultType.valueOf(resultType.toLowerCase());
+      return CameraResultType.valueOf(resultType.toUpperCase());
     } catch (IllegalArgumentException ex) {
       log("Invalid result type \"" + resultType + "\", defaulting to base64");
       return CameraResultType.BASE64;

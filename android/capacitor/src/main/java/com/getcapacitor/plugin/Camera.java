@@ -42,6 +42,7 @@ enum CameraSource {
   CameraSource(String source) {
     this.source = source;
   }
+  public String getSource() { return this.source; }
 }
 
 enum CameraResultType {
@@ -112,33 +113,18 @@ public class Camera extends Plugin {
         showPrompt(call);
         break;
       case CAMERA:
-        if(!getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-          call.error(NO_CAMERA_ERROR);
-          return;
-        }
-
+        showCamera(call);
         break;
       case PHOTOS:
+        showPhotos(call);
         break;
     }
   }
 
   private void showPrompt(final PluginCall call) {
-    // If we want to save to the gallery, we need two permissions
-    if(settings.saveToGallery && !(hasPermission(Manifest.permission.CAMERA) && hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))) {
-      pluginRequestPermissions(new String[]{
-        Manifest.permission.CAMERA,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE
-      }, REQUEST_IMAGE_CAPTURE);
-    }
-    // If we don't need to save to the gallery, we can just ask for camera permissions
-    else if(!hasPermission(Manifest.permission.CAMERA)) {
-      pluginRequestPermission(Manifest.permission.CAMERA, REQUEST_IMAGE_CAPTURE);
-    }
+    if (checkPermissions (call)) {
 
-    // We have all necessary permissions, open the camera
-    else {
+      // We have all necessary permissions, open the camera
       JSObject fromPhotos = new JSObject();
       fromPhotos.put("title", "From Photos");
       JSObject takePicture = new JSObject();
@@ -161,6 +147,37 @@ public class Camera extends Plugin {
     }
   }
 
+  private void showCamera(final PluginCall call) {
+    if(!getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+      call.error(NO_CAMERA_ERROR);
+      return;
+    }
+    openCamera(call);
+  }
+
+  private void showPhotos(final PluginCall call) {
+    openPhotos(call);
+  }
+
+  private boolean checkPermissions(PluginCall call) {
+    // If we want to save to the gallery, we need two permissions
+    if(settings.saveToGallery && !(hasPermission(Manifest.permission.CAMERA) && hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))) {
+      pluginRequestPermissions(new String[]{
+        Manifest.permission.CAMERA,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE
+      }, REQUEST_IMAGE_CAPTURE);
+      return false;
+    }
+    // If we don't need to save to the gallery, we can just ask for camera permissions
+    else if(!hasPermission(Manifest.permission.CAMERA)) {
+      pluginRequestPermission(Manifest.permission.CAMERA, REQUEST_IMAGE_CAPTURE);
+      return false;
+    }
+
+    return true;
+  }
+
   private CameraSettings getSettings(PluginCall call) {
     CameraSettings settings = new CameraSettings();
     settings.resultType = getResultType(call.getString("resultType"));
@@ -170,6 +187,11 @@ public class Camera extends Plugin {
     settings.height = call.getInt("height", 0);
     settings.shouldResize = settings.width > 0 || settings.height > 0;
     settings.shouldCorrectOrientation = call.getBoolean("correctOrientation", DEFAULT_CORRECT_ORIENTATION);
+    try {
+      settings.source = CameraSource.valueOf(call.getString("source", CameraSource.PROMPT.getSource()));
+    } catch (IllegalArgumentException ex) {
+      settings.source = CameraSource.PROMPT;
+    }
     return settings;
   }
 
@@ -259,6 +281,11 @@ public class Camera extends Plugin {
   }
 
   public void processPickedImage(PluginCall call, Intent data) {
+    if (data == null) {
+      call.error("No image picked");
+      return;
+    }
+
     Uri u = data.getData();
 
     try {

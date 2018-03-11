@@ -205,6 +205,9 @@ public class Camera extends Plugin {
   }
 
   public void openPhotos(final PluginCall call) {
+    Intent intent = new Intent(Intent.ACTION_PICK);
+    intent.setType("image/*");
+    startActivityForResult(call, intent, REQUEST_IMAGE_CAPTURE);
   }
 
   public void processImage(PluginCall call, Intent data) {

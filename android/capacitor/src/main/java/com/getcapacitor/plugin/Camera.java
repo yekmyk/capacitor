@@ -27,7 +27,9 @@ import com.getcapacitor.PluginRequestCodes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -71,11 +73,12 @@ class CameraSettings {
  * Adapted from https://developer.android.com/training/camera/photobasics.html
  */
 @NativePlugin(
-    requestCodes={Camera.REQUEST_IMAGE_CAPTURE}
+    requestCodes={Camera.REQUEST_IMAGE_CAPTURE, Camera.REQUEST_IMAGE_PICK}
 )
 public class Camera extends Plugin {
   // Request codes
   static final int REQUEST_IMAGE_CAPTURE = PluginRequestCodes.CAMERA_IMAGE_CAPTURE;
+  static final int REQUEST_IMAGE_PICK = PluginRequestCodes.CAMERA_IMAGE_PICK;
 
   // Message constants
   private static final String INVALID_RESULT_TYPE_ERROR = "Invalid resultType option";
@@ -207,10 +210,10 @@ public class Camera extends Plugin {
   public void openPhotos(final PluginCall call) {
     Intent intent = new Intent(Intent.ACTION_PICK);
     intent.setType("image/*");
-    startActivityForResult(call, intent, REQUEST_IMAGE_CAPTURE);
+    startActivityForResult(call, intent, REQUEST_IMAGE_PICK);
   }
 
-  public void processImage(PluginCall call, Intent data) {
+  public void processCameraImage(PluginCall call, Intent data) {
     boolean allowEditing = call.getBoolean("allowEditing", false);
     boolean saveToGallery = call.getBoolean("saveToGallery", DEFAULT_SAVE_IMAGE_TO_GALLERY);
     CameraResultType resultType = getResultType(call.getString("resultType"));
@@ -240,6 +243,54 @@ public class Camera extends Plugin {
       return;
     }
 
+    bitmap = prepareBitmap(bitmap);
+
+    // Compress the final image and prepare for output to client
+    ByteArrayOutputStream bitmapOutputStream = new ByteArrayOutputStream();
+    bitmap.compress(Bitmap.CompressFormat.JPEG, settings.quality, bitmapOutputStream);
+
+    if (resultType == CameraResultType.BASE64) {
+      returnBase64(call, bitmapOutputStream);
+    } else if (resultType == CameraResultType.URI) {
+      JSObject ret = new JSObject();
+      ret.put("path", contentUri.toString());
+      call.success(ret);
+    }
+  }
+
+  public void processPickedImage(PluginCall call, Intent data) {
+    Uri u = data.getData();
+
+    try {
+      InputStream imageStream = getActivity().getContentResolver().openInputStream(u);
+      Bitmap bitmap = BitmapFactory.decodeStream(imageStream);
+
+      int orientation = ExifInterface.ORIENTATION_NORMAL;
+      bitmap = prepareBitmap(bitmap);
+
+      // Compress the final image and prepare for output to client
+      ByteArrayOutputStream bitmapOutputStream = new ByteArrayOutputStream();
+      bitmap.compress(Bitmap.CompressFormat.JPEG, settings.quality, bitmapOutputStream);
+
+      if (settings.resultType == CameraResultType.BASE64) {
+        returnBase64(call, bitmapOutputStream);
+      } else if (settings.resultType == CameraResultType.URI) {
+        JSObject ret = new JSObject();
+        ret.put("path", u.toString());
+        call.success(ret);
+      }
+    } catch (FileNotFoundException ex) {
+      call.error("No such image found", ex);
+    }
+  }
+
+  /**
+   * Apply our standard processing of the bitmap, returning a new one and
+   * recycling the old one in the process
+   * @param bitmap
+   * @return
+   */
+  private Bitmap prepareBitmap(Bitmap bitmap) {
     if (settings.shouldCorrectOrientation) {
       Bitmap newBitmap = ImageUtils.correctOrientation(bitmap, imageFileSavePath);
       if (bitmap != newBitmap) {
@@ -255,18 +306,7 @@ public class Camera extends Plugin {
       }
       bitmap = newBitmap;
     }
-
-    // Compress the final image and prepare for output to client
-    ByteArrayOutputStream bitmapOutputStream = new ByteArrayOutputStream();
-    bitmap.compress(Bitmap.CompressFormat.JPEG, settings.quality, bitmapOutputStream);
-
-    if (resultType == CameraResultType.BASE64) {
-      returnBase64(call, bitmapOutputStream);
-    } else if (resultType == CameraResultType.URI) {
-      JSObject ret = new JSObject();
-      ret.put("path", contentUri.toString());
-      call.success(ret);
-    }
+    return bitmap;
   }
 
   private void returnBase64(PluginCall call, ByteArrayOutputStream bitmapOutputStream) {
@@ -330,8 +370,14 @@ public class Camera extends Plugin {
 
     PluginCall savedCall = getSavedCall();
 
-    if (requestCode == REQUEST_IMAGE_CAPTURE && savedCall != null) {
-      processImage(savedCall, data);
+    if (savedCall == null) {
+      return;
+    }
+
+    if (requestCode == REQUEST_IMAGE_CAPTURE) {
+      processCameraImage(savedCall, data);
+    } else if (requestCode == REQUEST_IMAGE_PICK) {
+      processPickedImage(savedCall, data);
     }
   }
 

@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -49,6 +51,10 @@ public class Plugin {
   // Stored results of an event if an event was fired and
   // no listeners were attached yet. Only stores the last value.
   private final Map<String, JSObject> retainedEventArguments;
+
+  // ThreadHandler for executing private plugin calls
+  private HandlerThread handlerThread = null;
+  protected Handler taskHandler = null;
 
   public Plugin() {
     eventListeners = new HashMap<>();
@@ -547,7 +553,11 @@ public class Plugin {
    * @param runnable
    */
   public void execute(Runnable runnable) {
-    bridge.execute(runnable);
+    if(taskHandler != null) {
+      taskHandler.post(runnable);
+    } else {
+      bridge.execute(runnable);
+    }
   }
 
   /**
@@ -569,5 +579,11 @@ public class Plugin {
 
   protected void logError(final String msg, final Throwable t) {
     Log.e(Bridge.TAG, msg, t);
+  }
+
+  protected void setupPrivateHandler() {
+    handlerThread = new HandlerThread("CapacitorPlugin_" + getPluginHandle());
+    handlerThread.start();
+    taskHandler = new Handler(handlerThread.getLooper());
   }
 }

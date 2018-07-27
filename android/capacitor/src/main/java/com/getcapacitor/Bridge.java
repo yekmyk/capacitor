@@ -459,7 +459,11 @@ public class Bridge {
         }
       };
 
-      taskHandler.post(currentThreadTask);
+      if(plugin.getInstance().taskHandler != null) {
+        plugin.getInstance().taskHandler.post(currentThreadTask);
+      } else {
+        taskHandler.post(currentThreadTask);
+      }
 
     } catch (Exception ex) {
       Log.e("callPluginMethod", "error : " + ex);

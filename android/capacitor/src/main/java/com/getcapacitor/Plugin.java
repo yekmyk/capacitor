@@ -524,6 +524,11 @@ public class Plugin {
   protected void handleOnStop() {}
 
   /**
+   * Handle onDestroy
+   */
+  protected void handleOnDestroy() {}
+
+  /**
    * Start a new Activity.
    *
    * Note: This method must be used by all plugins instead of calling

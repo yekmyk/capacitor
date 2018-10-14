@@ -1,5 +1,5 @@
 import { Config } from '../config';
-import { buildXmlElement, log, logInfo, parseXML, runTask } from '../common';
+import { buildXmlElement, checkPlatformVersions, logInfo, parseXML, runTask } from '../common';
 import { getAllElements, getFilePath, getPlatformElement, getPluginPlatform, getPlugins, getPluginType, printPlugins, Plugin, PluginType } from '../plugin';
 import { getAndroidPlugins } from './common';
 import { checkAndInstallDependencies, handleCordovaPluginsJS } from '../cordova';
@@ -13,12 +13,9 @@ export async function updateAndroid(config: Config) {
 
   const capacitorPlugins = plugins.filter(p => getPluginType(p, platform) === PluginType.Core);
 
-  let cordovaPlugins: Array<Plugin> = [];
   let needsPluginUpdate = true;
   while (needsPluginUpdate) {
-    cordovaPlugins = plugins
-      .filter(p => getPluginType(p, platform) === PluginType.Cordova);
-    needsPluginUpdate = await checkAndInstallDependencies(config, cordovaPlugins, platform);
+    needsPluginUpdate = await checkAndInstallDependencies(config, plugins, platform);
     if (needsPluginUpdate) {
       plugins = await getPluginsTask(config);
     }
@@ -27,6 +24,8 @@ export async function updateAndroid(config: Config) {
   printPlugins(capacitorPlugins, 'android');
 
   removePluginsNativeFiles(config);
+  const cordovaPlugins = plugins
+      .filter(p => getPluginType(p, platform) === PluginType.Cordova);
   if (cordovaPlugins.length > 0) {
     copyPluginsNativeFiles(config, cordovaPlugins);
   }
@@ -38,7 +37,7 @@ export async function updateAndroid(config: Config) {
   const incompatibleCordovaPlugins = plugins
   .filter(p => getPluginType(p, platform) === PluginType.Incompatible);
   printPlugins(incompatibleCordovaPlugins, platform, 'incompatible');
-
+  await checkPlatformVersions(platform);
 }
 
 function getGradlePackageName(id: string): string {

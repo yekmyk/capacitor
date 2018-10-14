@@ -1,6 +1,7 @@
 package com.getcapacitor;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
@@ -86,6 +88,9 @@ public class Bridge {
   // A reference to the main activity for the app
   private final Activity context;
   private WebViewLocalServer localServer;
+  private String localUrl;
+  private String appUrl;
+  private String appUrlConfig;
   // A reference to the main WebView for the app
   private final WebView webView;
   public final CordovaInterfaceImpl cordovaInterface;
@@ -149,10 +154,12 @@ public class Bridge {
   }
 
   private void loadWebView() {
-    final String appUrlConfig = Config.getString("server.url");
+    appUrlConfig = Config.getString("server.url");
 
     String port = getPort();
     String authority = "localhost" + ":" + port;
+    localUrl = "https://" + authority;
+
     boolean isLocal = true;
 
     if (appUrlConfig != null) {
@@ -175,7 +182,7 @@ public class Bridge {
     // Load the index route from our www folder
     String url = ahd.getHttpsPrefix().buildUpon().build().toString();
 
-    final String appUrl = appUrlConfig == null ? url.replace("%3A", ":") : appUrlConfig;
+    appUrl = appUrlConfig == null ? url.replace("%3A", ":") : appUrlConfig;
 
     Log.d(LOG_TAG, "Loading app at " + appUrl);
 
@@ -184,6 +191,13 @@ public class Bridge {
       @Override
       public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         return localServer.shouldInterceptRequest(request);
+      }
+
+      @Override
+      public void onPageFinished(WebView view, final String location) {
+        if (appUrlConfig != null) {
+          injectScriptFile(view, getJSInjector().getScriptString());
+        }
       }
 
       @Override
@@ -199,15 +213,23 @@ public class Bridge {
 
       private boolean launchIntent(String url) {
         if (!url.contains(appUrl)) {
-          Intent openIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-          getContext().startActivity(openIntent);
+          try {
+            Intent openIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            getContext().startActivity(openIntent);
+          } catch (ActivityNotFoundException e) {
+            // TODO - trigger an event
+          }
           return true;
         }
         return false;
       }
     });
 
-
+    SharedPreferences prefs = getContext().getSharedPreferences(com.getcapacitor.plugin.WebView.WEBVIEW_PREFS_NAME, Activity.MODE_PRIVATE);
+    String path = prefs.getString(com.getcapacitor.plugin.WebView.CAP_SERVER_PATH, null);
+    if (path != null) {
+      setServerBasePath(path);
+    }
     // Get to work
     webView.loadUrl(appUrl);
   }
@@ -343,6 +365,7 @@ public class Bridge {
     this.registerPlugin(StatusBar.class);
     this.registerPlugin(Storage.class);
     this.registerPlugin(com.getcapacitor.plugin.Toast.class);
+    this.registerPlugin(com.getcapacitor.plugin.WebView.class);
 
     for (Class<? extends Plugin> pluginClass : this.initialPlugins) {
       this.registerPlugin(pluginClass);
@@ -576,8 +599,9 @@ public class Bridge {
       String cordovaJS = JSExport.getCordovaJS(context);
       String cordovaPluginsJS = JSExport.getCordovaPluginJS(context);
       String cordovaPluginsFileJS = JSExport.getCordovaPluginsFileJS(context);
+      String localUrlJS = "window.WEBVIEW_SERVER_URL = '" + localUrl + "';";
 
-      return new JSInjector(globalJS, coreJS, pluginJS, cordovaJS, cordovaPluginsJS, cordovaPluginsFileJS);
+      return new JSInjector(globalJS, coreJS, pluginJS, cordovaJS, cordovaPluginsJS, cordovaPluginsFileJS, localUrlJS);
     } catch(JSExportException ex) {
       Log.e(LOG_TAG, "Unable to export Capacitor JS. App will not function!", ex);
     }
@@ -660,7 +684,7 @@ public class Bridge {
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     PluginHandle plugin = getPluginWithRequestCode(requestCode);
 
-    if (plugin == null) {
+    if (plugin == null || requestCode == 0) {
       Log.d(LOG_TAG, "Unable to find a Capacitor plugin to handle requestCode, try with Cordova plugins " + requestCode);
       try {
         cordovaInterface.onRequestPermissionResult(requestCode, permissions, grantResults);
@@ -787,5 +811,33 @@ public class Bridge {
       }
     }
 
+  }
+
+  public String getServerBasePath() {
+    return this.localServer.getBasePath();
+  }
+
+  public void setServerBasePath(String path){
+    localServer.hostFiles(path);
+    webView.post(new Runnable() {
+      @Override
+      public void run() {
+        webView.loadUrl(appUrl);
+      }
+    });
+  }
+
+  private void injectScriptFile(WebView view, String script) {
+
+    // Base64 encode string before injecting as innerHTML
+    String encoded = Base64.encodeToString(script.getBytes(), Base64.NO_WRAP);
+    view.loadUrl("javascript:(function() {" +
+            "var parent = document.getElementsByTagName('head').item(0);" +
+            "var script = document.createElement('script');" +
+            "script.type = 'text/javascript';" +
+            // Base64 decode injected javascript
+            "script.innerHTML = window.atob('" + encoded + "');" +
+            "parent.appendChild(script)" +
+            "})()");
   }
 }

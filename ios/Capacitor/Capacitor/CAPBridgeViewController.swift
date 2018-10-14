@@ -23,8 +23,8 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     return self
   }
   
-  private var port: Int?
   private var hostname: String?
+  private var basePath: String = ""
   
   private var isStatusBarVisible = true
   private var statusBarStyle: UIStatusBarStyle = .default
@@ -45,6 +45,9 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     
     webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
     webView?.scrollView.bounces = false
+    if #available(iOS 11.0, *) {
+        webView?.scrollView.contentInsetAdjustmentBehavior = .never
+    }
     webView?.uiDelegate = self
     webView?.navigationDelegate = self
     //If you want to implement the delegate
@@ -78,91 +81,97 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
       exit(1)
     }
 
-    
-    port = getPort()
-    hostname = CAPConfig.getString("server.url") ?? "http://localhost:\(port!)/"
-    
-    startWebServer(port: port!)
+    hostname = CAPConfig.getString("server.url") ?? "\(bridge!.getLocalUrl())/"
+
+    initWebServer()
 
     print("⚡️  Loading app at \(hostname!)...")
     let request = URLRequest(url: URL(string: hostname!)!)
     _ = webView?.load(request)
   }
   
-  func getPort() -> Int {
-    let configPort = CAPConfig.getString("server.port")
-    if configPort != nil {
-      return Int(configPort!)!
-    }
-    let defaults = UserDefaults.standard
-    var port = defaults.integer(forKey: "capacitorPort")
-    if port > 0 {
-      return port
-    }
-    port = getRandomPort()
-    defaults.set(port, forKey: "capacitorPort")
-    return port
-  }
-  
-  func getRandomPort() -> Int {
-    let range: [Int] = [3000, 9000]
-    return range[0] + Int(arc4random_uniform(UInt32(range[1]-range[0])))
-  }
-
-  func startWebServer(port: Int) {
-    let publicPath = Bundle.main.path(forResource: "public", ofType: nil)
+  func initWebServer() {
     GCDWebServer.setLogLevel(3)
     self.webServer = GCDWebServer.init()
-    guard let webServer = self.webServer else {
-      fatalError("Unable to create local web server")
+
+    var startPath = Bundle.main.path(forResource: "public", ofType: nil)
+
+    let defaults = UserDefaults.standard
+    let persistedPath = defaults.string(forKey: "serverBasePath")
+    if (persistedPath != nil && !persistedPath!.isEmpty) {
+      startPath = persistedPath
     }
-    
-    webServer.addGETHandler(forBasePath: "/", directoryPath: publicPath!, indexFilename: "index.html", cacheAge: 0, allowRangeRequests: true)
-    
+
+    setServerPath(path: startPath!)
+
+    startServer()
+  }
+
+  func startServer() {
+    do {
+      let options = [
+        GCDWebServerOption_Port: bridge!.getPort(),
+        GCDWebServerOption_BindToLocalhost: true,
+        GCDWebServerOption_ServerName: "Capacitor"
+        ] as [String : Any]
+      try self.getWebServer().start(options: options)
+    } catch {
+      print(error)
+    }
+  }
+
+  func setServerPath(path: String) {
+    let webServer = getWebServer()
+    self.basePath = path
+    let restart = webServer.isRunning
+
+    if (restart) {
+      webServer.stop()
+    }
+
+    webServer.addGETHandler(forBasePath: "/", directoryPath: path, indexFilename: "index.html", cacheAge: 0, allowRangeRequests: true)
+
     webServer.addHandler(forMethod: "GET", pathRegex: "_capacitor_/", request: GCDWebServerFileRequest.self) { (request, block) in
-      block(GCDWebServerFileResponse(file: request.url.absoluteString.replacingOccurrences(of: "http://localhost:\(port)/_capacitor_/", with: ""), byteRange: request.byteRange))
+      let urlToRemove = "\(self.bridge!.getLocalUrl())/_capacitor_/"
+      var absUrl = request.url.absoluteString.replacingOccurrences(of: urlToRemove, with: "")
+
+      if let range = absUrl.range(of: "?") {
+        absUrl.removeSubrange(range.lowerBound..<absUrl.endIndex)
+      }
+
+      let fileManager = FileManager.default
+      if !fileManager.fileExists(atPath: absUrl) {
+        let response = GCDWebServerResponse(statusCode: 404)
+        block(response)
+      } else {
+        var fileResponse = GCDWebServerFileResponse(file: absUrl, byteRange: request.byteRange)
+        fileResponse?.setValue("bytes", forAdditionalHeader: "Accept-Ranges")
+        block(fileResponse)
+      }
     }
 
     webServer.addHandler(forMethod: "GET", pathRegex: "cordova.js", request: GCDWebServerFileRequest.self) { (request, block) in
       block(GCDWebServerResponse())
     }
-    
-    /*
-    webServer.addHandler(forMethod: "GET", path: "/", request: GCDWebServerRequest.self, processBlock: { (req) -> GCDWebServerResponse? in
-      print("Also in here")
-      return nil
-    })
- */
-      
-    // Optional config for SPAs to redirect all requests to index file? Not quite right, needs to rewrite instead of redirect
-    //webServer.addHandler(forMethod: "GET", path: "/", request: GCDWebServerRequest.self, processBlock: { (req) -> GCDWebServerResponse? in
-      //return GCDWebServerResponse(redirect: URL(string: "index.html")!, permanent: false)
-    //})
-    
-    do {
-      let options = [
-        GCDWebServerOption_Port: port,
-        GCDWebServerOption_BindToLocalhost: true,
-        GCDWebServerOption_ServerName: "Capacitor"
-      ] as [String : Any]
-      try webServer.start(options: options)
-    } catch {
-      print(error)
+
+    if (restart) {
+     startServer()
     }
+
   }
-  
+
   public func configureWebView(configuration: WKWebViewConfiguration) {
     configuration.allowsInlineMediaPlayback = true
     configuration.suppressesIncrementalRendering = false
     configuration.allowsAirPlayForMediaPlayback = true
     //configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone
   }
-  
+
   public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
     // Reset the bridge on each navigation
     bridge!.reset()
   }
-  
+
   public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     let navUrl = navigationAction.request.url!
     if let scheme = navUrl.scheme {
@@ -178,25 +187,25 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     // https://github.com/ionic-team/cordova-plugin-ionic-webview/blob/608d64191405b233c01a939f5755f8b1fdd97f8c/src/ios/CDVWKWebViewEngine.m#L609
     decisionHandler(.allow)
   }
-  
+
   public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     print("⚡️  WebView loaded")
   }
-  
+
   public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
     print("⚡️  WebView failed to load")
     print("⚡️  Error: " + error.localizedDescription)
   }
-  
+
   public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
     print("⚡️  WebView failed provisional navigation")
     print("⚡️  Error: " + error.localizedDescription)
   }
-  
+
   public override func canPerformUnwindSegueAction(_ action: Selector, from fromViewController: UIViewController, withSender sender: Any) -> Bool {
     return false
   }
-  
+
   public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
     guard let bridge = bridge else {
       return
@@ -236,7 +245,7 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
       method_setImplementation(method, imp)
     }
   }
-  
+
   func handleJSStartupError(_ error: [String:Any]) {
     let message = error["message"] ?? "No message"
     let url = error["url"] as? String ?? ""
@@ -247,19 +256,19 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
       let index = url.index(after: filenameIndex)
       filename = String(url[index...])
     }
-    
+
     print("\n⚡️  ------ STARTUP JS ERROR ------\n")
     print("⚡️  \(message)")
     print("⚡️  URL: \(url)")
     print("⚡️  \(filename):\(line):\(col)")
     print("\n⚡️  See above for help with debugging blank-screen issues")
   }
-  
+
   override public func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     // Dispose of any resources that can be recreated.
   }
-  
+
   override public func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
     if bridge != nil {
       if motion == .motionShake && bridge!.isDevMode() {
@@ -267,72 +276,72 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
       }
     }
   }
-  
+
   // We are willing to become first responder to get shake motion
   override public var canBecomeFirstResponder: Bool {
     get {
       return true
     }
   }
-  
+
   override public var prefersStatusBarHidden: Bool {
     get {
       return !isStatusBarVisible
     }
   }
-  
+
   override public var preferredStatusBarStyle: UIStatusBarStyle {
     get {
       return statusBarStyle
     }
   }
-  
+
   override public var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
     get {
       return .slide
     }
   }
-  
+
   public func setStatusBarVisible(_ isStatusBarVisible: Bool) {
     self.isStatusBarVisible = isStatusBarVisible
     UIView.animate(withDuration: 0.2, animations: {
       self.setNeedsStatusBarAppearanceUpdate()
     })
   }
-  
+
   public func setStatusBarStyle(_ statusBarStyle: UIStatusBarStyle) {
     self.statusBarStyle = statusBarStyle
     UIView.animate(withDuration: 0.2, animations: {
       self.setNeedsStatusBarAppearanceUpdate()
     })
   }
-  
+
   public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-    
+
     let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-    
+
     alertController.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action) in
       completionHandler()
     }))
-    
+
     self.present(alertController, animated: true, completion: nil)
   }
-  
+
   public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-    
+
     let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-    
+
     alertController.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action) in
       completionHandler(true)
     }))
-    
+
     alertController.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (action) in
       completionHandler(false)
     }))
-    
+
     self.present(alertController, animated: true, completion: nil)
   }
-  
+
   public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
     
     let alertController = UIAlertController(title: nil, message: prompt, preferredStyle: .alert)
@@ -340,29 +349,50 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     alertController.addTextField { (textField) in
       textField.text = defaultText
     }
-    
+
     alertController.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action) in
       if let text = alertController.textFields?.first?.text {
         completionHandler(text)
       } else {
         completionHandler(defaultText)
       }
-      
+
     }))
-    
+
     alertController.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (action) in
       
       completionHandler(nil)
       
     }))
-    
+
     self.present(alertController, animated: true, completion: nil)
   }
-  
+
+  public func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+    if (navigationAction.request.url != nil) {
+      UIApplication.shared.open(navigationAction.request.url!, options: [:], completionHandler: nil)
+    }
+    return nil
+  }
+
   public func getWebView() -> WKWebView {
     return self.webView!
   }
-  
+
+  public func getWebServer() -> GCDWebServer {
+    return self.webServer!
+  }
+
+  public func getServerBasePath() -> String {
+    return self.basePath
+  }
+
+  public func setServerBasePath(path: String) {
+    setServerPath(path: path)
+    let request = URLRequest(url: URL(string: hostname!)!)
+    _ = getWebView().load(request)
+  }
+
   /**
    * Add hooks to detect failed HTTP requests
    

@@ -35,7 +35,12 @@ public class Browser extends Plugin {
     String toolbarColor = call.getString("toolbarColor");
 
     if (url == null) {
-      call.error("Must provide a URL");
+      call.error("Must provide a URL to open");
+      return;
+    }
+
+    if (url.isEmpty()) {
+      call.error("URL must not be empty");
       return;
     }
 
@@ -59,8 +64,7 @@ public class Browser extends Plugin {
 
   @PluginMethod()
   public void close(PluginCall call) {
-    // Not supported
-    call.success();
+    call.unimplemented();
   }
 
 

@@ -79,6 +79,7 @@ CAP_PLUGIN(CAPLocalNotificationsPlugin, "LocalNotifications",
   CAP_PLUGIN_METHOD(cancel, CAPPluginReturnPromise);
   CAP_PLUGIN_METHOD(getPending, CAPPluginReturnPromise);
   CAP_PLUGIN_METHOD(registerActionTypes, CAPPluginReturnPromise);
+  CAP_PLUGIN_METHOD(areEnabled, CAPPluginReturnPromise);
 )
 
 CAP_PLUGIN(CAPModalsPlugin, "Modals",
@@ -136,4 +137,10 @@ CAP_PLUGIN(CAPStoragePlugin, "Storage",
 
 CAP_PLUGIN(CAPToastPlugin, "Toast",
   CAP_PLUGIN_METHOD(show, CAPPluginReturnPromise);
+)
+
+CAP_PLUGIN(CAPWebViewPlugin, "WebView",
+  CAP_PLUGIN_METHOD(setServerBasePath, CAPPluginReturnPromise);
+  CAP_PLUGIN_METHOD(getServerBasePath, CAPPluginReturnPromise);
+  CAP_PLUGIN_METHOD(persistServerBasePath, CAPPluginReturnPromise);
 )

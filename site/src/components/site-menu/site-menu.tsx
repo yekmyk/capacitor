@@ -28,6 +28,10 @@ export class SiteMenu {
           url: '/docs/getting-started/'
         },
         {
+          title: 'PWA Elements',
+          url: '/docs/getting-started/pwa-elements/'
+        },
+        {
           title: 'Using with Ionic',
           url: '/docs/getting-started/with-ionic'
         }
@@ -204,7 +208,7 @@ export class SiteMenu {
         { title: 'Motion', url: '/docs/apis/motion' },
         { title: 'Network', url: '/docs/apis/network' },
         // { title: 'Photos', url: '/docs/apis/photos' },
-        // { title: 'Push Notifications', url: '/docs/apis/push-notifications' },
+        { title: 'Push Notifications', url: '/docs/apis/push-notifications' },
         { title: 'Share', url: '/docs/apis/share' },
         { title: 'Splash Screen', url: '/docs/apis/splash-screen' },
         { title: 'Status Bar', url: '/docs/apis/status-bar' },

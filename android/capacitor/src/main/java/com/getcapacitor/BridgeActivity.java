@@ -46,7 +46,7 @@ public class BridgeActivity extends AppCompatActivity {
   protected void init(Bundle savedInstanceState, List<Class<? extends Plugin>> plugins) {
     this.initialPlugins = plugins;
 
-    loadConfig(this.getApplicationContext(),this);
+    loadConfig(this.getApplicationContext(), this);
 
     getApplication().setTheme(getResources().getIdentifier("AppTheme_NoActionBar", "style", getPackageName()));
     setTheme(getResources().getIdentifier("AppTheme_NoActionBar", "style", getPackageName()));
@@ -83,7 +83,7 @@ public class BridgeActivity extends AppCompatActivity {
     cordovaInterface.onCordovaInit(pluginManager);
     bridge = new Bridge(this, webView, initialPlugins, cordovaInterface, pluginManager);
 
-    Splash.showOnLaunch(this);
+    // Splash.showOnLaunch(this);
 
     if (savedInstanceState != null) {
       bridge.restoreInstanceState(savedInstanceState);
@@ -97,6 +97,7 @@ public class BridgeActivity extends AppCompatActivity {
 
   /**
    * Notify the App plugin that the current state changed
+   * 
    * @param isActive
    */
   private void fireAppStateChanged(boolean isActive) {

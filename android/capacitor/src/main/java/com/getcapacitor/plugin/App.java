@@ -36,7 +36,7 @@ public class App extends Plugin {
     notifyListeners(EVENT_BACK_BUTTON, new JSObject(), true);
 
     // For Cordova compat, emit the backbutton event
-    bridge.triggerJSEvent("backbutton", "document");
+    // bridge.triggerJSEvent("backbutton", "document");
   }
 
   public boolean hasBackButtonListeners() {

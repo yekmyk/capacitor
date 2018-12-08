@@ -1,8 +1,8 @@
 import { Config } from './config';
 import { getJSModules, getPlatformElement, getPluginPlatform, getPlugins, getPluginType, printPlugins, Plugin, PluginType } from './plugin';
-import { copySync, ensureDirSync, existsAsync, readFileAsync, removeSync, writeFileAsync } from './util/fs';
+import { copySync, ensureDirSync, readFileAsync, removeSync, writeFileAsync } from './util/fs';
 import { join, resolve } from 'path';
-import { buildXmlElement, log, logError, logFatal, logInfo, readXML, runCommand, writeXML } from './common';
+import { buildXmlElement, log, logError, logFatal, logInfo, readXML, resolveNode, runCommand, writeXML } from './common';
 import { copy as fsCopy } from 'fs-extra';
 import { getAndroidPlugins } from './android/common';
 import { getIOSPlugins } from './ios/common';
@@ -89,6 +89,7 @@ export async function copyPluginsJS(config: Config, cordovaPlugins: Plugin[], pl
       let data = await readFileAsync(filePath, 'utf8');
       data = data.trim();
       data = `cordova.define("${pluginId}.${jsModule.$.name}", function(require, exports, module) { \n${data}\n});`;
+      data = data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gi, "")
       await writeFileAsync(filePath, data, 'utf8');
     });
   }));
@@ -96,8 +97,8 @@ export async function copyPluginsJS(config: Config, cordovaPlugins: Plugin[], pl
 }
 
 export async function copyCordovaJS(config: Config, platform: string) {
-  const cordovaPath = resolve(config.app.rootDir, 'node_modules', '@capacitor/core', 'cordova.js');
-  if (!await existsAsync(cordovaPath)) {
+  const cordovaPath = resolveNode(config, '@capacitor/core', 'cordova.js');
+  if (!cordovaPath) {
     logFatal(`Unable to find node_modules/@capacitor/core/cordova.js. Are you sure`,
     '@capacitor/core is installed? This file is currently required for Capacitor to function.');
     return;
@@ -134,7 +135,7 @@ export async function autoGenerateConfig(config: Config, cordovaPlugins: Plugin[
     if (currentPlatform) {
       const configFiles = currentPlatform['config-file'];
       if (configFiles) {
-        const configXMLEntries = configFiles.filter(function(item: any) { return item.$.target.includes(fileName); });
+        const configXMLEntries = configFiles.filter(function(item: any) { return item.$ && item.$.target.includes(fileName); });
         configXMLEntries.map(  (entry: any)  => {
           const feature = { feature: entry.feature };
           pluginEntries.push(feature);
@@ -180,9 +181,9 @@ export async function copyCordovaJSFiles(config: Config, platform: string) {
   const allPlugins = await getPlugins(config);
   let plugins: Plugin[] = [];
   if (platform === config.ios.name) {
-    plugins = await getIOSPlugins(config, allPlugins);
+    plugins = getIOSPlugins(allPlugins);
   } else if (platform === config.android.name) { 
-    plugins = await getAndroidPlugins(config, allPlugins);
+    plugins = getAndroidPlugins(allPlugins);
   }
   const cordovaPlugins = plugins
   .filter(p => getPluginType(p, platform) === PluginType.Cordova);
@@ -194,7 +195,7 @@ export async function logCordovaManualSteps(cordovaPlugins: Plugin[], config: Co
     const editConfig = getPlatformElement(p, platform, 'edit-config');
     const configFile = getPlatformElement(p, platform, 'config-file');
     editConfig.concat(configFile).map(async (configElement: any) => {
-      if (!configElement.$.target.includes('config.xml')) {
+      if (configElement.$ && !configElement.$.target.includes('config.xml')) {
         if (platform === config.ios.name) {
           if (configElement.$.target.includes('Info.plist')) {
             logiOSPlist(configElement, config, p);

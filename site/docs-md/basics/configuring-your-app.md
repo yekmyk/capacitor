@@ -41,7 +41,14 @@ The current ones you might configure are:
     // If you don't configure it, a random port will be assigned and persisted.
     "port": "8787",
     // You can make the app to load an external url (i.e. to live reload)
-    "url": "http://192.168.1.33:8100"
+    "url": "http://192.168.1.33:8100",
+    // Normally all external URLs are opened in the browser. By setting this option, you tell
+    // Capacitor to open URLs belonging to these hosts inside its WebView.
+    "allowNavigation": [
+      "example.org",
+      "*.example.org",
+      "192.0.2.1"
+    ]
   },
   "android": {
     // On Android, Capacitor loads your local assets using https
@@ -63,8 +70,8 @@ The current ones you might configure are:
     // Default is 4.0
     "cordovaSwiftVersion": "3.2",
     // Minimum iOS version supported by the project.
-    // Default is 10.0
-    "minVersion": "10.3"
+    // Default is 11.0
+    "minVersion": "11.3"
   }
 }
 ```

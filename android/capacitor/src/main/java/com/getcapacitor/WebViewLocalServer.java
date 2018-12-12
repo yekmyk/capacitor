@@ -36,8 +36,8 @@ import java.util.Map;
 
 /**
  * Helper class meant to be used with the android.webkit.WebView class to enable hosting assets,
- * resources and other data on 'virtual' capacitor:// URL.
- * Hosting assets and resources on capacitor:// URLs is desirable as it is compatible with the
+ * resources and other data on 'virtual' https:// URL.
+ * Hosting assets and resources on https:// URLs is desirable as it is compatible with the
  * Same-Origin policy.
  * <p>
  * This class is intended to be used from within the
@@ -49,7 +49,7 @@ import java.util.Map;
 public class WebViewLocalServer {
 
   private final static String capacitorScheme = Bridge.CAPACITOR_SCHEME_NAME;
-  private final static String capacitorAssetsScheme = Bridge.CAPACITOR_ASSET_SCHEME_NAME;
+  private final static String capacitorFileScheme = Bridge.CAPACITOR_FILE_SCHEME_NAME;
   private final static String capacitorContentScheme = Bridge.CAPACITOR_CONTENT_SCHEME_NAME;
   private String basePath;
 
@@ -197,12 +197,12 @@ public class WebViewLocalServer {
           handler.getStatusCode(), handler.getReasonPhrase(), handler.getResponseHeaders(), null);
     }
 
-    if (request.getUrl().getScheme().equals(capacitorContentScheme)) {
+    if (request.getUrl().getScheme().equals(capacitorContentScheme) || request.getUrl().getScheme().equals(capacitorFileScheme)) {
       InputStream responseStream = new LollipopLazyInputStream(handler, request);
-      InputStream stream = responseStream;
-      String mimeType = getMimeType(path, stream);
+      String mimeType = getMimeType(path, responseStream);
+      int statusCode = getStatusCode(responseStream, handler.getStatusCode());
       return new WebResourceResponse(mimeType, handler.getEncoding(),
-              handler.getStatusCode(), handler.getReasonPhrase(), handler.getResponseHeaders(), stream);
+              statusCode, handler.getReasonPhrase(), handler.getResponseHeaders(), responseStream);
     }
 
 
@@ -231,9 +231,9 @@ public class WebViewLocalServer {
       InputStream responseStream = new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
 
       bridge.reset();
-
+      int statusCode = getStatusCode(responseStream, handler.getStatusCode());
       return new WebResourceResponse("text/html", handler.getEncoding(),
-          handler.getStatusCode(), handler.getReasonPhrase(), handler.getResponseHeaders(), responseStream);
+              statusCode, handler.getReasonPhrase(), handler.getResponseHeaders(), responseStream);
     }
 
     if ("/favicon.ico".equalsIgnoreCase(path)) {
@@ -258,9 +258,9 @@ public class WebViewLocalServer {
       }
 
       String mimeType = getMimeType(path, stream);
-
+      int statusCode = getStatusCode(responseStream, handler.getStatusCode());
       return new WebResourceResponse(mimeType, handler.getEncoding(),
-          handler.getStatusCode(), handler.getReasonPhrase(), handler.getResponseHeaders(), stream);
+              statusCode, handler.getReasonPhrase(), handler.getResponseHeaders(), stream);
     }
 
     return null;
@@ -368,6 +368,18 @@ public class WebViewLocalServer {
     return mimeType;
   }
 
+  private int getStatusCode(InputStream stream, int defaultCode) {
+    int finalStatusCode = defaultCode;
+    try {
+      if (stream.available() == 0) {
+        finalStatusCode = 404;
+      }
+    } catch (IOException e) {
+      finalStatusCode = 500;
+    }
+    return finalStatusCode;
+  }
+
   /**
    * Registers a handler for the given <code>uri</code>. The <code>handler</code> will be invoked
    * every time the <code>shouldInterceptRequest</code> method of the instance is called with
@@ -387,9 +399,9 @@ public class WebViewLocalServer {
   }
 
   /**
-   * Hosts the application's assets on an capacitor:// URL. Assets from the local path
+   * Hosts the application's assets on an https:// URL. Assets from the local path
    * <code>assetPath/...</code> will be available under
-   * <code>capacitor://{uuid}.androidplatform.net/assets/...</code>.
+   * <code>https://{uuid}.androidplatform.net/assets/...</code>.
    *
    * @param assetPath the local path in the application's asset folder which will be made
    *                  available by the server (for example "/www").
@@ -403,8 +415,8 @@ public class WebViewLocalServer {
 
 
   /**
-   * Hosts the application's resources on an capacitor:// URL. Resources
-   * <code>capacitor://{uuid}.androidplatform.net/res/{resource_type}/{resource_name}</code>.
+   * Hosts the application's resources on an https:// URL. Resources
+   * <code>https://{uuid}.androidplatform.net/res/{resource_type}/{resource_name}</code>.
    *
    * @return prefixes under which the resources are hosted.
    */
@@ -413,8 +425,8 @@ public class WebViewLocalServer {
   }
 
   /**
-   * Hosts the application's resources on an capacitor:// URL. Resources
-   * <code>capacitor://{domain}/{virtualResourcesPath}/{resource_type}/{resource_name}</code>.
+   * Hosts the application's resources on an https:// URL. Resources
+   * <code>https://{domain}/{virtualResourcesPath}/{resource_type}/{resource_name}</code>.
    *
    * @param virtualResourcesPath the path on the local server under which the resources
    *                             should be hosted.
@@ -454,9 +466,9 @@ public class WebViewLocalServer {
   }
 
   /**
-   * Hosts the application's files on an capacitor:// URL. Files from the basePath
+   * Hosts the application's files on an https:// URL. Files from the basePath
    * <code>basePath/...</code> will be available under
-   * <code>capacitor://{uuid}.androidplatform.net/...</code>.
+   * <code>https://{uuid}.androidplatform.net/...</code>.
    *
    * @param basePath the local path in the application's data folder which will be made
    *                  available by the server (for example "/www").
@@ -488,7 +500,7 @@ public class WebViewLocalServer {
         try {
           if (url.getScheme().equals(capacitorScheme) && isAsset) {
             stream = protocolHandler.openAsset(assetPath + path);
-          } else if (url.getScheme().equals(capacitorAssetsScheme) || !isAsset) {
+          } else if (url.getScheme().equals(capacitorFileScheme) || !isAsset) {
             stream = protocolHandler.openFile(path);
           } else if (url.getScheme().equals(capacitorContentScheme)) {
             stream = protocolHandler.openContentUrl(path);
@@ -503,7 +515,7 @@ public class WebViewLocalServer {
     };
 
     registerUriForScheme(capacitorScheme, handler, authority);
-    registerUriForScheme(capacitorAssetsScheme, handler, "");
+    registerUriForScheme(capacitorFileScheme, handler, "");
     registerUriForScheme(capacitorContentScheme, handler, "");
 
   }

@@ -110,4 +110,19 @@ public class MessageHandler {
     }
   }
 
+  @JavascriptInterface
+  @SuppressWarnings("unused")
+  public void loadPlugins() {
+      try {
+        webView.post(new Runnable() {
+          @Override
+          public void run() {
+            bridge.loadPlugins();
+          }
+        });
+      } catch (Exception ex) {
+          System.out.println("+?+?+:loadPlugins " + ex.getMessage());
+      }
+  }
+
 }

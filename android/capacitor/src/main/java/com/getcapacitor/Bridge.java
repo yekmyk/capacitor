@@ -8,7 +8,6 @@ import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.ValueCallback;
@@ -52,7 +51,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Arrays;
 import java.util.ArrayList;
 
@@ -104,11 +104,8 @@ public class Bridge {
   // Our MessageHandler for sending and receiving data to the WebView
   private final MessageHandler msgHandler;
 
-  // The ThreadHandler for executing plugin calls
-  private final HandlerThread handlerThread = new HandlerThread("CapacitorPlugins");
-
   // Our Handler for posting plugin calls. Created from the ThreadHandler
-  private Handler taskHandler = null;
+  private ExecutorService taskHandler = null;
 
   private final List<Class<? extends Plugin>> initialPlugins;
 
@@ -139,8 +136,7 @@ public class Bridge {
     this.cordovaInterface = cordovaInterface;
 
     // Start our plugin execution threads and handlers
-    handlerThread.start();
-    taskHandler = new Handler(handlerThread.getLooper());
+    taskHandler = Executors.newCachedThreadPool();
 
     Config.load(getActivity());
 
@@ -154,7 +150,7 @@ public class Bridge {
     this.intentUri = intentData;
 
     // Register our core plugins
-    this.registerAllPlugins();
+    // this.registerAllPlugins();
 
     this.loadWebView();
   }
@@ -318,6 +314,13 @@ public class Bridge {
     }
   }
 
+  public void loadPlugins() {
+    // Register our core plugins
+    registerAllPlugins();
+    String pluginJS = JSExport.getPluginJS(plugins.values());
+    injectScriptFile(webView, (new JSInjector("", "", pluginJS, "", "", "", "capacitorPluginsLoaded = true; window.Capacitor.triggerEvent(\"pluginsLoaded\", \"document\", \"\")")).getScriptString());
+  }
+
   /**
    * Register our core Plugin APIs
    */
@@ -465,7 +468,7 @@ public class Bridge {
       if(plugin.getInstance().taskHandler != null) {
         plugin.getInstance().taskHandler.post(currentThreadTask);
       } else {
-        taskHandler.post(currentThreadTask);
+        taskHandler.execute(currentThreadTask);
       }
 
     } catch (Exception ex) {
@@ -532,7 +535,7 @@ public class Bridge {
   }
 
   public void execute(Runnable runnable) {
-    taskHandler.post(runnable);
+    taskHandler.execute(runnable);
   }
 
   public void executeOnMainThread(Runnable runnable) {

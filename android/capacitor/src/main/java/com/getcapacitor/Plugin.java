@@ -381,6 +381,15 @@ public class Plugin {
     retainedEventArguments.remove(eventName);
   }
 
+  public JSObject getRetainedEvent(String eventName) {
+    JSObject retained = retainedEventArguments.get(eventName);
+    if (retained == null) {
+      return null;
+    }
+    retainedEventArguments.remove(eventName);
+    return retained;
+  }
+
 
   /**
    * Exported plugin call for adding a listener to this plugin

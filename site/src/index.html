@@ -11,6 +11,15 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+  <script src="https://unpkg.com/ionicons@4.5.5/dist/ionicons.js"></script>
+
+  <script>
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister()
+      }
+    });
+  </script>
   <script src="/build/app.js"></script>
 </head>
 <body>
@@ -27,15 +36,14 @@
 
   <capacitor-site></capacitor-site>
 
-  <!--
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-44023830-42"></script>
   <script>
-    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-    ga('create', 'UA-44023830-34', 'auto');
-    ga('send', 'pageview');
-  </script>
-  -->
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  <script async defer src='https://www.google-analytics.com/analytics.js'></script>
+    gtag('config', 'UA-44023830-42');
+  </script>
 
   <script async defer src="https://buttons.github.io/buttons.js"></script>
 

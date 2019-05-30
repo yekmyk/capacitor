@@ -2,14 +2,19 @@ import { Config } from '../config';
 import { log, logFatal, logInfo, runCommand, runTask, writePrettyJSON, logWarn } from '../common';
 import { emoji } from '../util/emoji';
 import { existsAsync, mkdirAsync, writeFileAsync, readFileAsync } from '../util/fs';
-import { fixName } from '../plugin'
+import { fixName, removeScope } from '../plugin'
 
 import { copy, move, mkdirs, unlink } from 'fs-extra';
 import { dirname, join } from 'path';
+import { isInteractive } from '../util/term';
 
 
 export async function newPluginCommand(config: Config) {
   try {
+    if (!isInteractive()) {
+      return;
+    }
+
     await newPlugin(config);
   } catch (e) {
     logFatal(e);
@@ -98,7 +103,7 @@ export async function newPlugin(config: Config) {
   console.log('\n');
 
   if (answers.confirm) {
-    const pluginPath = answers.name;
+    const pluginPath = removeScope(answers.name);
     const domain = answers.domain;
     const className = answers.className;
 
@@ -120,8 +125,7 @@ export async function newPlugin(config: Config) {
     });
 
     await runTask('Installing NPM dependencies', async () => {
-      await runCommand(`cd "${pluginPath}"`);
-      return runCommand('npm install');
+      return  runCommand(`cd "${pluginPath}" && npm install`);
     });
 
     logInfo(`Your Capacitor plugin was created at ${pluginPath}`);
@@ -144,23 +148,23 @@ async function createTSPlugin(config: Config, pluginPath: string, domain: string
 }
 
 async function createIosPlugin(config: Config, pluginPath: string, domain: string, className: string, answers: any) {
-  const newPluginPath = join(pluginPath, 'ios/Plugin');
+  const newPluginPath = join(pluginPath, 'ios', 'Plugin');
 
-  const originalPluginSwift = await readFileAsync(join(newPluginPath, 'Plugin/Plugin.swift'), 'utf8');
-  const originalPluginObjc  = await readFileAsync(join(newPluginPath, 'Plugin/Plugin.m'), 'utf8');
+  const originalPluginSwift = await readFileAsync(join(newPluginPath, 'Plugin.swift'), 'utf8');
+  const originalPluginObjc  = await readFileAsync(join(newPluginPath, 'Plugin.m'), 'utf8');
   const pluginSwift = originalPluginSwift.replace(/CLASS_NAME/g, className);
   const pluginObjc  = originalPluginObjc.replace(/CLASS_NAME/g, className);
 
   if (!answers.git) {
-    logWarn('You will need to add a hompage and git repo to your generated podspec before installing or CocoaPods will complain');
+    logWarn('You will need to add a homepage and git repo to your generated podspec before installing or CocoaPods will complain');
   }
   if (!answers.description) {
     logWarn('You will need to add a summary to your generated podspec before installing or CocoaPods will complain');
   }
 
   await writeFileAsync(join(pluginPath, `${fixName(answers.name)}.podspec`), generatePodspec(config, answers), 'utf8');
-  await writeFileAsync(join(newPluginPath, `Plugin/Plugin.swift`), pluginSwift, 'utf8');
-  await writeFileAsync(join(newPluginPath, `Plugin/Plugin.m`), pluginObjc, 'utf8');
+  await writeFileAsync(join(newPluginPath, 'Plugin.swift'), pluginSwift, 'utf8');
+  await writeFileAsync(join(newPluginPath, 'Plugin.m'), pluginObjc, 'utf8');
 }
 
 function generatePodspec(config: Config, answers: any) {
@@ -173,7 +177,7 @@ function generatePodspec(config: Config, answers: any) {
     s.homepage = '${answers.git}'
     s.author = '${answers.author}'
     s.source = { :git => '${answers.git}', :tag => s.version.to_s }
-    s.source_files = 'ios/Plugin/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}'
+    s.source_files = 'ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}'
     s.ios.deployment_target  = '${config.ios.minVersion}'
     s.dependency 'Capacitor'
   end`;
@@ -183,10 +187,7 @@ async function createAndroidPlugin(config: Config, pluginPath: string, domain: s
   const domainPath = domain.split('.').join('/');
 
   // Android specific stuff
-  const newPluginPath = join(pluginPath, 'android/', pluginPath);
-  // Move the 'plugin' folder inside $pluginPath/android/plugin to be the same name as the plugin
-  const gradleProjectPath = join(pluginPath, 'android/plugin');
-  await move(gradleProjectPath, newPluginPath);
+  const newPluginPath = join(pluginPath, 'android');
   // Update the AndroidManifest to point to our new package
   await writeFileAsync(join(newPluginPath, 'src/main/AndroidManifest.xml'), generateAndroidManifest(domain, pluginPath));
 
@@ -206,12 +207,12 @@ async function createAndroidPlugin(config: Config, pluginPath: string, domain: s
 }
 
 function generateAndroidManifest(domain: string, pluginPath: string) {
-const pluginPackage = pluginPath.split('-').join('');
+  const pluginPackage = pluginPath.split('-').join('');
   return `
   <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="${domain}.${pluginPackage}">
-</manifest>
-`
+      package="${domain}.${pluginPackage}">
+  </manifest>
+  `;
 }
 
 function generatePackageJSON(answers: any) {
@@ -233,7 +234,9 @@ function generatePackageJSON(answers: any) {
       '@capacitor/core': 'latest'
     },
     devDependencies: {
-      'typescript': '^2.6.2'
+      'typescript': '^3.2.4',
+      '@capacitor/ios': 'latest',
+      '@capacitor/android': 'latest'
     },
     files: [
       'dist/',
@@ -253,12 +256,13 @@ function generatePackageJSON(answers: any) {
       android: {
         src: 'android'
       }
-    }, "repository": {
-      "type": "git",
-      "url": answers.git
     },
-    "bugs": {
-      "url": `${answers.git}/issues`
+    'repository': {
+      'type': 'git',
+      'url': answers.git
+    },
+    'bugs': {
+      'url': `${answers.git}/issues`
     }
   };
 }

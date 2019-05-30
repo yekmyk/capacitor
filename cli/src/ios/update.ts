@@ -3,6 +3,7 @@ import { CheckFunction, checkPlatformVersions, logFatal, resolveNode, runCommand
 import { copySync, readFileAsync, readFileSync, removeSync, writeFileAsync, writeFileSync } from '../util/fs';
 import { Config } from '../config';
 import { join, relative, resolve } from 'path';
+import { realpathSync } from 'fs';
 import { getFilePath, getPlatformElement, getPlugins, getPluginType, printPlugins, Plugin, PluginType } from '../plugin';
 import { checkAndInstallDependencies, handleCordovaPluginsJS, logCordovaManualSteps } from '../cordova';
 
@@ -98,7 +99,7 @@ export function generatePodFile(config: Config, plugins: Plugin[]) {
 
   const capacitorPlugins = plugins.filter(p => getPluginType(p, platform) === PluginType.Core);
   const pods = capacitorPlugins
-    .map((p) => `pod '${p.ios!.name}', :path => '${relative(podfilePath, p.rootPath)}'`);
+    .map((p) => `pod '${p.ios!.name}', :path => '${relative(podfilePath, realpathSync(p.rootPath))}'`);
   const cordovaPlugins = plugins.filter(p => getPluginType(p, platform) === PluginType.Cordova);
   const noPodPlugins = cordovaPlugins.filter(filterNoPods);
   if (noPodPlugins.length > 0) {
@@ -164,7 +165,7 @@ async function generateCordovaPodspec(cordovaPlugins: Plugin[], config: Config, 
             if (!weakFrameworks.includes(name)) {
               weakFrameworks.push(name);
             }
-          } if (framework.$.custom && framework.$.custom === 'true') {
+          } else if (framework.$.custom && framework.$.custom === 'true') {
             const frameworktPath = join(sourcesFolderName, plugin.name, name);
             if (!customFrameworks.includes(frameworktPath)) {
               customFrameworks.push(frameworktPath);
@@ -180,7 +181,13 @@ async function generateCordovaPodspec(cordovaPlugins: Plugin[], config: Config, 
           }
         }
       } else if (framework.$.type && framework.$.type === 'podspec') {
-        frameworkDeps.push(`s.dependency '${framework.$.src}', '${framework.$.spec}'`);
+        let depString = `s.dependency '${framework.$.src}'`;
+        if (framework.$.spec && framework.$.spec !== '') {
+          depString += `, '${framework.$.spec}'`;
+        }
+        if (!frameworkDeps.includes(depString)) {
+          frameworkDeps.push(depString);
+        }
       }
     });
     const sourceFiles = getPlatformElement(plugin, platform, 'source-file');
@@ -228,11 +235,18 @@ async function generateCordovaPodspec(cordovaPlugins: Plugin[], config: Config, 
     s.source = { :git => 'https://github.com/ionic-team/does-not-exist.git', :tag => '${config.cli.package.version}' }
     s.source_files = '${sourcesFolderName}/**/*.{swift,h,m,c,cc,mm,cpp}'
     s.ios.deployment_target  = '${config.ios.minVersion}'
-    s.dependency 'CapacitorCordova'
+    s.dependency 'CapacitorCordova'${getLinkerFlags(config)}
     s.swift_version  = '${config.ios.cordovaSwiftVersion}'
     ${frameworksString}
   end`;
   await writeFileAsync(join(pluginsPath, `${name}.podspec`), content);
+}
+
+function getLinkerFlags(config: Config) {
+  if (config.app.extConfig.ios && config.app.extConfig.ios.cordovaLinkerFlags) {
+    return `\n    s.pod_target_xcconfig = { 'OTHER_LDFLAGS' => '${config.app.extConfig.ios.cordovaLinkerFlags.join(' ')}' }`;
+  }
+  return '';
 }
 
 function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) {

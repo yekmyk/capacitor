@@ -1,10 +1,19 @@
-# Capacitor Web Plugin Guide
+---
+title: Capacitor Web/PWA Plugin Guide
+description: Capacitor Web/PWA Plugin Guide
+url: /docs/plugins/web
+contributors:
+  - mlynch
+  - jcesarmobile
+---
 
-Capacitor utilizes a web/native compatibility layer, making it easy to build plugins that have functionality when running natively, as well as when running in a PWA on the Web.
+# Capacitor Web/PWA Plugin Guide
+
+<p class="intro">Capacitor utilizes a web/native compatibility layer, making it easy to build plugins that have functionality when running natively, as well as when running in a PWA on the Web.</p>
 
 ## Getting Started
 
-To get started, first generate a plugin as shown in the [Getting Started]('./#getting-started) section of the Plugin guide.
+To get started, first generate a plugin as shown in the [Getting Started](./#getting-started) section of the Plugin guide.
 
 Next, open `your-plugin/src/web.ts` in your editor of choice.
 
@@ -29,7 +38,7 @@ export class MyPluginWeb extends WebPlugin {
 
   async echo(options: { value: string }) {
     console.log('ECHO', options);
-    return Promise.resolve();
+    return options;
   }
 }
 

@@ -44,8 +44,13 @@ public class LocalNotifications extends Plugin {
   @Override
   protected void handleOnNewIntent(Intent data) {
     super.handleOnNewIntent(data);
+    if (!Intent.ACTION_MAIN.equals(data.getAction())) {
+      return;
+    }
     JSObject dataJson = manager.handleNotificationActionPerformed(data, notificationStorage);
-    notifyListeners("localNotificationActionPerformed", dataJson, true);
+    if (dataJson != null) {
+      notifyListeners("localNotificationActionPerformed", dataJson, true);
+    }
   }
 
   @Override
@@ -92,7 +97,7 @@ public class LocalNotifications extends Plugin {
   @PluginMethod()
   public void areEnabled(PluginCall call) {
     JSObject data = new JSObject();
-    data.put("areEnabled", manager.areNotificationsEnabled());
+    data.put("value", manager.areNotificationsEnabled());
     call.success(data);
   }
 

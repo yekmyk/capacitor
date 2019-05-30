@@ -1,8 +1,17 @@
+---
+title: Troubleshooting Android Issues
+description: Troubleshooting Android Issues
+url: /docs/android/troubleshooting
+contributors:
+  - mlynch
+  - jcesarmobile
+---
+
 # Troubleshooting Android Issues
 
-Creating a 100% perfect native management tool is nearly impossible, and sooner or later you'll run into various issues with some part of the Android workflow.
+<p class="intro">Creating a 100% perfect native management tool is nearly impossible, and sooner or later you'll run into various issues with some part of the Android workflow.</a>
 
-This guide attempts to document common Android issues with possible solutions.
+<p class="intro">This guide attempts to document common Android issues with possible solutions.</a>
 
 ## Android Toolbox
 
@@ -14,7 +23,7 @@ Any time you encounter an issue with Android, or Gradle, or Emulators, your firs
 
 Capacitor uses the standard Android toolkit, so chances are if you run into something, many Android developers have as well, and there's a solution out there.
 
-It could be as simple as updating a dependency, running Gradle sync, or invalidating caches
+It could be as simple as updating a dependency, running Gradle sync, or invalidating caches.
 
 ### Clean/Rebuild
 

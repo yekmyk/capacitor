@@ -11,7 +11,7 @@ export async function openAndroid(config: Config) {
     throw new Error('Android project does not exist. Create one with "npx cap add android"');
   }
 
-  const opn = await import('opn');
+  const opn = await import('open');
 
   const dir = config.android.platformDir;
 
@@ -21,7 +21,7 @@ export async function openAndroid(config: Config) {
       break;
     case OS.Windows:
       try {
-        await opn(dir, { app: config.windows.androidStudioPath, wait: true });
+        await opn(dir, { app: config.windows.androidStudioPath, wait: false });
       } catch (e) {
         logError('Unable to launch Android Studio. Make sure the latest version of Android Studio is installed, or,' +
                  'if you\'ve installed Android Studio in a custom location, configure "windowsAndroidStudioPath" ' +
@@ -45,7 +45,7 @@ export async function openAndroid(config: Config) {
       };
 
       try {
-        await opn(dir, { app: config.linux.androidStudioPath, wait: true });
+        await opn(dir, { app: config.linux.androidStudioPath, wait: false });
       } catch (e) {
         linuxError();
       }

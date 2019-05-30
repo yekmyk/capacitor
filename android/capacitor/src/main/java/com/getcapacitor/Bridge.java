@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Base64;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
@@ -18,6 +19,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.content.SharedPreferences;
 
+import com.getcapacitor.android.BuildConfig;
 import com.getcapacitor.plugin.Accessibility;
 import com.getcapacitor.plugin.App;
 import com.getcapacitor.plugin.Browser;
@@ -40,12 +42,14 @@ import com.getcapacitor.plugin.StatusBar;
 import com.getcapacitor.plugin.Storage;
 import com.getcapacitor.plugin.background.BackgroundTask;
 import com.getcapacitor.ui.Toast;
+import com.getcapacitor.util.HostMask;
 
 import org.apache.cordova.CordovaInterfaceImpl;
 import org.apache.cordova.PluginManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
@@ -84,8 +88,8 @@ public class Bridge {
   // The name of the directory we use to look for index.html and the rest of our web assets
   public static final String DEFAULT_WEB_ASSET_DIR = "public";
   public static final String CAPACITOR_SCHEME_NAME = "http";
-  public static final String CAPACITOR_FILE_SCHEME_NAME = "capacitor-file";
-  public static final String CAPACITOR_CONTENT_SCHEME_NAME = "capacitor-content";
+  public static final String CAPACITOR_FILE_START = "/_capacitor_file_";
+  public static final String CAPACITOR_CONTENT_START = "/_capacitor_content_";
 
   // Loaded Capacitor config
   private JSONObject config = new JSONObject();
@@ -96,7 +100,7 @@ public class Bridge {
   private String localUrl;
   private String appUrl;
   private String appUrlConfig;
-  private String[] appAllowNavigationConfig;
+  private HostMask appAllowNavigationMask;
   // A reference to the main WebView for the app
   private final WebView webView;
   public final CordovaInterfaceImpl cordovaInterface;
@@ -157,28 +161,34 @@ public class Bridge {
 
   private void loadWebView() {
     appUrlConfig = Config.getString("server.url");
-    appAllowNavigationConfig = Config.getArray("server.allowNavigation");
+    String[] appAllowNavigationConfig = Config.getArray("server.allowNavigation");
+
+    ArrayList<String> authorities = new ArrayList<String>();
+    if (appAllowNavigationConfig != null) {
+      authorities.addAll(Arrays.asList(appAllowNavigationConfig));
+    }
+    this.appAllowNavigationMask = HostMask.Parser.parse(appAllowNavigationConfig);
 
     String authority = Config.getString("server.hostname", "localhost");
-    localUrl = CAPACITOR_SCHEME_NAME + "://" + authority + "/";
-
-    boolean isLocal = true;
+    authorities.add(authority);
+    localUrl = CAPACITOR_SCHEME_NAME + "://" + authority;
 
     if (appUrlConfig != null) {
       try {
         URL appUrlObject = new URL(appUrlConfig);
-        authority = appUrlObject.getAuthority();
-        isLocal = false;
+        authorities.add(appUrlObject.getAuthority());
       } catch (Exception ex) {
       }
 
-      Toast.show(getContext(), "Using app server " + appUrlConfig.toString());
+      if (BuildConfig.DEBUG) {
+        Toast.show(getContext(), "Using app server " + appUrlConfig.toString());
+      }
     }
 
     final boolean html5mode = Config.getBoolean("server.html5mode", true);
 
     // Start the local web server
-    localServer = new WebViewLocalServer(context, this, getJSInjector(), authority, html5mode, isLocal);
+    localServer = new WebViewLocalServer(context, this, getJSInjector(), authorities, html5mode);
     localServer.hostAssets(DEFAULT_WEB_ASSET_DIR);
 
 
@@ -194,13 +204,6 @@ public class Bridge {
       }
 
       @Override
-      public void onPageFinished(WebView view, final String location) {
-        if (appUrlConfig != null || appAllowNavigationConfig != null) {
-          injectScriptFile(view, getJSInjector().getScriptString());
-        }
-      }
-
-      @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         Uri url = request.getUrl();
         return launchIntent(url);
@@ -212,7 +215,7 @@ public class Bridge {
       }
 
       private boolean launchIntent(Uri url) {
-        if (!url.toString().contains(appUrl) && !matchHosts(url.getHost(), appAllowNavigationConfig)) {
+        if (!url.toString().contains(appUrl) && !appAllowNavigationMask.matches(url.getHost())) {
           try {
             Intent openIntent = new Intent(Intent.ACTION_VIEW, url);
             getContext().startActivity(openIntent);
@@ -227,7 +230,7 @@ public class Bridge {
 
     SharedPreferences prefs = getContext().getSharedPreferences(com.getcapacitor.plugin.WebView.WEBVIEW_PREFS_NAME, Activity.MODE_PRIVATE);
     String path = prefs.getString(com.getcapacitor.plugin.WebView.CAP_SERVER_PATH, null);
-    if (path != null) {
+    if (path != null && !path.isEmpty() && new File(path).exists()) {
       setServerBasePath(path);
     }
     // Get to work
@@ -237,8 +240,10 @@ public class Bridge {
 
   public void handleAppUrlLoadError(Exception ex) {
     if (ex instanceof SocketTimeoutException) {
-      Toast.show(getContext(), "Unable to load app. Are you sure the server is running at " + localServer.getAuthority() + "?");
-      Log.e(LOG_TAG, "Unable to load app. Ensure the server is running at " + localServer.getAuthority() + ", or modify the " +
+      if (BuildConfig.DEBUG) {
+        Toast.show(getContext(), "Unable to load app. Are you sure the server is running at " + appUrl + "?");
+      }
+      Log.e(LOG_TAG, "Unable to load app. Ensure the server is running at " + appUrl + ", or modify the " +
           "appUrl setting in capacitor.config.json (make sure to npx cap copy after to commit changes).", ex);
     }
   }
@@ -309,6 +314,8 @@ public class Bridge {
     settings.setGeolocationEnabled(true);
     settings.setDatabaseEnabled(true);
     settings.setAppCacheEnabled(true);
+    settings.setMediaPlaybackRequiresUserGesture(false);
+    settings.setJavaScriptCanOpenWindowsAutomatically(true);
     if (Config.getBoolean("android.allowMixedContent", false)) {
       settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
     }
@@ -809,18 +816,8 @@ public class Bridge {
     });
   }
 
-  private void injectScriptFile(WebView view, String script) {
-
-    // Base64 encode string before injecting as innerHTML
-    String encoded = Base64.encodeToString(script.getBytes(), Base64.NO_WRAP);
-    view.loadUrl("javascript:(function() {" +
-            "var parent = document.getElementsByTagName('head').item(0);" +
-            "var script = document.createElement('script');" +
-            "script.type = 'text/javascript';" +
-            // Base64 decode injected javascript
-            "script.innerHTML = window.atob('" + encoded + "');" +
-            "parent.appendChild(script)" +
-            "})()");
+  public String getLocalUrl() {
+    return localUrl;
   }
 
   private boolean matchHost(String host, String pattern) {
@@ -854,5 +851,9 @@ public class Bridge {
       }
     }
     return false;
+  }
+
+  public WebViewLocalServer getLocalServer() {
+    return localServer;
   }
 }

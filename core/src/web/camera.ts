@@ -3,7 +3,8 @@ import { WebPlugin } from './index';
 import {
   CameraPlugin,
   CameraPhoto,
-  CameraOptions
+  CameraOptions,
+  CameraResultType
 } from '../core-plugin-definitions';
 
 //import '@ionic/pwa-elements';
@@ -20,39 +21,55 @@ export class CameraPluginWeb extends WebPlugin implements CameraPlugin {
     options;
 
     return new Promise<CameraPhoto>(async (resolve, reject) => {
-      const cameraModal: any = document.createElement('ion-pwa-camera-modal');
+      const cameraModal: any = document.createElement('pwa-camera-modal');
       document.body.appendChild(cameraModal);
       await cameraModal.componentOnReady();
       cameraModal.addEventListener('onPhoto', async (e: any) => {
         const photo = e.detail;
 
         if (photo === null) {
-          reject();
+          reject('User cancelled photos app');
         } else {
-          resolve(await this._getCameraPhoto(photo));
+          resolve(await this._getCameraPhoto(photo, options));
         }
 
         cameraModal.dismiss();
+        document.body.removeChild(cameraModal);
       });
 
       cameraModal.present();
     });
   }
 
-  private _getCameraPhoto(photo: Blob) {
+  private _getCameraPhoto(photo: Blob, options: CameraOptions) {
     return new Promise<CameraPhoto>((resolve, reject) => {
       var reader = new FileReader();
-      reader.readAsDataURL(photo);
-      reader.onloadend = () => {
+      var format = photo.type.split('/')[1]
+      if (options.resultType == CameraResultType.Uri) {
         resolve({
-          base64Data: reader.result,
-          webPath: reader.result,
-          format: 'jpeg'
+          webPath: URL.createObjectURL(photo),
+          format: format
         });
-      };
-      reader.onerror = (e) => {
-        reject(e);
-      };
+      } else {
+        reader.readAsDataURL(photo);
+        reader.onloadend = () => {
+          const r = reader.result as string;
+          if (options.resultType == CameraResultType.DataUrl) {
+            resolve({
+              dataUrl: r,
+              format: format
+            });
+          } else {
+            resolve({
+              base64String: r.split(',')[1],
+              format: format
+            });
+          }
+        };
+        reader.onerror = (e) => {
+          reject(e);
+        };
+      }
     });
   }
 }

@@ -15,6 +15,7 @@ enum CameraDirection: String {
 enum CameraResultType: String {
   case base64 = "base64"
   case uri = "uri"
+  case DATA_URL = "dataUrl"
 }
 
 struct CameraSettings {
@@ -22,7 +23,7 @@ struct CameraSettings {
   var direction: CameraDirection = CameraDirection.rear
   var allowEditing = false
   var shouldResize = false
-  var shouldCorrectOrientation = false
+  var shouldCorrectOrientation = true
   var quality: Float = 1.0
   var width: Float = 0
   var height: Float = 0
@@ -36,11 +37,11 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
 
   var imagePicker: UIImagePickerController?
   var call: CAPPluginCall?
-  
+
   var imageCounter = 0
-  
+
   var settings = CameraSettings()
-  
+
   @objc func getPhoto(_ call: CAPPluginCall) {
     self.call = call
     self.settings = getSettings(call)
@@ -55,10 +56,11 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
 
     imagePicker = UIImagePickerController()
     imagePicker!.delegate = self
+    imagePicker!.allowsEditing = settings.allowEditing
 
     doShow(call: call, settings: settings)
   }
-  
+
   func getSettings(_ call: CAPPluginCall) -> CameraSettings {
     var settings = CameraSettings()
     settings.quality = call.get("quality", Float.self, 100)!
@@ -73,14 +75,13 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
       // We resize only if a dimension was provided
       settings.shouldResize = true
     }
-    
-    settings.shouldCorrectOrientation = call.get("correctOrientation", Bool.self, false)!
+    settings.shouldCorrectOrientation = call.get("correctOrientation", Bool.self, true)!
 
     return settings
   }
-  
+
   func doShow(call: CAPPluginCall, settings: CameraSettings) {
-    
+
     DispatchQueue.main.async {
       switch settings.source {
       case CameraSource.prompt:
@@ -92,28 +93,28 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
       }
     }
   }
-  
+
   func showPrompt(_ call: CAPPluginCall) {
     // Build the action sheet
-    let alert = UIAlertController(title: "Photo", message: nil, preferredStyle: UIAlertControllerStyle.actionSheet)
+    let alert = UIAlertController(title: "Photo", message: nil, preferredStyle: UIAlertController.Style.actionSheet)
     alert.addAction(UIAlertAction(title: "From Photos", style: .default, handler: { (action: UIAlertAction) in
       self.showPhotos(call)
     }))
-    
+
     alert.addAction(UIAlertAction(title: "Take Picture", style: .default, handler: { (action: UIAlertAction) in
       self.showCamera(call)
     }))
-    
+
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction) in
       alert.dismiss(animated: true, completion: nil)
     }))
-    
+
     self.setCenteredPopover(alert)
     self.bridge.viewController.present(alert, animated: true, completion: nil)
   }
-  
+
   func showCamera(_ call: CAPPluginCall) {
-    if self.bridge.isSimulator() || !UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.camera) {
+    if self.bridge.isSimulator() || !UIImagePickerController.isSourceTypeAvailable(UIImagePickerController.SourceType.camera) {
       self.bridge.modulePrint(self, "Camera not available in simulator")
       self.bridge.alert("Camera Error", "Camera not available in Simulator")
       call.error("Camera not available while running in Simulator")
@@ -155,15 +156,14 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
       call.error("User denied access to photos")
       return
     }
-    
+
     self.configurePicker()
-    
+
     self.imagePicker!.sourceType = .photoLibrary
-    self.imagePicker!.allowsEditing = settings.allowEditing
-    
+
     self.bridge.viewController.present(self.imagePicker!, animated: true, completion: nil)
   }
-    
+
   private func configurePicker() {
     self.imagePicker!.modalPresentationStyle = .popover
     self.imagePicker!.popoverPresentationController?.delegate = self
@@ -178,20 +178,21 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
   public func popoverPresentationControllerDidDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) {
     self.call?.error("User cancelled photos app")
   }
-  
-  public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+
+  public func imagePickerController(_ picker: UIImagePickerController,
+                                    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
     var image: UIImage?
 
-    if let editedImage = info[UIImagePickerControllerEditedImage] as? UIImage {
+    if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
       // Use editedImage Here
       image = editedImage
-    } else if let originalImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
+    } else if let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
       // Use originalImage Here
       image = originalImage
     }
-    
-    let imageMetadata = info[UIImagePickerControllerMediaMetadata] as? [AnyHashable: Any]
-    
+
+    let imageMetadata = info[UIImagePickerController.InfoKey.mediaMetadata] as? [AnyHashable: Any]
+
     if settings.shouldResize {
       guard let convertedImage = resizeImage(image!) else {
         self.call?.error("Error resizing image")
@@ -199,7 +200,7 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
       }
       image = convertedImage
     }
-    
+
     if settings.shouldCorrectOrientation {
       guard let convertedImage = correctOrientation(image!) else {
         self.call?.error("Error resizing image")
@@ -207,23 +208,31 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
       }
       image = convertedImage
     }
-    
-    guard let jpeg = UIImageJPEGRepresentation(image!, CGFloat(settings.quality/100)) else {
+
+    guard let jpeg = image!.jpegData(compressionQuality: CGFloat(settings.quality/100)) else {
       self.call?.error("Unable to convert image to jpeg")
       return
     }
 
-    if settings.resultType == "base64" {
+    if settings.resultType == CameraResultType.base64.rawValue {
       let base64String = jpeg.base64EncodedString()
-      
+
       self.call?.success([
-        "base64Data": "data:image/jpeg;base64," + base64String,
+        "base64String": base64String,
         "exif": makeExif(imageMetadata) ?? [:],
         "format": "jpeg"
       ])
-    } else if settings.resultType == "uri" {
+    } else if settings.resultType == CameraResultType.DATA_URL.rawValue {
+      let base64String = jpeg.base64EncodedString()
+
+      self.call?.success([
+        "dataUrl": "data:image/jpeg;base64," + base64String,
+        "exif": makeExif(imageMetadata) ?? [:],
+        "format": "jpeg"
+      ])
+    } else if settings.resultType == CameraResultType.uri.rawValue {
       let path = try! saveTemporaryImage(jpeg)
-      guard let webPath = CAPFileManager.getPortablePath(uri: URL(string: path)) else {
+      guard let webPath = CAPFileManager.getPortablePath(host: bridge.getLocalUrl(), uri: URL(string: path)) else {
         call?.reject("Unable to get portable path to file")
         return
       }
@@ -234,10 +243,10 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
         "format": "jpeg"
       ])
     }
-    
+
     picker.dismiss(animated: true, completion: nil)
   }
-  
+
   func resizeImage(_ image: UIImage) -> UIImage? {
     let isAspectScale = settings.width > 0 && settings.height == 0 || settings.height > 0 && settings.width == 0
     let aspect = Float(image.size.width / image.size.height);
@@ -253,16 +262,16 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
 
     UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
     image.draw(in: CGRect(origin: CGPoint.zero, size: size))
-    
+
     let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     return scaledImage
   }
-  
+
   func makeExif(_ exif: [AnyHashable:Any]?) -> [AnyHashable:Any]? {
     return exif?["{Exif}"] as? [AnyHashable:Any]
   }
-  
+
   func correctOrientation(_ image: UIImage) -> UIImage? {
     UIGraphicsBeginImageContext(image.size)
     image.draw(at: .zero)
@@ -270,18 +279,18 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
     UIGraphicsEndImageContext()
     return newImage ?? image
   }
-  
+
   func saveTemporaryImage(_ data: Data) throws -> String {
     var url: URL
     repeat {
       imageCounter += 1
       url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("photo-\(imageCounter).jpg")
     } while FileManager.default.fileExists(atPath: url.absoluteString)
-    
+
     try data.write(to: url, options: .atomic)
     return url.absoluteString
   }
-  
+
   /**
    * Make sure the developer provided proper usage descriptions
    * per apple's terms.
@@ -307,8 +316,8 @@ public class CAPCameraPlugin : CAPPlugin, UIImagePickerControllerDelegate, UINav
           " Camera will not function without it. Learn more: \(docLink.rawValue)"
       }
     }
-    
+
     return nil
   }
-  
+
 }

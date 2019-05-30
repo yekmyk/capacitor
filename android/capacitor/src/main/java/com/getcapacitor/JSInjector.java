@@ -4,8 +4,8 @@ import android.util.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -23,13 +23,7 @@ class JSInjector {
   private String localUrlJS;
 
   public JSInjector(String globalJS, String coreJS, String pluginJS) {
-    this.globalJS = globalJS;
-    this.coreJS = coreJS;
-    this.pluginJS = pluginJS;
-    this.cordovaJS = "";
-    this.cordovaPluginsJS = "";
-    this.cordovaPluginsFileJS = "";
-    this.localUrlJS = "";
+    this(globalJS, coreJS, pluginJS, "" /* cordovaJS */, "" /* cordovaPluginsJS */, "" /* cordovaPluginsFileJS */, "" /* localUrlJS */);
   }
 
   public JSInjector(String globalJS, String coreJS, String pluginJS, String cordovaJS, String cordovaPluginsJS, String cordovaPluginsFileJS, String localUrlJS) {
@@ -61,14 +55,36 @@ class JSInjector {
    * @return
    */
   public InputStream getInjectedStream(InputStream responseStream) {
-    try {
-      String js = "<script type=\"text/javascript\">" + getScriptString() + "</script>";
-      InputStream jsInputStream = new ByteArrayInputStream(js.getBytes(StandardCharsets.UTF_8.name()));
-      return new SequenceInputStream(jsInputStream, responseStream);
-    } catch(UnsupportedEncodingException ex) {
-      Log.e(LogUtils.getCoreTag(), "Unable to get encoding! Serious internal error, please file an issue", ex);
+    String js = "<script type=\"text/javascript\">" + getScriptString() + "</script>";
+    String html = this.readAssetStream(responseStream);
+    if (html.contains("<head>")) {
+      html = html.replace("<head>", "<head>\n" + js + "\n");
+    } else if (html.contains("</head>")) {
+      html = html.replace("</head>", js + "\n" + "</head>");
+    } else {
+      Log.e(LogUtils.getCoreTag(), "Unable to inject Capacitor, Plugins won't work");
     }
-    return null;
+    return new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String readAssetStream(InputStream stream) {
+    try {
+      final int bufferSize = 1024;
+      final char[] buffer = new char[bufferSize];
+      final StringBuilder out = new StringBuilder();
+      Reader in = new InputStreamReader(stream, "UTF-8");
+      for (; ; ) {
+        int rsz = in.read(buffer, 0, buffer.length);
+        if (rsz < 0)
+          break;
+        out.append(buffer, 0, rsz);
+      }
+      return out.toString();
+    } catch (Exception e) {
+      Log.e(LogUtils.getCoreTag(), "Unable to process HTML asset file. This is a fatal error", e);
+    }
+
+    return "";
   }
 
 }

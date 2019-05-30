@@ -2,10 +2,11 @@ import { Config } from './config';
 import { getJSModules, getPlatformElement, getPluginPlatform, getPlugins, getPluginType, printPlugins, Plugin, PluginType } from './plugin';
 import { copySync, ensureDirSync, readFileAsync, removeSync, writeFileAsync } from './util/fs';
 import { join, resolve } from 'path';
-import { buildXmlElement, log, logError, logFatal, logInfo, readXML, resolveNode, runCommand, writeXML } from './common';
-import { copy as fsCopy } from 'fs-extra';
+import { buildXmlElement, installDeps, log, logError, logFatal, logInfo, readXML, resolveNode, writeXML } from './common';
+import { copy as fsCopy, existsSync } from 'fs-extra';
 import { getAndroidPlugins } from './android/common';
 import { getIOSPlugins } from './ios/common';
+import { copy } from './tasks/copy';
 
 const plist = require('plist');
 const chalk = require('chalk');
@@ -14,7 +15,7 @@ const chalk = require('chalk');
  * Build the root cordova_plugins.js file referencing each Plugin JS file.
  */
 export function generateCordovaPluginsJSFile(config: Config, plugins: Plugin[], platform: string) {
-  let pluginModules: Array<string> = [];
+  let pluginModules: Array<any> = [];
   let pluginExports: Array<string> = [];
   plugins.map((p) => {
     const pluginId = p.xml.$.id;
@@ -25,9 +26,11 @@ export function generateCordovaPluginsJSFile(config: Config, plugins: Plugin[], 
       let clobbersModule = '';
       let mergesModule = '';
       let runsModule = '';
+      let clobberKey = '';
       if (jsModule.clobbers) {
         jsModule.clobbers.map((clobber: any) => {
           clobbers.push(clobber.$.target);
+          clobberKey = clobber.$.target;
         });
         clobbersModule = `,
         "clobbers": [
@@ -46,19 +49,19 @@ export function generateCordovaPluginsJSFile(config: Config, plugins: Plugin[], 
       if (jsModule.runs) {
         runsModule = ',\n        "runs": true';
       }
-      pluginModules.push(`{
+      const pluginModule = { clobber: clobberKey, pluginContent: `{
         "id": "${pluginId}.${jsModule.$.name}",
         "file": "plugins/${pluginId}/${jsModule.$.src}",
         "pluginId": "${pluginId}"${clobbersModule}${mergesModule}${runsModule}
-      }`
-      );
+      }`};
+      pluginModules.push(pluginModule);
     });
     pluginExports.push(`"${pluginId}": "${p.xml.$.version}"`);
   });
   return `
   cordova.define('cordova/plugin_list', function(require, exports, module) {
     module.exports = [
-      ${pluginModules.join(',\n      ')}
+      ${pluginModules.sort((a, b) => a.clobber.localeCompare(b.clobber)).map(e => e.pluginContent).join(',\n      ')}
     ];
     module.exports.metadata =
     // TOP OF METADATA
@@ -83,7 +86,7 @@ export async function copyPluginsJS(config: Config, cordovaPlugins: Plugin[], pl
     const pluginDir = join(pluginsDir, pluginId, 'www');
     ensureDirSync(pluginDir);
     const jsModules = getJSModules(p, platform);
-    jsModules.map(async (jsModule: any) => {
+    await Promise.all(jsModules.map(async (jsModule: any) => {
       const filePath = join(webDir, 'plugins', pluginId, jsModule.$.src);
       copySync(join(p.rootPath, jsModule.$.src), filePath);
       let data = await readFileAsync(filePath, 'utf8');
@@ -91,7 +94,7 @@ export async function copyPluginsJS(config: Config, cordovaPlugins: Plugin[], pl
       data = `cordova.define("${pluginId}.${jsModule.$.name}", function(require, exports, module) { \n${data}\n});`;
       data = data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gi, "")
       await writeFileAsync(filePath, data, 'utf8');
-    });
+    }));
   }));
   writeFileAsync(cordovaPluginsJSFile, generateCordovaPluginsJSFile(config, cordovaPlugins, platform));
 }
@@ -150,6 +153,7 @@ export async function autoGenerateConfig(config: Config, cordovaPlugins: Plugin[
   }));
   const content = `<?xml version='1.0' encoding='utf-8'?>
   <widget version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <access origin="*" />
   ${pluginEntriesString.join('\n')}
   </widget>`;
   await writeFileAsync(cordovaConfigXMLFile, content);
@@ -166,6 +170,9 @@ function getWebDir(config: Config, platform: string): string {
 }
 
 export async function handleCordovaPluginsJS(cordovaPlugins: Plugin[], config: Config, platform: string) {
+  if (!existsSync(getWebDir(config, platform))) {
+    await copy(config, platform);
+  }
   if (cordovaPlugins.length > 0) {
     printPlugins(cordovaPlugins, platform, 'cordova');
     await copyCordovaJS(config, platform);
@@ -275,7 +282,7 @@ export async function checkAndInstallDependencies(config: Config, plugins: Plugi
           }
           logInfo(`installing missing dependency plugin ${plugin}`);
           try {
-            await runCommand(`cd "${config.app.rootDir}" && npm install ${plugin}`);
+            await installDeps(config.app.rootDir, [plugin], config);
             await config.updateAppPackage();
             needsUpdate = true;
           } catch (e) {
@@ -292,5 +299,6 @@ export async function checkAndInstallDependencies(config: Config, plugins: Plugi
 export function getIncompatibleCordovaPlugins(){
   return ["cordova-plugin-statusbar", "cordova-plugin-splashscreen", "cordova-plugin-ionic-webview",
   "cordova-plugin-crosswalk-webview", "cordova-plugin-wkwebview-engine", "cordova-plugin-console",
-  "cordova-plugin-compat", "cordova-plugin-music-controls", "cordova-plugin-add-swift-support"];
+  "cordova-plugin-compat", "cordova-plugin-music-controls", "cordova-plugin-add-swift-support",
+  "cordova-plugin-ionic-keyboard", "cordova-plugin-braintree"];
 }

@@ -8,11 +8,11 @@ public class CAPHapticsPlugin: CAPPlugin {
   @objc public func impact(_ call: CAPPluginCall) {
     DispatchQueue.main.async {
       if let style = call.options["style"] as? String {
-        var impactStyle = UIImpactFeedbackStyle.heavy
+        var impactStyle = UIImpactFeedbackGenerator.FeedbackStyle.heavy
         if style == "MEDIUM" {
-          impactStyle = UIImpactFeedbackStyle.medium
+          impactStyle = UIImpactFeedbackGenerator.FeedbackStyle.medium
         } else if style == "LIGHT" {
-          impactStyle = UIImpactFeedbackStyle.light
+          impactStyle = UIImpactFeedbackGenerator.FeedbackStyle.light
         }
         
         let generator = UIImpactFeedbackGenerator(style: impactStyle)
@@ -21,6 +21,23 @@ public class CAPHapticsPlugin: CAPPlugin {
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
       }
+    }
+  }
+
+  @objc public func notification(_ call: CAPPluginCall) {
+      DispatchQueue.main.async {
+        let generator = UINotificationFeedbackGenerator()
+        if let type = call.options["type"] as? String {
+          var notificationType = UINotificationFeedbackGenerator.FeedbackType.success
+          if type == "WARNING" {
+                notificationType = UINotificationFeedbackGenerator.FeedbackType.warning
+          } else if type == "ERROR" {
+            notificationType = UINotificationFeedbackGenerator.FeedbackType.error
+          }
+          generator.notificationOccurred(notificationType)
+        } else {
+          generator.notificationOccurred(.success)
+        }
     }
   }
   

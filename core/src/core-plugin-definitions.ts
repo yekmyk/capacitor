@@ -1,30 +1,32 @@
 import { Plugin, PluginListenerHandle } from './definitions';
 
-declare global {
-  interface PluginRegistry {
-    Accessibility?: AccessibilityPlugin;
-    App?: AppPlugin;
-    BackgroundTask?: BackgroundTaskPlugin;
-    Browser?: BrowserPlugin;
-    Camera?: CameraPlugin;
-    Clipboard?: ClipboardPlugin;
-    Device?: DevicePlugin;
-    Filesystem?: FilesystemPlugin;
-    Geolocation?: GeolocationPlugin;
-    Haptics?: HapticsPlugin;
-    Keyboard?: KeyboardPlugin;
-    LocalNotifications?: LocalNotificationsPlugin;
-    Modals?: ModalsPlugin;
-    Motion?: MotionPlugin;
-    Network?: NetworkPlugin;
-    Photos?: PhotosPlugin;
-    PushNotifications?: PushNotificationsPlugin;
-    Share?: SharePlugin;
-    SplashScreen?: SplashScreenPlugin;
-    StatusBar?: StatusBarPlugin;
-    Storage?: StoragePlugin;
-    Toast?: ToastPlugin;
-    WebView?: WebViewPlugin;
+export interface PluginRegistry {
+  Accessibility: AccessibilityPlugin;
+  App: AppPlugin;
+  BackgroundTask: BackgroundTaskPlugin;
+  Browser: BrowserPlugin;
+  Camera: CameraPlugin;
+  Clipboard: ClipboardPlugin;
+  Device: DevicePlugin;
+  Filesystem: FilesystemPlugin;
+  Geolocation: GeolocationPlugin;
+  Haptics: HapticsPlugin;
+  Keyboard: KeyboardPlugin;
+  LocalNotifications: LocalNotificationsPlugin;
+  Modals: ModalsPlugin;
+  Motion: MotionPlugin;
+  Network: NetworkPlugin;
+  Photos: PhotosPlugin;
+  PushNotifications: PushNotificationsPlugin;
+  Share: SharePlugin;
+  SplashScreen: SplashScreenPlugin;
+  StatusBar: StatusBarPlugin;
+  Storage: StoragePlugin;
+  Toast: ToastPlugin;
+  WebView: WebViewPlugin;
+
+  [pluginName: string]: {
+    [prop: string]: any;
   }
 }
 
@@ -85,7 +87,7 @@ export interface AppPlugin extends Plugin {
   /**
    * Force exit the app. This should only be used in conjunction with the `backButton` handler for Android to
    * exit the app when navigation is complete.
-   * 
+   *
    * Ionic handles this itself so you shouldn't need to call this if using Ionic
    */
   exitApp(): never;
@@ -180,10 +182,10 @@ export interface BackgroundTaskPlugin extends Plugin {
    * can finish any work your app needs to do (such as finishing an upload
    * or network request). This is especially important on iOS as any operations
    * would normally be suspended without initiating a background task.
-   * 
+   *
    * This method should finish in less than 3 minutes or your app risks
    * being terminated by the OS.
-   * 
+   *
    * When you are finished, this callback _must_ call `BackgroundTask.finish({ taskId })`
    * where `taskId` is the value returned from `BackgroundTask.beforeExit()`
    * @param cb the task to run when the app is backgrounded but before it is terminated
@@ -270,7 +272,7 @@ export interface CameraOptions {
    */
   allowEditing?: boolean;
   /**
-   * How the data should be returned. Currently, only 'base64' or 'uri' is supported
+   * How the data should be returned. Currently, only 'Base64', 'DataUrl' or 'Uri' is supported
    */
   resultType: CameraResultType;
   /**
@@ -322,9 +324,13 @@ export enum CameraDirection {
 
 export interface CameraPhoto {
   /**
-   * The base64 encoded data of the image, if using CameraResultType.Base64.
+   * The base64 encoded string representation of the image, if using CameraResultType.Base64.
    */
-  base64Data?: string;
+  base64String?: string;
+  /**
+   * The url starting with 'data:image/jpeg;base64,' and the base64 encoded string representation of the image, if using CameraResultType.DataUrl.
+   */
+  dataUrl?: string;
   /**
    * If using CameraResultType.Uri, the path will contain a full,
    * platform-specific file URL that can be read later using the Filsystem API.
@@ -347,7 +353,8 @@ export interface CameraPhoto {
 
 export enum CameraResultType {
   Uri = 'uri',
-  Base64 = 'base64'
+  Base64 = 'base64',
+  DataUrl = 'dataUrl'
 }
 
 //
@@ -397,9 +404,9 @@ export interface DeviceInfo {
    */
   model: string;
   /**
-   * The device platform (lowercase). For example, "ios", "android", or "web"
+   * The device platform (lowercase).
    */
-  platform: string;
+  platform: 'ios' | 'android' | 'electron' | 'web';
   /**
    * The UUID of the device as available to the app. This identifier may change
    * on modern mobile platforms that only allow per-app install UUIDs.
@@ -721,12 +728,29 @@ export interface GeolocationPlugin extends Plugin {
 
 export interface GeolocationPosition {
   /**
+   * Creation timestamp for coords
+   */
+  timestamp: number;
+  /**
    * The GPS coordinates along with the accuracy of the data
    */
   coords: {
+    /**
+     * Latitude in decimal degrees
+     */
     latitude: number;
+    /**
+     * longitude in decimal degrees
+     */
     longitude: number;
+    /**
+     * Accuracy level of the latitude and longitude coordinates in meters
+     */
     accuracy: number;
+    /**
+     * Accuracy level of the altitude coordinate in meters (if available)
+     */
+    altitudeAccuracy?: number;
     /**
      * The altitude the user is at (if available)
      */
@@ -769,6 +793,10 @@ export interface HapticsPlugin extends Plugin {
    */
   impact(options: HapticsImpactOptions): void;
   /**
+   * Trigger a haptics "notification" feedback
+   */
+  notification(options: HapticsNotificationOptions): void;
+  /**
    * Vibrate the device
    */
   vibrate(): void;
@@ -799,6 +827,16 @@ export enum HapticsImpactStyle {
   Light = 'LIGHT'
 }
 
+export interface HapticsNotificationOptions {
+  type: HapticsNotificationType;
+}
+
+export enum HapticsNotificationType {
+  SUCCESS = 'SUCCESS',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR'
+}
+
 export interface VibrateOptions {
   duration?: number;
 }
@@ -819,13 +857,21 @@ export interface KeyboardPlugin extends Plugin {
    * the accessory bar for short forms (login, signup, etc.) to provide a cleaner UI
    */
   setAccessoryBarVisible(options: { isVisible: boolean }): Promise<void>;
+
+  addListener(eventName: 'keyboardWillShow', listenerFunc: (info: KeyboardInfo) => void): PluginListenerHandle;
+  addListener(eventName: 'keyboardDidShow', listenerFunc: (info: KeyboardInfo) => void): PluginListenerHandle;
+  addListener(eventName: 'keyboardWillHide', listenerFunc: () => void): PluginListenerHandle;
+  addListener(eventName: 'keyboardDidHide', listenerFunc: () => void): PluginListenerHandle;
+}
+
+export interface KeyboardInfo {
+  keyboardHeight: number;
 }
 
 //
 
 export interface LocalNotificationRequest {
   id: string;
-  options: any;
 }
 
 export interface LocalNotificationPendingList {
@@ -864,7 +910,7 @@ export interface LocalNotificationAttachment {
 
 export interface LocalNotificationAttachmentOptions {
   iosUNNotificationAttachmentOptionsTypeHintKey?: string;
-  iosUNNotificationAttachmentOptionsThumbnailHiddenKey?: string; 
+  iosUNNotificationAttachmentOptionsThumbnailHiddenKey?: string;
   iosUNNotificationAttachmentOptionsThumbnailClippingRectKey?: string;
   iosUNNotificationAttachmentOptionsThumbnailTimeKey?: string;
 }
@@ -896,7 +942,7 @@ export interface LocalNotificationSchedule {
 export interface LocalNotificationActionPerformed {
   actionId: string;
   inputValue?: string;
-  notificationRequest: any;
+  notification: LocalNotification;
 }
 
 export interface LocalNotificationEnabledResult {
@@ -913,7 +959,7 @@ export interface LocalNotificationsPlugin extends Plugin {
   cancel(pending: LocalNotificationPendingList): Promise<void>;
   areEnabled(): Promise<LocalNotificationEnabledResult>;
   addListener(eventName: 'localNotificationReceived', listenerFunc: (notification: LocalNotification) => void): PluginListenerHandle;
-  addListener(eventName: 'localNotificationActionPerformed', listenerFunc: (notification: LocalNotificationActionPerformed) => void): PluginListenerHandle;
+  addListener(eventName: 'localNotificationActionPerformed', listenerFunc: (notificationAction: LocalNotificationActionPerformed) => void): PluginListenerHandle;
 }
 
 
@@ -1245,16 +1291,18 @@ export interface PushNotification {
   title?: string;
   subtitle?: string;
   body?: string;
-  id?: string;
+  id: string;
   badge?: number;
   notification?: any;
-  data?: any;
+  data: any;
+  click_action?: string;
+  link?: string;
 }
 
 export interface PushNotificationActionPerformed {
   actionId: string;
   inputValue?: string;
-  notificationRequest: any;
+  notification: PushNotification;
 }
 
 export interface PushNotificationToken {
@@ -1379,6 +1427,10 @@ export interface StatusBarPlugin extends Plugin {
    *  Hide the status bar
    */
   hide(): Promise<void>;
+  /**
+   *  Get info about the current state of the status bar
+   */
+  getInfo(): Promise<StatusBarInfoResult>;
 }
 
 export interface StatusBarStyleOptions {
@@ -1386,7 +1438,13 @@ export interface StatusBarStyleOptions {
 }
 
 export enum StatusBarStyle {
+  /**
+   * Light text for dark backgrounds.
+   */
   Dark = 'DARK',
+  /**
+   * Dark text for light backgrounds.
+   */
   Light = 'LIGHT'
 }
 
@@ -1394,11 +1452,17 @@ export interface StatusBarBackgroundColorOptions {
   color: string;
 }
 
+export interface StatusBarInfoResult {
+  visible: boolean;
+  style: StatusBarStyle;
+  color?: string;
+}
+
 export interface StoragePlugin extends Plugin {
   /**
    * Get the value with the given key.
    */
-  get(options: { key: string }): Promise<{ value: string }>;
+  get(options: { key: string }): Promise<{ value: string | null }>;
   /**
    * Set the value for the given key
    */

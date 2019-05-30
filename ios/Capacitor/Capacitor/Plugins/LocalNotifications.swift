@@ -115,7 +115,7 @@ public class CAPLocalNotificationsPlugin : CAPPlugin {
       print(notifications)
       
       let ret = notifications.map({ (notification) -> [String:Any] in
-        return self.bridge.notificationsDelegate.makeNotificationRequestJSObject(notification)
+        return self.bridge.notificationsDelegate.makePendingNotificationRequestJSObject(notification)
       })
       call.success([
         "notifications": ret
@@ -164,18 +164,20 @@ public class CAPLocalNotificationsPlugin : CAPPlugin {
     let actionTypeId = notification["actionTypeId"] as? String
     let sound = notification["sound"] as? String
     let attachments = notification["attachments"] as? JSArray
+    let extra = notification["extra"] as? JSObject ?? [:]
     
     let content = UNMutableNotificationContent()
     content.title = NSString.localizedUserNotificationString(forKey: title, arguments: nil)
     content.body = NSString.localizedUserNotificationString(forKey: body,
                                                             arguments: nil)
     
+    content.userInfo = extra
     if actionTypeId != nil {
       content.categoryIdentifier = actionTypeId!
     }
     
     if sound != nil {
-      content.sound = UNNotificationSound(named: sound!)
+      content.sound = UNNotificationSound(named: UNNotificationSoundName(sound!))
     }
     
     if attachments != nil {

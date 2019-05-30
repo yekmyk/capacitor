@@ -2,9 +2,6 @@
 //  ViewController.swift
 //  IonicRunner
 //
-//  Created by Max Lynch on 3/22/17.
-//  Copyright © 2017 Max Lynch. All rights reserved.
-//
 
 import UIKit
 import WebKit
@@ -29,18 +26,21 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
   private var statusBarStyle: UIStatusBarStyle = .default
   @objc public var supportedOrientations: Array<Int> = []
   
+  @objc public var startDir = ""
+
   // Construct the Capacitor runtime
   public var bridge: CAPBridge?
-  
+  private var handler: CAPAssetHandler?
   
   override public func loadView() {
     setStatusBarDefaults()
     setScreenOrientationDefaults()
 
+    HTTPCookieStorage.shared.cookieAcceptPolicy = HTTPCookie.AcceptPolicy.always
     let webViewConfiguration = WKWebViewConfiguration()
-
-    webViewConfiguration.setURLSchemeHandler(CAPAssetHandler(), forURLScheme: CAPBridge.CAP_SCHEME)
-    webViewConfiguration.setURLSchemeHandler(CAPAssetHandler(), forURLScheme: CAPBridge.CAP_FILE_SCHEME)
+    self.handler = CAPAssetHandler()
+    self.handler!.setAssetPath(self.getStartPath())
+    webViewConfiguration.setURLSchemeHandler(self.handler, forURLScheme: CAPBridge.CAP_SCHEME)
     
     let o = WKUserContentController()
     o.add(self, name: "bridge")
@@ -56,8 +56,6 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     
     webView?.uiDelegate = self
     webView?.navigationDelegate = self
-    //If you want to implement the delegate
-    //webView?.navigationDelegate = self
     webView?.configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
     view = webView
     
@@ -69,25 +67,44 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     }
   }
   
+  private func getStartPath() -> String {
+    let fullStartPath = URL(fileURLWithPath: "public").appendingPathComponent(startDir)
+    guard var startPath = Bundle.main.path(forResource: fullStartPath.relativePath, ofType: nil) else {
+      fatalLoadError()
+    }
+
+    let defaults = UserDefaults.standard
+    let persistedPath = defaults.string(forKey: "serverBasePath")
+    if (persistedPath != nil && !persistedPath!.isEmpty) {
+      let libPath = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true)[0]
+      let cordovaDataDirectory = (libPath as NSString).appendingPathComponent("NoCloud")
+      let snapshots = (cordovaDataDirectory as NSString).appendingPathComponent("ionic_built_snapshots")
+      startPath = (snapshots as NSString).appendingPathComponent((persistedPath! as NSString).lastPathComponent)
+    }
+    self.basePath = startPath
+    return startPath
+  }
+
   override public func viewDidLoad() {
     super.viewDidLoad()
     self.becomeFirstResponder()
-    
     loadWebView()
-    bridge!.didLoad()
   }
-  
-  public override func viewWillAppear(_ animated: Bool) {
-    bridge!.willAppear()
+
+  func fatalLoadError() -> Never {
+    let fullStartPath = URL(fileURLWithPath: "public").appendingPathComponent(startDir)
+
+    print("⚡️  FATAL ERROR: Unable to load \(fullStartPath.relativePath)/index.html")
+    print("⚡️  This file is the root of your web app and must exist before")
+    print("⚡️  Capacitor can run. Ensure you've run capacitor copy at least")
+    print("⚡️  or, if embedding, that this directory exists as a resource directory.")
+    exit(1)
   }
-  
+
   func loadWebView() {
-    if Bundle.main.path(forResource: "public/index", ofType: "html") == nil {
-      print("⚡️  FATAL ERROR: Unable to load public/index.html")
-      print("⚡️  This file is the root of your web app and must exist before")
-      print("⚡️  Capacitor can run. Ensure you've run capacitor copy at least once")
-      
-      exit(1)
+    let fullStartPath = URL(fileURLWithPath: "public").appendingPathComponent(startDir).appendingPathComponent("index")
+    if Bundle.main.path(forResource: fullStartPath.relativePath, ofType: "html") == nil {
+      fatalLoadError()
     }
 
     hostname = CAPConfig.getString("server.url") ?? "\(bridge!.getLocalUrl())"
@@ -100,9 +117,8 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
   }
 
   func setServerPath(path: String) {
-
     self.basePath = path
-
+    self.handler?.setAssetPath(path)
   }
 
   public func setStatusBarDefaults() {
@@ -149,7 +165,7 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     configuration.allowsInlineMediaPlayback = true
     configuration.suppressesIncrementalRendering = false
     configuration.allowsAirPlayForMediaPlayback = true
-    //configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone
+    configuration.mediaTypesRequiringUserActionForPlayback = []
   }
 
   public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
@@ -158,6 +174,7 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
   }
 
   public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    NotificationCenter.default.post(name: Notification.Name(CAPNotifications.DecidePolicyForNavigationAction.name()), object: navigationAction)
     let navUrl = navigationAction.request.url!
     if let allowNavigation = allowNavigationConfig, let requestHost = navUrl.host {
       for pattern in allowNavigation {
@@ -167,13 +184,11 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
         }
       }
     }
-    if let scheme = navUrl.scheme {
-      let validSchemes = ["tel", "mailto", "facetime", "sms", "maps", "itms-services", "http", "https"]
-      if validSchemes.contains(scheme) && navUrl.absoluteString.range(of: hostname!) == nil && (navigationAction.targetFrame == nil || (navigationAction.targetFrame?.isMainFrame)!) {
-        UIApplication.shared.open(navUrl, options: [:], completionHandler: nil)
-        decisionHandler(.cancel)
-        return
-      }
+
+    if navUrl.absoluteString.range(of: hostname!) == nil && (navigationAction.targetFrame == nil || (navigationAction.targetFrame?.isMainFrame)!) {
+      UIApplication.shared.open(navUrl, options: [:], completionHandler: nil)
+      decisionHandler(.cancel)
+      return
     }
 
     // TODO: Allow plugins to handle this. See
@@ -193,6 +208,10 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
   public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
     print("⚡️  WebView failed provisional navigation")
     print("⚡️  Error: " + error.localizedDescription)
+  }
+
+  public func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    webView.reload()
   }
 
   public override func canPerformUnwindSegueAction(_ action: Selector, from fromViewController: UIViewController, withSender sender: Any) -> Bool {
@@ -217,6 +236,7 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
 
     let oldSelector: Selector = sel_getUid("_startAssistingNode:userIsInteracting:blurPreviousNode:userObject:")
     let newSelector: Selector = sel_getUid("_startAssistingNode:userIsInteracting:blurPreviousNode:changingActivityState:userObject:")
+    let newerSelector: Selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:changingActivityState:userObject:")
 
     if let method = class_getInstanceMethod(wkc, oldSelector) {
       let originalImp: IMP = method_getImplementation(method)
@@ -229,14 +249,22 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
     }
 
     if let method = class_getInstanceMethod(wkc, newSelector) {
-      let originalImp: IMP = method_getImplementation(method)
-      let original: NewClosureType = unsafeBitCast(originalImp, to: NewClosureType.self)
-      let block : @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
-        original(me, newSelector, arg0, !value, arg2, arg3, arg4)
-      }
-      let imp: IMP = imp_implementationWithBlock(block)
-      method_setImplementation(method, imp)
+      self.swizzleAutofocusMethod(method, newSelector, value)
     }
+
+    if let method = class_getInstanceMethod(wkc, newerSelector) {
+      self.swizzleAutofocusMethod(method, newerSelector, value)
+    }
+  }
+
+  func swizzleAutofocusMethod(_ method: Method, _ selector: Selector, _ value: Bool) {
+    let originalImp: IMP = method_getImplementation(method)
+    let original: NewClosureType = unsafeBitCast(originalImp, to: NewClosureType.self)
+    let block : @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
+      original(me, selector, arg0, !value, arg2, arg3, arg4)
+    }
+    let imp: IMP = imp_implementationWithBlock(block)
+    method_setImplementation(method, imp)
   }
 
   func handleJSStartupError(_ error: [String:Any]) {
@@ -281,21 +309,6 @@ public class CAPBridgeViewController: UIViewController, CAPBridgeDelegate, WKScr
   override public func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     // Dispose of any resources that can be recreated.
-  }
-
-  override public func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
-    if bridge != nil {
-      if motion == .motionShake && bridge!.isDevMode() {
-        bridge!.showDevMode()
-      }
-    }
-  }
-
-  // We are willing to become first responder to get shake motion
-  override public var canBecomeFirstResponder: Bool {
-    get {
-      return true
-    }
   }
 
   override public var prefersStatusBarHidden: Bool {

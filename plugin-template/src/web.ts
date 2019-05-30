@@ -11,10 +11,13 @@ export class MyPluginWeb extends WebPlugin implements MyPluginPlugin {
 
   async echo(options: { value: string }): Promise<{value: string}> {
     console.log('ECHO', options);
-    return Promise.resolve({ value: options.value });
+    return options;
   }
 }
 
 const MyPlugin = new MyPluginWeb();
 
 export { MyPlugin };
+
+import { registerWebPlugin } from '@capacitor/core';
+registerWebPlugin(MyPlugin);

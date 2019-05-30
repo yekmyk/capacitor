@@ -32,9 +32,12 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 /**
  * Common File utilities, such as resolve content URIs and
@@ -42,7 +45,7 @@ import java.io.File;
  */
 public class FileUtils {
 
-  private static String CapacitorFileScheme = Bridge.CAPACITOR_FILE_SCHEME_NAME + "://";
+  private static String CapacitorFileScheme = Bridge.CAPACITOR_FILE_START;
 
   public enum Type {
     IMAGE("image");
@@ -52,14 +55,14 @@ public class FileUtils {
     }
   }
 
-  public static String getPortablePath(Context c, Uri u) {
+  public static String getPortablePath(Context c, String host, Uri u) {
     String path = getFileUrlForUri(c, u);
     if (path.startsWith("file://")) {
-      path = path.replace("file://", CapacitorFileScheme);
+      path = path.replace("file://", "");
     } else if (path.startsWith("/")) {
-      path = CapacitorFileScheme + path;
+      path = path;
     }
-    return path;
+    return host + Bridge.CAPACITOR_FILE_START + path;
   }
 
   public static String getFileUrlForUri(final Context context, final Uri uri) {
@@ -128,7 +131,6 @@ public class FileUtils {
       // Return the remote address
       if (isGooglePhotosUri(uri))
         return uri.getLastPathSegment();
-
       return getDataColumn(context, uri, null, null);
     }
     // File
@@ -151,7 +153,7 @@ public class FileUtils {
    */
   private static String getDataColumn(Context context, Uri uri, String selection,
                                       String[] selectionArgs) {
-
+    String path = null;
     Cursor cursor = null;
     final String column = "_data";
     final String[] projection = {
@@ -163,13 +165,45 @@ public class FileUtils {
           null);
       if (cursor != null && cursor.moveToFirst()) {
         final int index = cursor.getColumnIndexOrThrow(column);
-        return cursor.getString(index);
+        path = cursor.getString(index);
       }
+    } catch (IllegalArgumentException ex) {
+      return getCopyFilePath(uri, context);
     } finally {
       if (cursor != null)
         cursor.close();
     }
-    return null;
+    if (path == null) {
+      return getCopyFilePath(uri, context);
+    }
+    return path;
+  }
+
+  private static String getCopyFilePath(Uri uri, Context context) {
+    Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+    cursor.moveToFirst();
+    String name = (cursor.getString(nameIndex));
+    File file = new File(context.getFilesDir(), name);
+    try {
+      InputStream inputStream = context.getContentResolver().openInputStream(uri);
+      FileOutputStream outputStream = new FileOutputStream(file);
+      int read = 0;
+      int maxBufferSize = 1024 * 1024;
+      int bufferSize = Math.min(inputStream.available(), maxBufferSize);
+      final byte[] buffers = new byte[bufferSize];
+      while ((read = inputStream.read(buffers)) != -1) {
+        outputStream.write(buffers, 0, read);
+      }
+      inputStream.close();
+      outputStream.close();
+    } catch (Exception e) {
+      return null;
+    } finally {
+      if (cursor != null)
+        cursor.close();
+    }
+    return file.getPath();
   }
 
 

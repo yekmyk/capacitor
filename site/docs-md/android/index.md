@@ -1,10 +1,19 @@
+---
+title: Capacitor Android Documentation
+description: Capacitor Android Documentation
+url: /docs/android
+contributors:
+  - mlynch
+  - jcesarmobile
+---
+
 # Capacitor Android Documentation
 
-Capacitor features a native Android runtime that enables developers to communicate between JavaScript and Native Java for Android code.
+<p class="intro">Capacitor features a native Android runtime that enables developers to communicate between JavaScript and Native Java for Android code.</p>
 
-Capacitor Android apps are configured and managed through Android Studio (generally).
+<p class="intro">Capacitor Android apps are configured and managed through Android Studio (generally).</p>
 
-Follow these guides for more information on each topic:
+<p class="intro">Follow these guides for more information on each topic:</p>
 
 ## Getting Started
 
@@ -43,7 +52,7 @@ npx cap open android
 ```
 
 ### Running Your App
-> __Note:__ Currently to use an Android Emulator you must use a system image of at least Android version 7.0 on API 24. This is due to the System WebView version not being able to be updated on emulators. Physical devices should work as low as Android 5.1 so long as they are kept updated.
+> __Note:__ Currently to use an Android Emulator you must use a system image of at least Android version 7.0 on API 24. This is due to the System WebView version not being able to be updated on emulators. Physical devices should work as low as Android 5.0 (API 21) as long as their System WebView is updated.
 
 Once Android Studio is open, you should be able to run your app on a device or emulator. Go to Run or Debug in the Run menu:
 
@@ -62,6 +71,6 @@ If your app ran you are now ready to continue developing and building your app. 
 Follow these Android-specific guides for more information on setting permissions for your app, updating dependencies, building
 plugins, and more:
 
-[Configuring and setting permissions for Android](./configuration)
+[Configuring and setting permissions for Android &#8250;](./configuration)
 
-[Building Native Plugins for Android](../plugins)
+[Building Native Plugins for Android &#8250;](../plugins)

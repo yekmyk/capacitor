@@ -1,3 +1,12 @@
+---
+title: Storage
+description: Storage API
+url: /docs/apis/storage
+contributors:
+  - mlynch
+  - jcesarmobile
+---
+
 <plugin-platforms platforms="pwa,ios,android,electron"></plugin-platforms>
 
 # Storage
@@ -33,7 +42,8 @@ async setObject() {
 
 // JSON "get" example
 async getObject() {
-  const user = JSON.parse(await Storage.get({ key: 'user' }));
+  const ret = await Storage.get({ key: 'user' });
+  const user = JSON.parse(ret.value);
 }
 
 async setItem() {

@@ -1,3 +1,12 @@
+---
+title: Status Bar
+description: Status Bar API
+url: /docs/apis/status-bar
+contributors:
+  - mlynch
+  - jcesarmobile
+---
+
 <plugin-platforms platforms="ios,android"></plugin-platforms>
 
 # Status Bar
@@ -38,7 +47,7 @@ export class StatusBarExample {
   changeStatusBar() {
     StatusBar.setStyle({
       style: this.isStatusBarLight ? StatusBarStyle.Dark : StatusBarStyle.Light
-    }, () => {});
+    });
     this.isStatusBarLight = !this.isStatusBarLight;
   }
 

@@ -42,14 +42,32 @@ public class CAPUNUserNotificationCenterDelegate : NSObject, UNUserNotificationC
     let request = notification.request
     var plugin: CAPPlugin
     var action = "localNotificationReceived"
-    print(notification)
+    var presentationOptions: UNNotificationPresentationOptions = [];
+
     var notificationData = makeNotificationRequestJSObject(request)
-    if (request.trigger?.isKind(of: UNPushNotificationTrigger.self))! {
+    if (request.trigger?.isKind(of: UNPushNotificationTrigger.self) ?? false) {
       plugin = (self.bridge?.getOrLoadPlugin(pluginName: "PushNotifications"))!
+      let options = plugin.getConfigValue("presentationOptions") as? [String] ?? ["badge"]
+
       action = "pushNotificationReceived"
+      if options.contains("alert") {
+        presentationOptions.update(with: .alert)
+      }
+      if options.contains("badge") {
+        presentationOptions.update(with: .badge)
+      }
+      if options.contains("sound") {
+        presentationOptions.update(with: .sound)
+      }
       notificationData = makePushNotificationRequestJSObject(request)
+
     } else {
       plugin = (self.bridge?.getOrLoadPlugin(pluginName: "LocalNotifications"))!
+      presentationOptions = [
+        .badge,
+        .sound,
+        .alert
+      ]
     }
 
     plugin.notifyListeners(action, data: notificationData)
@@ -62,11 +80,7 @@ public class CAPUNUserNotificationCenterDelegate : NSObject, UNUserNotificationC
       }
     }
 
-    if (self.bridge?.isAppActive())! {
-      completionHandler([.badge, .sound, .alert])
-    } else {
-      completionHandler([.badge, .sound])
-    }
+    completionHandler(presentationOptions)
   }
 
   /**
@@ -102,16 +116,25 @@ public class CAPUNUserNotificationCenterDelegate : NSObject, UNUserNotificationC
     var plugin: CAPPlugin
     var action = "localNotificationActionPerformed"
 
-    if (originalNotificationRequest.trigger?.isKind(of: UNPushNotificationTrigger.self))! {
+    if (originalNotificationRequest.trigger?.isKind(of: UNPushNotificationTrigger.self) ?? false) {
       plugin = (self.bridge?.getOrLoadPlugin(pluginName: "PushNotifications"))!
-      data["notificationRequest"] = makePushNotificationRequestJSObject(originalNotificationRequest)
+      data["notification"] = makePushNotificationRequestJSObject(originalNotificationRequest)
       action = "pushNotificationActionPerformed"
     } else {
-      data["notificationRequest"] = makeNotificationRequestJSObject(originalNotificationRequest)
+      data["notification"] = makeNotificationRequestJSObject(originalNotificationRequest)
       plugin = (self.bridge?.getOrLoadPlugin(pluginName: "LocalNotifications"))!
     }
 
-    plugin.notifyListeners(action, data: data)
+    plugin.notifyListeners(action, data: data, retainUntilConsumed: true)
+  }
+
+  /**
+   * Make a JSObject of pending notifications.
+   */
+  func makePendingNotificationRequestJSObject(_ request: UNNotificationRequest) -> JSObject {
+    return [
+      "id": request.identifier,
+    ]
   }
 
   /**
@@ -119,10 +142,14 @@ public class CAPUNUserNotificationCenterDelegate : NSObject, UNUserNotificationC
    */
   func makeNotificationRequestJSObject(_ request: UNNotificationRequest) -> JSObject {
     let notificationRequest = notificationRequestLookup[request.identifier] ?? [:]
-
     return [
       "id": request.identifier,
-      "extra": notificationRequest["extra"] ?? [:]
+      "title": request.content.title,
+      "sound": notificationRequest["sound"]  ?? "",
+      "body": request.content.body,
+      "extra": request.content.userInfo,
+      "actionTypeId": request.content.categoryIdentifier,
+      "attachments": notificationRequest["attachments"]  ?? [],
     ]
   }
 
@@ -136,7 +163,8 @@ public class CAPUNUserNotificationCenterDelegate : NSObject, UNUserNotificationC
       "title": content.title,
       "subtitle": content.subtitle,
       "body": content.body,
-      "badge": content.badge ?? 1
+      "badge": content.badge ?? 1,
+      "data": content.userInfo,
     ]
   }
 

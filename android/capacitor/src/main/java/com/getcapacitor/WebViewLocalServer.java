@@ -49,6 +49,7 @@ public class WebViewLocalServer {
   private final static String capacitorFileStart = Bridge.CAPACITOR_FILE_START;
   private final static String capacitorContentStart = Bridge.CAPACITOR_CONTENT_START;
   private String basePath;
+  private String indexFile = "index.html";
 
   private final UriMatcher uriMatcher;
   private final AndroidProtocolHandler protocolHandler;
@@ -126,6 +127,16 @@ public class WebViewLocalServer {
     public Map<String, String> getResponseHeaders() {
       return responseHeaders;
     }
+  }
+
+  WebViewLocalServer(Context context, Bridge bridge, JSInjector jsInjector, ArrayList<String> authorities, boolean html5mode, String indexFile) {
+    this.indexFile = indexFile;
+    uriMatcher = new UriMatcher(null);
+    this.html5mode = html5mode;
+    this.protocolHandler = new AndroidProtocolHandler(context.getApplicationContext());
+    this.authorities = authorities;
+    this.bridge = bridge;
+    this.jsInjector = jsInjector;
   }
 
   WebViewLocalServer(Context context, Bridge bridge, JSInjector jsInjector, ArrayList<String> authorities, boolean html5mode) {
@@ -232,7 +243,7 @@ public class WebViewLocalServer {
     if (path.equals("/") || (!request.getUrl().getLastPathSegment().contains(".") && html5mode)) {
       InputStream responseStream;
       try {
-        String startPath = this.basePath + "/index.html";
+        String startPath = this.basePath + "/" + indexFile;
         if (isAsset) {
           responseStream = protocolHandler.openAsset(startPath);
         } else {

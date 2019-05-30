@@ -20,27 +20,7 @@ import android.webkit.WebViewClient;
 import android.content.SharedPreferences;
 
 import com.getcapacitor.android.BuildConfig;
-import com.getcapacitor.plugin.Accessibility;
 import com.getcapacitor.plugin.App;
-import com.getcapacitor.plugin.Browser;
-import com.getcapacitor.plugin.Camera;
-import com.getcapacitor.plugin.Clipboard;
-import com.getcapacitor.plugin.Console;
-import com.getcapacitor.plugin.Device;
-import com.getcapacitor.plugin.Filesystem;
-import com.getcapacitor.plugin.Geolocation;
-import com.getcapacitor.plugin.Haptics;
-import com.getcapacitor.plugin.Keyboard;
-import com.getcapacitor.plugin.LocalNotifications;
-import com.getcapacitor.plugin.Modals;
-import com.getcapacitor.plugin.Network;
-import com.getcapacitor.plugin.Photos;
-import com.getcapacitor.plugin.PushNotifications;
-import com.getcapacitor.plugin.Share;
-import com.getcapacitor.plugin.SplashScreen;
-import com.getcapacitor.plugin.StatusBar;
-import com.getcapacitor.plugin.Storage;
-import com.getcapacitor.plugin.background.BackgroundTask;
 import com.getcapacitor.ui.Toast;
 import com.getcapacitor.util.HostMask;
 
@@ -133,7 +113,7 @@ public class Bridge {
    * @param context
    * @param webView
    */
-  public Bridge(Activity context, WebView webView, List<Class<? extends Plugin>> initialPlugins, CordovaInterfaceImpl cordovaInterface, PluginManager pluginManager) {
+  public Bridge(Activity context, WebView webView, List<Class<? extends Plugin>> initialPlugins, CordovaInterfaceImpl cordovaInterface, PluginManager pluginManager, String indexPath) {
     this.context = context;
     this.webView = webView;
     this.initialPlugins = initialPlugins;
@@ -156,10 +136,10 @@ public class Bridge {
     // Register our core plugins
     // this.registerAllPlugins();
 
-    this.loadWebView();
+    this.loadWebView(indexPath);
   }
 
-  private void loadWebView() {
+  private void loadWebView(String indexPath) {
     appUrlConfig = Config.getString("server.url");
     String[] appAllowNavigationConfig = Config.getArray("server.allowNavigation");
 
@@ -188,7 +168,7 @@ public class Bridge {
     final boolean html5mode = Config.getBoolean("server.html5mode", true);
 
     // Start the local web server
-    localServer = new WebViewLocalServer(context, this, getJSInjector(), authorities, html5mode);
+    localServer = new WebViewLocalServer(context, this, getJSInjector(), authorities, html5mode, indexPath);
     localServer.hostAssets(DEFAULT_WEB_ASSET_DIR);
 
 
@@ -332,30 +312,6 @@ public class Bridge {
    * Register our core Plugin APIs
    */
   private void registerAllPlugins() {
-    /* this.registerPlugin(App.class);
-    this.registerPlugin(Accessibility.class);
-    this.registerPlugin(BackgroundTask.class);
-    this.registerPlugin(Browser.class);
-    this.registerPlugin(Camera.class);
-    this.registerPlugin(Clipboard.class);
-    this.registerPlugin(Console.class);
-    this.registerPlugin(Device.class);
-    this.registerPlugin(LocalNotifications.class);
-    this.registerPlugin(Filesystem.class);
-    this.registerPlugin(Geolocation.class);
-    this.registerPlugin(Haptics.class);
-    this.registerPlugin(Keyboard.class);
-    this.registerPlugin(Modals.class);
-    this.registerPlugin(Network.class);
-    this.registerPlugin(Photos.class);
-    this.registerPlugin(PushNotifications.class);
-    this.registerPlugin(Share.class);
-    this.registerPlugin(SplashScreen.class);
-    this.registerPlugin(StatusBar.class);
-    this.registerPlugin(Storage.class);
-    this.registerPlugin(com.getcapacitor.plugin.Toast.class);
-    this.registerPlugin(com.getcapacitor.plugin.WebView.class);*/
-
     for (Class<? extends Plugin> pluginClass : this.initialPlugins) {
       this.registerPlugin(pluginClass);
     }
@@ -855,5 +811,19 @@ public class Bridge {
 
   public WebViewLocalServer getLocalServer() {
     return localServer;
+  }
+
+  private void injectScriptFile(WebView view, String script) {
+
+    // Base64 encode string before injecting as innerHTML
+    String encoded = Base64.encodeToString(script.getBytes(), Base64.NO_WRAP);
+    view.loadUrl("javascript:(function() {" +
+            "var parent = document.getElementsByTagName('head').item(0);" +
+            "var script = document.createElement('script');" +
+            "script.type = 'text/javascript';" +
+            // Base64 decode injected javascript
+            "script.innerHTML = window.atob('" + encoded + "');" +
+            "parent.appendChild(script)" +
+            "})()");
   }
 }

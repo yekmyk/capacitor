@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.webkit.WebView;
+import android.graphics.Color;
 import com.getcapacitor.android.R;
 import com.getcapacitor.cordova.MockCordovaInterfaceImpl;
 import com.getcapacitor.cordova.MockCordovaWebViewImpl;
@@ -43,7 +44,7 @@ public class BridgeActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
   }
 
-  protected void init(Bundle savedInstanceState, List<Class<? extends Plugin>> plugins) {
+  protected void init(Bundle savedInstanceState, List<Class<? extends Plugin>> plugins, String indexPath) {
     this.initialPlugins = plugins;
 
     loadConfig(this.getApplicationContext(), this);
@@ -61,16 +62,17 @@ public class BridgeActivity extends AppCompatActivity {
 
     setContentView(R.layout.bridge_layout_main);
 
-    this.load(savedInstanceState);
+    this.load(savedInstanceState, indexPath);
   }
 
   /**
    * Load the WebView and create the Bridge
    */
-  protected void load(Bundle savedInstanceState) {
+  protected void load(Bundle savedInstanceState, String indexPath) {
     Log.d(LogUtils.getCoreTag(), "Starting BridgeActivity");
 
     webView = findViewById(R.id.webview);
+    webView.setBackgroundColor(Color.TRANSPARENT);
     cordovaInterface = new MockCordovaInterfaceImpl(this);
     if (savedInstanceState != null) {
       cordovaInterface.restoreInstanceState(savedInstanceState);
@@ -81,7 +83,7 @@ public class BridgeActivity extends AppCompatActivity {
 
     pluginManager = mockWebView.getPluginManager();
     cordovaInterface.onCordovaInit(pluginManager);
-    bridge = new Bridge(this, webView, initialPlugins, cordovaInterface, pluginManager);
+    bridge = new Bridge(this, webView, initialPlugins, cordovaInterface, pluginManager, indexPath);
 
     // Splash.showOnLaunch(this);
 
